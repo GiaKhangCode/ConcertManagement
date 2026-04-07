@@ -1,5 +1,6 @@
 E:\EventManagement\backend\src\main\java\com\stellar\backend\service\EventService.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\BookingController.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\NhomQuyenRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\VeRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\HangVeDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\SuKien.java
@@ -7,6 +8,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\AdminCon
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\LichDien.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\LichDienRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\AuthController.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\OrganizerController.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\ViCaNhanRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\security\UserDetailsServiceImpl.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\security\AuthTokenFilter.java
@@ -19,11 +21,13 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\security\UserDetail
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\EventResponseDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\DiaDiem.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\SuKienRepository.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\NhomQuyen.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\HangVeRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\EventDetailDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\HangVe.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DiaDiemRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\JwtResponse.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\RevenueResponseDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\LoginRequest.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DonMuaRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\security\SecurityConfig.java

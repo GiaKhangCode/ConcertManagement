@@ -3,13 +3,18 @@ package com.stellar.backend.controller;
 import com.stellar.backend.dto.EventCreateRequestDto;
 import com.stellar.backend.entity.*;
 import com.stellar.backend.repository.*;
+import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -26,16 +31,28 @@ public class AdminController {
     private HangVeRepository hangVeRepository;
     @Autowired
     private KhuVucRepository khuVucRepository;
+    @Autowired
+    private TaiKhoanRepository taiKhoanRepository;
 
     @GetMapping("/locations")
     public ResponseEntity<?> getAllLocations() {
         return ResponseEntity.ok(diaDiemRepository.findAll());
     }
 
+    /**
+     * Tạo sự kiện đa tầng (Nested JSON) - Chỉ ORGANIZER hoặc ADMIN mới được tạo.
+     * Tự động gán người tạo (nguoiTao) là tài khoản đang đăng nhập.
+     */
     @Transactional
     @PostMapping("/events/create")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
     public ResponseEntity<?> createComplexEvent(@RequestBody EventCreateRequestDto request) {
         try {
+            // Lấy user đang đăng nhập để gán làm người tạo
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+            TaiKhoan nguoiTao = taiKhoanRepository.findById(userDetails.getId()).orElse(null);
+
             DiaDiem diaDiem = null;
             if (request.getMaDiaDiem() != null) {
                 diaDiem = diaDiemRepository.findById(request.getMaDiaDiem()).orElse(null);
@@ -51,6 +68,7 @@ public class AdminController {
             suKien.setAnhBiaUrl(request.getAnhBiaUrl());
             suKien.setPhanLoai(request.getPhanLoai());
             suKien.setTrangThai("Chờ phê duyệt");
+            suKien.setNguoiTao(nguoiTao); // Gán nhà tổ chức
 
             suKien = suKienRepository.save(suKien);
 
@@ -98,5 +116,65 @@ public class AdminController {
             err.put("message", "Lỗi tạo sự kiện: " + e.getMessage());
             return ResponseEntity.badRequest().body(err);
         }
+    }
+
+    /**
+     * Lấy danh sách sự kiện đang chờ phê duyệt - Chỉ ADMIN
+     */
+    @GetMapping("/pending-events")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getPendingEvents() {
+        List<SuKien> pending = suKienRepository.findByTrangThai("Chờ phê duyệt");
+        
+        // Map sang response có thêm thông tin nhà tổ chức
+        List<Map<String, Object>> result = pending.stream().map(sk -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("maSuKien", sk.getMaSuKien());
+            item.put("tenSuKien", sk.getTenSuKien());
+            item.put("trangThai", sk.getTrangThai());
+            item.put("thoiGianBD", sk.getThoiGianBD());
+            item.put("thoiGianKT", sk.getThoiGianKT());
+            item.put("anhBiaUrl", sk.getAnhBiaUrl());
+            item.put("phanLoai", sk.getPhanLoai());
+            if (sk.getDiaDiem() != null) {
+                item.put("diaDiem", sk.getDiaDiem().getTenDiaDiem());
+            }
+            if (sk.getNguoiTao() != null && sk.getNguoiTao().getNguoiDung() != null) {
+                item.put("nguoiTao", sk.getNguoiTao().getNguoiDung().getHoTen());
+            }
+            return item;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Phê duyệt sự kiện - Chuyển trạng thái từ "Chờ phê duyệt" -> "Sắp diễn ra"
+     */
+    @PutMapping("/approve-event/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> approveEvent(@PathVariable Long id) {
+        SuKien suKien = suKienRepository.findById(id).orElse(null);
+        if (suKien == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+        }
+        suKien.setTrangThai("Sắp diễn ra");
+        suKienRepository.save(suKien);
+        return ResponseEntity.ok(Map.of("message", "Đã phê duyệt sự kiện: " + suKien.getTenSuKien()));
+    }
+
+    /**
+     * Từ chối sự kiện - Chuyển trạng thái từ "Chờ phê duyệt" -> "Bị từ chối"
+     */
+    @PutMapping("/reject-event/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> rejectEvent(@PathVariable Long id) {
+        SuKien suKien = suKienRepository.findById(id).orElse(null);
+        if (suKien == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+        }
+        suKien.setTrangThai("Bị từ chối");
+        suKienRepository.save(suKien);
+        return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện: " + suKien.getTenSuKien()));
     }
 }

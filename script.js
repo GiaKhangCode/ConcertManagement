@@ -142,8 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const roles = JSON.parse(rolesStr);
             const createEventNav = document.getElementById('createEventNav');
+            const revenueNav = document.getElementById('revenueNav');
+            const adminNav = document.getElementById('adminNav');
+
             if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 createEventNav.style.display = 'inline-block';
+            }
+            if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                revenueNav.style.display = 'inline-block';
+            }
+            if(adminNav && roles.includes('ROLE_ADMIN')) {
+                adminNav.style.display = 'inline-block';
             }
         } catch(e) {}
     }

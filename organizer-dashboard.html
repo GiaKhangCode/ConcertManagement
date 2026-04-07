@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bảng điều khiển doanh thu dành cho Nhà Tổ Chức sự kiện trên Ve'ryGood.">
+    <title>Ve'ryGood | Doanh Thu Nhà Tổ Chức</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* === ORGANIZER DASHBOARD STYLES === */
+        .dashboard-hero {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(0, 229, 255, 0.08) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.2), transparent 70%);
+            border-radius: 50%;
+            animation: drift 25s infinite alternate ease-in-out;
+        }
+
+        .dashboard-hero h1 {
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-hero p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        /* === STATS GRID === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+        }
+
+        .stat-card .stat-icon.revenue {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 229, 255, 0.1));
+            color: #00ff88;
+        }
+
+        .stat-card .stat-icon.tickets {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(200, 100, 255, 0.1));
+            color: #c864ff;
+        }
+
+        .stat-card .stat-icon.events {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 150, 255, 0.1));
+            color: #00e5ff;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .stat-value.glow-green { color: #00ff88; text-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .stat-value.glow-purple { color: #c864ff; text-shadow: 0 0 20px rgba(200, 100, 255, 0.3); }
+        .stat-value.glow-cyan { color: #00e5ff; text-shadow: 0 0 20px rgba(0, 229, 255, 0.3); }
+
+        /* === REVENUE TABLE === */
+        .revenue-section {
+            margin-bottom: 4rem;
+        }
+
+        .revenue-section h2 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .revenue-table-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .revenue-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .revenue-table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .revenue-table tbody tr {
+            transition: background 0.3s;
+        }
+
+        .revenue-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .revenue-table tbody td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            vertical-align: middle;
+        }
+
+        .event-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .event-cell img {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .event-cell .event-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pill.approved {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .status-pill.pending {
+            background: rgba(255, 170, 0, 0.1);
+            color: #ffaa00;
+            border: 1px solid rgba(255, 170, 0, 0.2);
+        }
+
+        .status-pill.rejected {
+            background: rgba(255, 51, 102, 0.1);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.2);
+        }
+
+        .revenue-amount {
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        /* === EMPTY STATE === */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state p {
+            color: rgba(139, 139, 154, 0.6);
+            margin-bottom: 2rem;
+        }
+
+        /* === LOADING === */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-secondary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* === CHART AREA === */
+        .chart-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 200px;
+            padding-top: 1rem;
+        }
+
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 60px;
+            border-radius: 8px 8px 0 0;
+            background: linear-gradient(180deg, var(--accent-secondary), rgba(0, 229, 255, 0.3));
+            min-height: 4px;
+            transition: height 1s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .bar:hover {
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+
+        .bar-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70px;
+        }
+
+        .bar-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent-secondary);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .revenue-table-wrapper { overflow-x: auto; }
+            .revenue-table { min-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
+
+    <header class="navbar">
+        <a href="index.html" style="text-decoration:none;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <div class="nav-center">
+            <div class="search-bar" style="visibility:hidden;">
+                <input type="text" placeholder="">
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="admin-create.html">Tạo Sự Kiện</a>
+            <a href="index.html">Trang Chủ</a>
+            <a href="profile.html" class="btn btn-outline small" id="authBtn">Hồ Sơ</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Dashboard Hero -->
+        <section class="dashboard-hero fade-up">
+            <h1>📊 Bảng Điều Khiển <span class="neon-text">Doanh Thu</span></h1>
+            <p>Tổng hợp dữ liệu bán vé từ tất cả sự kiện bạn đã tổ chức trên Ve'ryGood.</p>
+        </section>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card fade-up stagger-1">
+                <div class="stat-icon revenue">💰</div>
+                <div class="stat-label">Tổng doanh thu</div>
+                <div class="stat-value glow-green" id="totalRevenue">---</div>
+            </div>
+            <div class="stat-card fade-up stagger-2">
+                <div class="stat-icon tickets">🎫</div>
+                <div class="stat-label">Tổng đơn mua</div>
+                <div class="stat-value glow-purple" id="totalTickets">---</div>
+            </div>
+            <div class="stat-card fade-up stagger-3">
+                <div class="stat-icon events">🎪</div>
+                <div class="stat-label">Số sự kiện</div>
+                <div class="stat-value glow-cyan" id="totalEvents">---</div>
+            </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="chart-section fade-up">
+            <h3>Biểu Đồ Doanh Thu Theo Sự Kiện</h3>
+            <div class="bar-chart" id="barChart">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
+
+        <!-- Revenue Table -->
+        <section class="revenue-section fade-up">
+            <h2>Chi Tiết Từng Sự Kiện</h2>
+            <div class="revenue-table-wrapper">
+                <table class="revenue-table">
+                    <thead>
+                        <tr>
+                            <th>Sự kiện</th>
+                            <th>Trạng thái</th>
+                            <th>Đơn mua</th>
+                            <th>Doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenueTableBody">
+                        <tr>
+                            <td colspan="4">
+                                <div class="loading-spinner"><div class="spinner"></div></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="copyright">© 2026 Ve'ryGood. All rights reserved.</div>
+    </footer>
+
+    <script>
+        // Custom cursor
+        const cursor = document.querySelector('.custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Kiểm tra quyền truy cập
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('stellar_token');
+            const rolesStr = localStorage.getItem('stellar_roles');
+
+            if (!token) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            let roles = [];
+            try { roles = JSON.parse(rolesStr || '[]'); } catch (e) {}
+
+            if (!roles.includes('ROLE_ORGANIZER') && !roles.includes('ROLE_ADMIN')) {
+                alert('Bạn không có quyền truy cập trang này. Chỉ dành cho Nhà Tổ Chức.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadRevenue(token);
+        });
+
+        async function loadRevenue(token) {
+            try {
+                const res = await fetch('http://localhost:8081/api/organizer/revenue', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 403 || res.status === 401) {
+                    alert('Phiên đăng nhập đã hết hạn hoặc không đủ quyền.');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) {
+                console.error('Lỗi tải doanh thu:', e);
+                document.getElementById('revenueTableBody').innerHTML = `
+                    <tr><td colspan="4">
+                        <div class="empty-state">
+                            <div class="empty-icon">⚠️</div>
+                            <h3>Không thể kết nối Backend</h3>
+                            <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
+                        </div>
+                    </td></tr>`;
+            }
+        }
+
+        function renderDashboard(data) {
+            // Stat cards
+            const formattedRevenue = data.tongDoanhThu 
+                ? Number(data.tongDoanhThu).toLocaleString('vi-VN') + 'đ' 
+                : '0đ';
+            document.getElementById('totalRevenue').textContent = formattedRevenue;
+            document.getElementById('totalTickets').textContent = data.tongSoVeBan || 0;
+            document.getElementById('totalEvents').textContent = data.tongSoSuKien || 0;
+
+            // Bar chart
+            const barChart = document.getElementById('barChart');
+            if (!data.chiTietSuKien || data.chiTietSuKien.length === 0) {
+                barChart.innerHTML = `
+                    <div class="empty-state" style="width:100%;">
+                        <div class="empty-icon">📭</div>
+                        <h3>Chưa có dữ liệu</h3>
+                        <p>Bạn chưa tạo sự kiện nào. Hãy bắt đầu tổ chức!</p>
+                        <a href="admin-create.html" class="btn btn-primary glow-btn">Tạo Sự Kiện Đầu Tiên</a>
+                    </div>`;
+                document.getElementById('revenueTableBody').innerHTML = `
+                    <tr><td colspan="4">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <h3>Chưa có sự kiện nào</h3>
+                        </div>
+                    </td></tr>`;
+                return;
+            }
+
+            // Tìm doanh thu cao nhất để scale biểu đồ
+            const maxRevenue = Math.max(...data.chiTietSuKien.map(e => Number(e.doanhThu) || 0), 1);
+
+            barChart.innerHTML = '';
+            data.chiTietSuKien.forEach((ev, idx) => {
+                const revenue = Number(ev.doanhThu) || 0;
+                const height = Math.max((revenue / maxRevenue) * 180, 4);
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-value">${revenue > 0 ? (revenue / 1000000).toFixed(1) + 'M' : '0'}</div>
+                    <div class="bar" style="height: 0px;" data-height="${height}px"></div>
+                    <div class="bar-label" title="${ev.tenSuKien}">${ev.tenSuKien.length > 10 ? ev.tenSuKien.substring(0, 10) + '...' : ev.tenSuKien}</div>
+                `;
+                barChart.appendChild(barItem);
+
+                // Animate bars
+                setTimeout(() => {
+                    barItem.querySelector('.bar').style.height = height + 'px';
+                }, 100 + idx * 150);
+            });
+
+            // Revenue table
+            const tbody = document.getElementById('revenueTableBody');
+            tbody.innerHTML = '';
+            data.chiTietSuKien.forEach(ev => {
+                const statusClass = ev.trangThai === 'Sắp diễn ra' ? 'approved' 
+                    : ev.trangThai === 'Chờ phê duyệt' ? 'pending' 
+                    : ev.trangThai === 'Bị từ chối' ? 'rejected' : 'approved';
+
+                const revenue = Number(ev.doanhThu) || 0;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="event-cell">
+                            <img src="${ev.anhBiaUrl || 'https://via.placeholder.com/48x48/1a1a2e/ffffff?text=SK'}" alt="" onerror="this.src='https://via.placeholder.com/48x48/1a1a2e/ffffff?text=SK'">
+                            <span class="event-name">${ev.tenSuKien}</span>
+                        </div>
+                    </td>
+                    <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
+                    <td>${ev.soVeBan}</td>
+                    <td><span class="revenue-amount">${revenue.toLocaleString('vi-VN')}đ</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

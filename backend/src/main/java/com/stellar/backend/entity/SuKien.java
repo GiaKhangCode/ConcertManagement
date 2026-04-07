@@ -33,6 +33,10 @@ public class SuKien {
     @Column(name = "TrangThai", nullable = false)
     private String trangThai;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaNguoiTao")
+    private TaiKhoan nguoiTao;
+
     @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
     private List<HangVe> danhSachHangVe;
 
@@ -66,6 +70,9 @@ public class SuKien {
 
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+
+    public TaiKhoan getNguoiTao() { return nguoiTao; }
+    public void setNguoiTao(TaiKhoan nguoiTao) { this.nguoiTao = nguoiTao; }
 
     public List<HangVe> getDanhSachHangVe() { return danhSachHangVe; }
     public void setDanhSachHangVe(List<HangVe> danhSachHangVe) { this.danhSachHangVe = danhSachHangVe; }
