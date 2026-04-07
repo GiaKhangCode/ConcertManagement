@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vé Điện Tử | Stellar Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-color);
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: #fff;
+        }
+
+        .checkout-container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: #10b981;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
+        .checkout-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #10b981, var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Mã code Barcode Cyberpunk */
+        .ticket-hologram {
+            background: rgba(20, 25, 40, 0.8);
+            border: 1px solid var(--primary-cyan);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(20px);
+            margin: 30px auto;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticket-hologram::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+            animation: scanline 2s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .barcode {
+            font-family: 'Space Mono', monospace;
+            font-size: 3rem;
+            letter-spacing: -2px;
+            opacity: 0.8;
+            margin: 20px 0;
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+
+        .info-row span { color: #a0a5b5; }
+        .info-row strong { color: #fff; font-family: 'Space Mono', monospace; }
+
+        .back-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: 'Unbounded', sans-serif;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
+
+    <div class="checkout-container">
+        <i class="fa fa-check-circle success-icon"></i>
+        <h1 class="checkout-title">GIAO DỊCH THÀNH CÔNG</h1>
+        <p style="color:#a0a5b5; font-size: 1.2rem;">Thiết bị của bạn đã nhận được Mã Vé Điện Tử Hologram</p>
+
+        <div class="ticket-hologram">
+            <div class="info-row">
+                <span>Trạng thái:</span>
+                <strong style="color: #10b981;">Đã Xác Nhận</strong>
+            </div>
+            <div class="info-row">
+                <span>Mã Phiếu Thanh Toán:</span>
+                <strong id="invoiceId">INV-0000</strong>
+            </div>
+            <div class="info-row">
+                <span>Số lượng vé:</span>
+                <strong id="ticketQty">0</strong>
+            </div>
+            
+            <div class="barcode">
+                ||| ||| || ||| || |||
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #a0a5b5; font-size: 0.95rem;"><i>Vui lòng xuất trình mã QR này để check-in tại sự kiện</i></p>
+            
+            <a href="index.html" class="btn btn-outline" style="margin-top: 20px; display: inline-block;">
+                <i class="fa fa-arrow-left"></i> VỀ TRANG CHỦ
+            </a>
+            <a href="profile.html" class="btn btn-primary glow-btn" style="margin-top: 20px; margin-left: 10px; display: inline-block;">
+                <i class="fa fa-user"></i> XEM DANH SÁCH VÉ
+            </a>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        document.getElementById('invoiceId').innerText = 'STELLAR-' + (urlParams.get('invoiceId') || '999');
+        document.getElementById('ticketQty').innerText = urlParams.get('tickets') || '1';
+
+        // Lấy cursor cũ
+        const cursor = document.querySelector('.custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+        const btn = document.querySelector('.back-btn');
+        btn.addEventListener('mouseenter', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(2.5)';
+            cursor.style.background = 'transparent';
+            cursor.style.border = '1px solid white';
+        });
+        btn.addEventListener('mouseleave', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            cursor.style.background = '#fff';
+            cursor.style.border = 'none';
+        });
+    </script>
+</body>
+</html>

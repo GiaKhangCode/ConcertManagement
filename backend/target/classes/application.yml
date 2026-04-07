@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: StellarPortalBackend
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:orcl
+    username: ConcertManagementDB
+    password: Admin123
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8081

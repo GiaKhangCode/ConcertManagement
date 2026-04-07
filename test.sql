@@ -1,0 +1,1 @@
+SELECT count(*) FROM DIA_DIEM; SELECT count(*) FROM SU_KIEN; EXIT;

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sự Kiện | Stellar Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { padding-top: 100px; }
+        
+        .main-container {
+            max-width: 1200px; margin: 0 auto; padding: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* --- PHẦN THÔNG TIN CHUNG (Trái: Ảnh, Phải: Text) --- */
+        .event-intro {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 50px;
+            margin-bottom: 50px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .poster-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.15);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            aspect-ratio: 3/4;
+        }
+
+        .event-info-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .event-title {
+            font-size: 2.5rem;
+            font-family: 'Unbounded', sans-serif;
+            color: #fff;
+            line-height: 1.3;
+            margin: 15px 0 25px 0;
+            text-transform: uppercase;
+        }
+
+        .event-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            color: #a0a5b5;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .event-meta-item i {
+            color: var(--primary-cyan);
+            font-size: 1.3rem;
+        }
+
+        /* --- PHẦN CHI TIẾT (Trái: Story, Phải: Box Vé) --- */
+        .detail-body {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 50px;
+        }
+
+        .story-section h2 {
+            font-family: 'Unbounded', sans-serif;
+            color: var(--primary-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .story-section p {
+            line-height: 1.8;
+            color: #a0a5b5;
+            font-size: 1.1rem;
+        }
+
+        .ticket-box {
+            background: linear-gradient(145deg, rgba(20,25,40,0.8), rgba(6,11,25,0.9));
+            border: 1px solid var(--primary-purple);
+            padding: 2.5rem;
+            border-radius: 20px;
+            position: sticky;
+            top: 120px;
+            box-shadow: 0 0 30px rgba(188, 0, 255, 0.15);
+        }
+        
+        .ticket-box h3 {
+            font-family: 'Unbounded', sans-serif;
+            margin-bottom: 2rem;
+            color: #fff;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .tier-row {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .tier-row:hover {
+            border-color: var(--primary-cyan);
+            background: rgba(0, 243, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .tier-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tier-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .tier-price {
+            color: var(--primary-cyan);
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 900px) {
+            .event-intro, .detail-body { grid-template-columns: 1fr; }
+            .poster-wrapper img { aspect-ratio: 16/9; }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh" style="opacity: 0.3;"></div>
+    
+    <header class="navbar">
+        <a href="index.html" class="logo" style="text-decoration:none;">STELLAR <span class="neon-text">PORTAL</span></a>
+        <div class="nav-links">
+            <a href="index.html">Về Trang Chủ</a>
+            <a href="#" class="btn btn-outline small">Đăng Nhập</a>
+        </div>
+    </header>
+
+    <div id="loading" style="text-align:center; padding: 200px 20px; font-size:1.5rem; color:var(--primary-cyan)">
+        <p><i class="fa fa-spinner fa-spin"></i> Đang trích xuất dữ liệu từ Vũ trụ...</p>
+    </div>
+    
+    <main class="main-container" id="appContainer" style="display:none;">
+        <section class="event-intro">
+            <div class="poster-wrapper">
+                <img id="eventPoster" src="" alt="Event Poster">
+            </div>
+            <div class="event-info-wrapper">
+                <div class="status-badge live" id="eventStatus" style="align-self: flex-start; font-size:1rem; padding: 8px 16px;"></div>
+                <h1 class="event-title" id="eventTitle"></h1>
+                
+                <div class="event-meta-item">
+                    <i class="fa-regular fa-clock"></i>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Thời gian Bắt đầu</span>
+                        <strong id="eventDate" style="color:#fff;"></strong>
+                    </div>
+                </div>
+
+                <div class="event-meta-item">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Khu vực tổ chức</span>
+                        <strong id="eventLocation" style="color:#fff;"></strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="detail-body">
+            <div class="story-section">
+                <h2><i class="fa fa-book-open"></i> SIÊU SỰ KIỆN</h2>
+                <p>
+                    Vượt qua mọi giới hạn của không gian và thời gian, sân khấu Live mang đến những màn trình diễn bùng nổ cùng công nghệ thiết kế ánh sáng tân tiến nhất. Chúng tôi kiến tạo nên một vũ trụ trải nghiệm đa giác quan, nơi bạn có thể chạm vào âm ba và nhìn thấy từng nhịp đập của cảm xúc.
+                </p>
+                <p style="margin-top:20px;">
+                    Hãy cùng hàng ngàn khán giả khác hòa mình vào không khí cuồng nhiệt này và lưu giữ những kí ức phi thường. Hệ thống vé điện tử của chúng tôi đảm bảo chỗ ngồi có hạn luôn được bảo mật tuyệt vời. Chốt vé ngay để giành lấy tấm vé thông hành của bạn nhé!
+                </p>
+            </div>
+            
+            <div class="ticket-section">
+                <div class="ticket-box">
+                    <h3>CHỌN VÉ CỦA BẠN</h3>
+                    <div id="ticketTiersContainer"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Mascot Companion -->
+    <div class="mascot-companion" style="bottom:30px; right:30px;">
+        <div class="mascot-tooltip" style="background:var(--primary-cyan); color:#000;">Nhanh tay mua vé kẻo lỡ nha!</div>
+        <img src="assets/mascot.png" alt="Stellar Mascot" style="filter: drop-shadow(0 0 15px rgba(0,243,255,0.8));">
+    </div>
+
+    <script src="event-detail.js"></script>
+</body>
+</html>

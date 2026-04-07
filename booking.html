@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sân Khấu & Đặt Vé | Stellar Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: var(--bg-color);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        .booking-page-container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(20, 25, 40, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(20px);
+            z-index: 10;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            overflow: hidden;
+        }
+
+        /* Vùng bản đồ sân khấu tĩnh */
+        .stage-map {
+            padding: 40px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0, 243, 255, 0.05), transparent);
+        }
+
+        .stage-box {
+            width: 80%;
+            height: 100px;
+            background: linear-gradient(90deg, var(--primary-purple), var(--primary-cyan));
+            border-radius: 10px;
+            transform: perspective(600px) rotateX(20deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 50px;
+            box-shadow: 0 20px 50px rgba(0, 243, 255, 0.3);
+            letter-spacing: 5px;
+        }
+
+        .zone-mock {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .zone-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #a0a5b5;
+        }
+        
+        .zone-card.selected {
+            border-color: var(--primary-cyan);
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--primary-cyan);
+        }
+
+        /* Khu form booking */
+        .booking-details {
+            padding: 40px;
+        }
+
+        .booking-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #fff, var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tier-label {
+            display: inline-block;
+            background: rgba(188, 0, 255, 0.2);
+            border: 1px solid var(--primary-purple);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #eab8ff;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #a0a5b5;
+            font-size: 0.9rem;
+        }
+
+        .zone-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+        }
+        
+        .zone-select option {
+            background: #141928;
+            color: white;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            width: fit-content;
+        }
+
+        .qty-btn {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .qty-btn:hover { background: rgba(0, 243, 255, 0.2); }
+
+        .qty-input {
+            width: 60px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            color: var(--primary-cyan);
+            text-align: center;
+            font-size: 1.2rem;
+            font-family: 'Space Mono', monospace;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .price-total {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary-cyan);
+            margin: 30px 0;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(90deg, var(--primary-purple), var(--primary-cyan));
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.4);
+        }
+
+        .back-home {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            color: #a0a5b5;
+            text-decoration: none;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+        }
+        
+        .back-home:hover { color: var(--primary-cyan); }
+
+        @media (max-width: 800px) {
+            .booking-page-container { grid-template-columns: 1fr; }
+            .stage-map { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
+
+    <a href="#" onclick="window.history.back(); return false;" class="back-home"><i class="fa fa-arrow-left"></i> Quay lại Sự kiện</a>
+
+    <div class="booking-page-container">
+        <!-- Khu vực Map -->
+        <div class="stage-map">
+            <div class="stage-box">MAIN STAGE</div>
+            <div class="zone-mock">
+                <div class="zone-card selected">Khu vực LEFT WING</div>
+                <div class="zone-card">Khu vực RIGHT WING</div>
+                <div class="zone-card">Khu vực CAO TẦNG</div>
+                <div class="zone-card">Khu vực VIP LOUNGE</div>
+            </div>
+        </div>
+
+        <!-- Khu vực Control -->
+        <div class="booking-details">
+            <h1 class="booking-title">THIẾT LẬP VÉ</h1>
+            <div class="tier-label" id="lblTierName">Đang tải cấu hình vé...</div>
+
+            <div class="form-group">
+                <label>Chọn Khu Vực (Zone Selection)</label>
+                <select class="zone-select">
+                    <option value="left">Cổng Trái - Left Wing (+0 VNĐ)</option>
+            <div class="booking-container fade-in">
+        <h2 style="text-align: center; color: var(--primary-cyan); font-family: 'Unbounded', sans-serif; font-size: 2rem; margin-bottom: 30px;">ĐẶT VÉ SỰ KIỆN</h2>
+
+        <div class="booking-box">
+            <h3><i class="fa fa-ticket-alt"></i> CHỌN SỐ LƯỢNG VÉ</h3>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <input type="number" id="ticketQuantity" value="1" min="1" max="10" class="form-input" style="flex:1;">
+                <span style="color: #a0a5b5; font-size: 0.9rem;">(Tối đa 10 vé / giao dịch)</span>
+            </div>
+        </div>
+
+        <div class="booking-box" style="margin-top: 20px;">
+            <h3 style="color: var(--primary-purple);"><i class="fa fa-map-marked-alt"></i> CHỌN KHU VỰC SÂN KHẤU</h3>
+            <select id="zoneSelect" class="form-input">
+                <!-- Data will be loaded via JS -->
+            </select>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center;">
+            <button class="btn btn-primary glow-btn" id="confirmBookingBtn" onclick="submitBooking()" style="font-size: 1.2rem; padding: 20px 40px; width: 100%; border-radius: 12px; font-family: 'Unbounded', sans-serif; transition: all 0.3s;">
+                XÁC NHẬN ĐẶT VÉ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Custom cursor
+        const cursor = document.querySelector('.custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // URL Params
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('eventId');
+        const tierId = urlParams.get('tierId');
+        const tierName = urlParams.get('tierName');
+        
+        let qty = 1;
+        let unitPrice = 0; // Chúng ta sẽ fetch lại event details để lấy unitPrice chính xác.
+
+        document.getElementById('lblTierName').innerText = tierName ? `Hạng: ${tierName}` : "Hạng vé tiêu chuẩn";
+
+        // Fetch giá vé từ DB (Để đảm bảo tính toàn vẹn)
+        async function fetchPrice() {
+            try {
+                const response = await fetch('http://localhost:8081/api/events/' + eventId);
+                const ev = await response.json();
+                const matchedTier = ev.ticketTiers.find(t => t.id == tierId);
+                if(matchedTier) {
+                    unitPrice = matchedTier.price;
+                    updateUIPrice();
+                }
+            } catch(e) {
+                document.getElementById('lblTotalPrice').innerText = "Lỗi xác thực giá (Backend Offline)";
+            }
+        }
+        
+        if(eventId && tierId) fetchPrice();
+
+        function updateQty(delta) {
+            qty += delta;
+            if (qty < 1) qty = 1;
+            if (qty > 10) qty = 10; // Max 10 vé
+            document.getElementById('inpQty').value = qty;
+            updateUIPrice();
+        }
+
+        function updateUIPrice() {
+            const total = qty * unitPrice;
+            document.getElementById('lblTotalPrice').innerText = total.toLocaleString('vi-VN') + " VNĐ";
+        }
+
+        async function submitBooking() {
+            const token = localStorage.getItem('stellar_token');
+            if(!token) {
+                alert("Bạn cần Đăng Nhập để đi tiếp!");
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            const btn = document.querySelector('.checkout-btn');
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG TRUYỀN DỮ LIỆU...';
+            btn.disabled = true;
+
+            try {
+                const payload = {
+                    maSuKien: parseInt(eventId),
+                    maHangVe: parseInt(ticketTierId),
+                    soLuong: parseInt(qty)
+                };
+
+                const response = await fetch('http://localhost:8081/api/booking/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    // Sửa lại ticketTierId thành tierId do biến toàn cục gọi khác
+                    body: JSON.stringify({ maSuKien: parseInt(eventId), maHangVe: parseInt(tierId), soLuong: parseInt(qty) })
+                });
+
+                const data = await response.json();
+                
+                if(response.ok) {
+                    window.location.href = `checkout.html?invoiceId=${data.invoiceId}&tickets=${data.totalTickets}`;
+                } else {
+                    alert("❌ Lỗi: " + (data.message || 'Hủy giao dịch.'));
+                    btn.innerHTML = '<i class="fa fa-lock" style="margin-right:8px;"></i> CHỐT GIAO DỊCH VÀ XUẤT VÉ';
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                alert("⚠️ Lỗi Tín hiệu Máy chủ (Backend).");
+                btn.innerHTML = '<i class="fa fa-lock" style="margin-right:8px;"></i> CHỐT GIAO DỊCH VÀ XUẤT VÉ';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

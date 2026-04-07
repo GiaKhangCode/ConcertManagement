@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truy Cập Hệ Thống | Stellar Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-color);
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 4rem 1rem;
+            box-sizing: border-box;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+            background: rgba(20, 25, 40, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(20px);
+            z-index: 10;
+            position: relative;
+            margin: auto;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .auth-header h2 {
+            font-family: 'Unbounded', sans-serif;
+            color: #fff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            cursor: pointer;
+            color: #a0a5b5;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            font-family: 'Unbounded', sans-serif;
+        }
+
+        .auth-tab.active {
+            color: var(--primary-cyan);
+            border-bottom-color: var(--primary-cyan);
+            text-shadow: 0 0 10px rgba(0,243,255,0.5);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            top: 50%;
+            left: 18px;
+            transform: translateY(-50%);
+            color: var(--primary-cyan);
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 14px 20px 14px 45px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-cyan);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0,243,255,0.2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, var(--primary-purple), var(--primary-cyan));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.4);
+        }
+
+        #registerForm { display: none; }
+        
+        .alert-msg {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            display: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .back-home {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            color: #a0a5b5;
+            text-decoration: none;
+            font-size: 1.1rem;
+            z-index: 20;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .back-home:hover { color: var(--primary-cyan); }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
+    
+    <a href="index.html" class="back-home"><i class="fa fa-arrow-left"></i> Rời Khỏi Vùng Kết Nối</a>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>STELLAR <span class="neon-text">PORTAL</span></h2>
+            <p style="color:#a0a5b5;">Đồng bộ dữ liệu của bạn để nhận đặc quyền</p>
+        </div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">ĐĂNG NHẬP</div>
+            <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">ĐĂNG KÝ</div>
+        </div>
+        
+        <div id="mainAlert" class="alert-msg"></div>
+
+        <!-- FORM ĐĂNG NHẬP -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <i class="fa fa-user"></i>
+                <input type="text" id="loginUsername" placeholder="Tên truy cập" required>
+            </div>
+            <div class="input-group">
+                <i class="fa fa-lock"></i>
+                <input type="password" id="loginPassword" placeholder="Khóa bảo mật" required>
+            </div>
+            <button type="submit" class="submit-btn" style="box-shadow: 0 0 20px rgba(188, 0, 255, 0.4);">TRUY CẬP</button>
+        </form>
+
+        <!-- FORM ĐĂNG KÝ -->
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="input-group">
+                <i class="fa fa-user-astronaut"></i>
+                <input type="text" id="regUsername" placeholder="Tên truy cập (Username)" required>
+            </div>
+            <div class="input-group">
+                <i class="fa fa-envelope"></i>
+                <input type="email" id="regEmail" placeholder="Tích hợp Email" required>
+            </div>
+            <div class="input-group">
+                <i class="fa fa-phone"></i>
+                <input type="text" id="regPhone" placeholder="Sô điện thoại xác thực" required>
+            </div>
+            <div class="input-group">
+                <i class="fa fa-id-card"></i>
+                <input type="text" id="regFullName" placeholder="Họ và tên thật của bạn" required>
+            </div>
+            <div class="input-group">
+                <i class="fa fa-lock"></i>
+                <input type="password" id="regPassword" placeholder="Thiết lập mật khẩu an toàn" required>
+            </div>
+            <button type="submit" class="submit-btn" style="background: linear-gradient(90deg, #10b981, var(--primary-cyan));">KHỞI TẠO TÀI KHOẢN</button>
+        </form>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
