@@ -11,6 +11,7 @@ public class EventResponseDto {
     private String status;
     private String image;
     private String category;
+    private Boolean isFeatured;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -36,4 +37,7 @@ public class EventResponseDto {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public Boolean getIsFeatured() { return isFeatured; }
+    public void setIsFeatured(Boolean isFeatured) { this.isFeatured = isFeatured; }
 }

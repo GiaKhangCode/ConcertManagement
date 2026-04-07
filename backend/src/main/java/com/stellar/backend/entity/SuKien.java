@@ -46,6 +46,9 @@ public class SuKien {
     @Column(name = "PhanLoai")
     private String phanLoai;
 
+    @Column(name = "LaSuKienNoiBat")
+    private Integer laSuKienNoiBat = 0;
+
     // Getters and Setters
     public Long getMaSuKien() { return maSuKien; }
     public void setMaSuKien(Long maSuKien) { this.maSuKien = maSuKien; }
@@ -82,4 +85,7 @@ public class SuKien {
 
     public String getPhanLoai() { return phanLoai; }
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }
+
+    public Integer getLaSuKienNoiBat() { return laSuKienNoiBat; }
+    public void setLaSuKienNoiBat(Integer laSuKienNoiBat) { this.laSuKienNoiBat = laSuKienNoiBat; }
 }

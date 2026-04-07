@@ -20,7 +20,10 @@ public class EventController {
     }
 
     @GetMapping
-    public List<EventResponseDto> getEvents() {
+    public List<EventResponseDto> getEvents(@RequestParam(required = false) String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return eventService.searchEvents(keyword);
+        }
         return eventService.getAllEvents();
     }
 

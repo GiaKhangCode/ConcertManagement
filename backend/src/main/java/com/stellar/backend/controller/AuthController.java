@@ -103,13 +103,23 @@ public class AuthController {
         taiKhoan.setDongYNhanMarketing(0);
         taiKhoan.setNguoiDung(nguoiDung);
 
-        NhomQuyen customerRole = nhomQuyenRepository.findByTenNhomQuyen("ROLE_CUSTOMER")
+        String reqRole = signUpRequest.getRole();
+        String roleName = "ROLE_CUSTOMER"; // Mặc định là Khách hàng
+        
+        if (reqRole != null && reqRole.equalsIgnoreCase("ORGANIZER")) {
+            roleName = "ROLE_ORGANIZER";
+        }
+        
+        // Không cấp quyền ADMIN qua API register
+        final String finalRoleName = roleName;
+
+        NhomQuyen quyenDuocCap = nhomQuyenRepository.findByTenNhomQuyen(roleName)
                 .orElseGet(() -> {
                     NhomQuyen rq = new NhomQuyen();
-                    rq.setTenNhomQuyen("ROLE_CUSTOMER");
+                    rq.setTenNhomQuyen(finalRoleName);
                     return nhomQuyenRepository.save(rq);
                 });
-        taiKhoan.getNhomQuyens().add(customerRole);
+        taiKhoan.getNhomQuyens().add(quyenDuocCap);
 
         taiKhoanRepository.save(taiKhoan);
 

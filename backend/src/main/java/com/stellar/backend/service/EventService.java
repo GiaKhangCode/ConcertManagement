@@ -24,31 +24,40 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventResponseDto> getAllEvents() {
-        return suKienRepository.findAll().stream().map(sk -> {
-            EventResponseDto dto = new EventResponseDto();
-            dto.setId(sk.getMaSuKien());
-            dto.setTitle(sk.getTenSuKien());
-            dto.setDate(sk.getThoiGianBD());
-            if (sk.getDiaDiem() != null) {
-                dto.setLocation(sk.getDiaDiem().getTenDiaDiem() + ", " + sk.getDiaDiem().getTinhThanh());
-            }
-            dto.setStatus(sk.getTrangThai());
-            
-            BigDecimal lowest = null;
-            if (sk.getDanhSachHangVe() != null) {
-                for (HangVe hv : sk.getDanhSachHangVe()) {
-                    if (lowest == null || hv.getGiaNiemYet().compareTo(lowest) < 0) {
-                        lowest = hv.getGiaNiemYet();
-                    }
+        return suKienRepository.findAll().stream().map(this::mapToEventResponseDto).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventResponseDto> searchEvents(String keyword) {
+        return suKienRepository.findByTenSuKienContainingIgnoreCaseOrDiaDiem_TenDiaDiemContainingIgnoreCase(keyword, keyword)
+                .stream().map(this::mapToEventResponseDto).collect(Collectors.toList());
+    }
+
+    private EventResponseDto mapToEventResponseDto(SuKien sk) {
+        EventResponseDto dto = new EventResponseDto();
+        dto.setId(sk.getMaSuKien());
+        dto.setTitle(sk.getTenSuKien());
+        dto.setDate(sk.getThoiGianBD());
+        if (sk.getDiaDiem() != null) {
+            dto.setLocation(sk.getDiaDiem().getTenDiaDiem() + ", " + sk.getDiaDiem().getTinhThanh());
+        }
+        dto.setStatus(sk.getTrangThai());
+        
+        BigDecimal lowest = null;
+        if (sk.getDanhSachHangVe() != null) {
+            for (HangVe hv : sk.getDanhSachHangVe()) {
+                if (lowest == null || hv.getGiaNiemYet().compareTo(lowest) < 0) {
+                    lowest = hv.getGiaNiemYet();
                 }
             }
-            dto.setStartingPrice(lowest != null ? lowest : BigDecimal.ZERO);
-            
-            dto.setImage(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png?text=No+Cover");
-            dto.setCategory(sk.getPhanLoai() != null && !sk.getPhanLoai().isEmpty() ? sk.getPhanLoai() : "music");
-            
-            return dto;
-        }).collect(Collectors.toList());
+        }
+        dto.setStartingPrice(lowest != null ? lowest : BigDecimal.ZERO);
+        
+        dto.setImage(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png?text=No+Cover");
+        dto.setCategory(sk.getPhanLoai() != null && !sk.getPhanLoai().isEmpty() ? sk.getPhanLoai() : "music");
+        dto.setIsFeatured(sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1);
+        
+        return dto;
     }
 
     @Transactional(readOnly = true)

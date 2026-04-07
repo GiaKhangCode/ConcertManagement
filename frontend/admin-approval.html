@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         /* === ADMIN APPROVAL PAGE STYLES === */
         .admin-hero {
@@ -336,7 +336,7 @@
     <div class="bg-mesh secondary-mesh"></div>
 
     <header class="navbar">
-        <a href="index.html" style="text-decoration:none;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
         <div class="nav-center">
             <div class="search-bar" style="visibility:hidden;">
                 <input type="text" placeholder="">
@@ -362,6 +362,17 @@
 
         <!-- Approval Grid -->
         <div class="approval-grid" id="approvalGrid">
+            <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Featured Management Section -->
+        <section class="admin-hero fade-up" style="margin-top: 4rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 200, 100, 0.05) 100%);">
+            <h1>🌟 Đặt <span style="color: #00ff88;">Sự Kiện Nổi Bật</span> (Hero Banner)</h1>
+            <p>Chọn một sự kiện đã được phê duyệt để ưu tiên hiển thị ở vị trí trung tâm ngoài trang chủ.</p>
+        </section>
+
+        <!-- Feature Grid -->
+        <div class="approval-grid" id="featureGrid">
             <div class="loading-spinner"><div class="spinner"></div></div>
         </div>
     </main>
@@ -425,6 +436,7 @@
             }
 
             loadPendingEvents(token);
+            loadApprovedEvents(token);
         });
 
         async function loadPendingEvents(token) {
@@ -567,6 +579,88 @@
             // Cập nhật số lượng chờ duyệt
             const remaining = document.querySelectorAll('.approval-card:not(.processed)').length;
             document.getElementById('pendingCountText').textContent = `${remaining} sự kiện chờ duyệt`;
+        }
+
+        /* === TÍNH NĂNG ĐẶT SỰ KIỆN NỔI BẬT === */
+        async function loadApprovedEvents(token) {
+            const grid = document.getElementById('featureGrid');
+            try {
+                const res = await fetch('http://localhost:8081/api/admin/approved-events', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) return;
+                const events = await res.json();
+                renderApprovedEvents(events);
+            } catch (e) {
+                console.error('Lỗi tải sự kiện đã phê duyệt:', e);
+            }
+        }
+
+        function renderApprovedEvents(events) {
+            const grid = document.getElementById('featureGrid');
+            if (!events || events.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-icon">🎟️</div>
+                        <h3>Chưa có sự kiện khả dụng</h3>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = '';
+            events.forEach((ev, idx) => {
+                const card = document.createElement('div');
+                card.className = 'approval-card';
+                card.style.animationDelay = `${idx * 0.1}s`;
+
+                // Nếu đang là sự kiện nổi bật, add một border đặc biệt
+                if (ev.laSuKienNoiBat) {
+                    card.style.borderColor = '#00ff88';
+                    card.style.boxShadow = '0 0 15px rgba(0,255,136,0.3)';
+                }
+
+                const dateStr = ev.thoiGianBD ? new Date(ev.thoiGianBD).toLocaleDateString('vi-VN') : 'Chưa xác định';
+                
+                card.innerHTML = `
+                    <div class="card-banner" style="background-image: url('${ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
+                        <div class="overlay"></div>
+                        <div class="status-tag" style="background: rgba(0,255,136,0.2); color: #00ff88; border-color: rgba(0,255,136,0.3);">${ev.laSuKienNoiBat ? '⭐ HIỆN NỔI BẬT' : 'Sẵn sàng'}</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>${ev.tenSuKien}</h3>
+                        <div class="card-meta">
+                            <span><span class="icon">📅</span> ${dateStr}</span>
+                            <span><span class="icon">📍</span> ${ev.diaDiem || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn approve" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
+                                🌟 Đặt làm Hero
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            attachCursorEvents(grid.querySelectorAll('.action-btn'));
+        }
+
+        async function setFeatured(id) {
+            const token = localStorage.getItem('stellar_token');
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${id}/feature`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'Đã cài đặt sự kiện nổi bật!', 'success');
+                    // Tải lại list để refresh UI
+                    loadApprovedEvents(token);
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối. Thử lại sau.', 'error');
+            }
         }
     </script>
 </body>

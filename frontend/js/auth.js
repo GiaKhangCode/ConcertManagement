@@ -80,6 +80,7 @@ async function handleRegister(e) {
         phone: document.getElementById('regPhone').value,
         fullName: document.getElementById('regFullName').value,
         password: document.getElementById('regPassword').value,
+        role: document.getElementById('regRole') ? document.getElementById('regRole').value : 'CUSTOMER'
     };
 
     try {

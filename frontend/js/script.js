@@ -70,9 +70,10 @@ if (heroVisual && hologramCard) {
 }
 
 // BACKEND API INTEGRATION
-async function fetchEventsFromBackend() {
+async function fetchEventsFromBackend(keyword = '') {
     try {
-        const response = await fetch('http://localhost:8081/api/events');
+        const url = keyword ? `http://localhost:8081/api/events?keyword=${encodeURIComponent(keyword)}` : 'http://localhost:8081/api/events';
+        const response = await fetch(url);
         if (!response.ok) return;
         
         const events = await response.json();
@@ -107,6 +108,45 @@ async function fetchEventsFromBackend() {
                 grid.appendChild(card);
             });
             
+            // Render Sự kiện nổi bật (Featured Event) - Lấy sự kiện được đánh dấu hoặc đầu tiên
+            const featured = events.find(ev => ev.isFeatured) || events[0];
+            const heroTitle = document.querySelector('.feature-content h1');
+            const heroDesc = document.querySelector('.feature-content p');
+            const featureSpans = document.querySelectorAll('.feature-meta span');
+            const heroBuyBtn = document.querySelector('.feature-content .btn-primary');
+            const heroDetailBtn = document.querySelector('.feature-content .btn-secondary');
+            const holoText = document.querySelector('.holo-text');
+            const hologramCard = document.querySelector('.hologram-card');
+
+            if(heroTitle && featured) {
+                const feDate = featured.date ? new Date(featured.date).toLocaleDateString('vi-VN') : '';
+                heroTitle.innerHTML = `${featured.title}`;
+                if(heroDesc) heroDesc.innerHTML = `Sự kiện đang dẫn đầu xu hướng hiện nay. Số lượng vé có hạn, hãy nhanh tay!`;
+                
+                const dateIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+                const locIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+                
+                if(featureSpans.length >= 2) {
+                    featureSpans[0].innerHTML = `${dateIcon} ${feDate}`;
+                    featureSpans[1].innerHTML = `${locIcon} ${featured.location || 'Chưa cập nhật'}`;
+                }
+                
+                if(heroBuyBtn) heroBuyBtn.onclick = () => window.location.href = `event-detail.html?id=${featured.id}`;
+                if(heroDetailBtn) heroDetailBtn.onclick = () => window.location.href = `event-detail.html?id=${featured.id}`;
+                
+                if(holoText) {
+                    const words = featured.title.split(' ');
+                    const shortText = words[0] && words[0].length <= 3 && words[1] ? words[0] + words[1] : (words[0] || "HYPE");
+                    holoText.innerHTML = shortText.substring(0, 6).toUpperCase().split('').join(' ');
+                }
+                
+                if(hologramCard) {
+                    hologramCard.style.backgroundImage = `url('${featured.image}')`;
+                    hologramCard.style.backgroundSize = 'cover';
+                    hologramCard.style.backgroundPosition = 'center';
+                }
+            }
+
             // Re-attach cursor hover events to newly generated buttons
             attachCursorEvents(document.querySelectorAll('.event-card, .buy-btn'));
             initFiltering(); // Re-initialize filtering
@@ -117,7 +157,20 @@ async function fetchEventsFromBackend() {
 }
 
 // Bắt đầu khởi tạo dữ liệu khi Load trang xong
-document.addEventListener('DOMContentLoaded', fetchEventsFromBackend);
+document.addEventListener('DOMContentLoaded', () => {
+    fetchEventsFromBackend();
+
+    // Thêm chức năng tìm kiếm
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const keyword = e.target.value.trim();
+                fetchEventsFromBackend(keyword);
+            }
+        });
+    }
+});
 
 // Update Header UI based on Auth JWT Token
 document.addEventListener('DOMContentLoaded', () => {

@@ -6,7 +6,7 @@
     <title>Truy Cập Hệ Thống | Ve'ryGood</title>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         body {
             display: flex;
@@ -163,7 +163,7 @@
 
     <div class="auth-container">
         <div class="auth-header">
-            <h2>Ve'ry<span class="neon-text">Good</span></h2>
+            <div class="logo" style="justify-content: center; font-size: 2.2rem; margin-bottom: 10px;">Ve'ry<span class="neon-text">Good</span></div>
             <p style="color:#a0a5b5;">Đồng bộ dữ liệu của bạn để nhận đặc quyền</p>
         </div>
 
@@ -209,10 +209,17 @@
                 <i class="fa fa-lock"></i>
                 <input type="password" id="regPassword" placeholder="Thiết lập mật khẩu an toàn" required>
             </div>
+            <div class="input-group">
+                <i class="fa fa-user-tag"></i>
+                <select id="regRole" class="form-input" style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 14px 20px 14px 45px; border-radius: 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: all 0.3s; box-sizing: border-box; appearance: none; cursor: pointer;">
+                    <option value="CUSTOMER" style="background:#141928;">Khách Hàng (Tâm điểm trải nghiệm)</option>
+                    <option value="ORGANIZER" style="background:#141928;">Nhà Tổ Chức (Người kiến tạo)</option>
+                </select>
+            </div>
             <button type="submit" class="submit-btn" style="background: linear-gradient(90deg, #10b981, var(--primary-cyan));">KHỞI TẠO TÀI KHOẢN</button>
         </form>
     </div>
 
-    <script src="auth.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>

@@ -177,4 +177,49 @@ public class AdminController {
         suKienRepository.save(suKien);
         return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện: " + suKien.getTenSuKien()));
     }
+
+    /**
+     * Lấy danh sách sự kiện đã được phê duyệt (Sắp diễn ra, Đang diễn ra)
+     */
+    @GetMapping("/approved-events")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getApprovedEvents() {
+        // Có thể filter list hoặc lấy tất cả tuỳ logic, đây mình ví dụ lấy "Sắp diễn ra"
+        List<SuKien> approved = suKienRepository.findByTrangThai("Sắp diễn ra");
+        
+        List<Map<String, Object>> result = approved.stream().map(sk -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("maSuKien", sk.getMaSuKien());
+            item.put("tenSuKien", sk.getTenSuKien());
+            item.put("trangThai", sk.getTrangThai());
+            item.put("thoiGianBD", sk.getThoiGianBD());
+            item.put("anhBiaUrl", sk.getAnhBiaUrl());
+            item.put("laSuKienNoiBat", sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1);
+            if (sk.getDiaDiem() != null) {
+                item.put("diaDiem", sk.getDiaDiem().getTenDiaDiem());
+            }
+            return item;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Đặt sự kiện làm nổi bật
+     */
+    @Transactional
+    @PutMapping("/events/{id}/feature")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> setFeaturedEvent(@PathVariable Long id) {
+        SuKien suKien = suKienRepository.findById(id).orElse(null);
+        if (suKien == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+        }
+        
+        suKienRepository.resetTatCaSuKienNoiBat();
+        suKien.setLaSuKienNoiBat(1);
+        suKienRepository.save(suKien);
+        
+        return ResponseEntity.ok(Map.of("message", "Đã đặt làm sự kiện nổi bật: " + suKien.getTenSuKien()));
+    }
 }
