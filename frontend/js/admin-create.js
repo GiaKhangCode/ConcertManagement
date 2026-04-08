@@ -39,13 +39,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Chế độ chỉnh sửa
         document.querySelector('h1').textContent = "CHỈNH SỬA SỰ KIỆN";
         document.title = "Chỉnh sửa Sự Kiện | Ve'ryGood";
-        loadEventData(eventId, token);
+        await loadEventData(eventId, token);
     } else {
         // Chế độ tạo mới
         addLichDien();
         addHangVe();
     }
+
+    // Khởi tạo Flatpickr cho các ô tĩnh
+    initFlatpickr('.dt-picker');
 });
+
+function showMascotMessage(msg, isError = false) {
+    const tooltip = document.getElementById('mascotTooltip');
+    const mascot = document.getElementById('mascotCompanion');
+    if (tooltip) {
+        tooltip.innerText = msg;
+        tooltip.classList.add('show');
+        if (isError) {
+            tooltip.classList.add('error');
+            if(mascot) mascot.style.animation = 'shake 0.5s ease';
+        } else {
+            tooltip.classList.remove('error');
+            if(mascot) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }
+        
+        setTimeout(() => {
+            tooltip.classList.remove('show');
+            if(mascot && isError) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }, 5000);
+    }
+}
+
+function initFlatpickr(selector) {
+    return flatpickr(selector, {
+        enableTime: true,
+        altInput: true,
+        altFormat: "d/m/Y H:i",
+        dateFormat: "Y-m-dTH:i",
+        time_24hr: true,
+        locale: {
+            firstDayOfWeek: 1
+        }
+    });
+}
 
 async function loadEventData(id, token) {
     try {
@@ -83,7 +120,7 @@ async function loadEventData(id, token) {
         }
     } catch (e) {
         alert("Lỗi: " + e.message);
-        window.location.href = "organizer-dashboard.html";
+        window.location.href = "event-management.html";
     }
 }
 
@@ -100,16 +137,21 @@ function addLichDien(data = null) {
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #a0a5b5; margin-bottom:5px; display:block;">Bắt Đầu Lúc</label>
-                    <input type="datetime-local" class="form-input ld-start" required value="${data ? data.thoiGianBatDau : ''}">
+                    <input type="text" class="form-input ld-start dt-picker-dynamic" required placeholder="Ngày/Tháng/Năm H:i" value="${data ? data.thoiGianBatDau : ''}">
+                    <div class="time-hint" style="font-size:0.7rem;">Ngày/Tháng/Năm</div>
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #a0a5b5; margin-bottom:5px; display:block;">Kết Thúc Lúc</label>
-                    <input type="datetime-local" class="form-input ld-end" required value="${data ? data.thoiGianKetThuc : ''}">
+                    <input type="text" class="form-input ld-end dt-picker-dynamic" required placeholder="Ngày/Tháng/Năm H:i" value="${data ? data.thoiGianKetThuc : ''}">
+                    <div class="time-hint" style="font-size:0.7rem;">Ngày/Tháng/Năm</div>
                 </div>
             </div>
         </div>
     `;
     document.getElementById('lichDienContainer').insertAdjacentHTML('beforeend', html);
+    
+    // Khởi tạo Flatpickr cho các ô vừa thêm mới
+    initFlatpickr('.dt-picker-dynamic');
 }
 
 function addHangVe(data = null) {
@@ -140,7 +182,7 @@ function addHangVe(data = null) {
             <div style="margin-top: 25px; padding: 25px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 1px dashed rgba(255, 184, 108, 0.4);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <span style="font-size: 0.95rem; color: #ffb86c; font-family: 'Space Mono', monospace;"><i class="fa fa-map-marker-alt" style="margin-right:10px;"></i>DANH SÁCH KHU VỰC THUỘC HẠNG VÉ (ZONES)</span>
-                    <button type="button" class="btn btn-outline" style="padding: 5px 15px; font-size: 0.75rem; border-color: #ffb86c; color: #ffb86c;" onclick="addKhuVuc('${kvContId}')">+ THÊM KHU VỰC</button>
+                    <button type="button" class="btn btn-outline add-btn-anim" style="padding: 5px 15px; font-size: 0.75rem; border-color: #ffb86c; color: #ffb86c;" onclick="addKhuVuc('${kvContId}')">+ THÊM KHU VỰC</button>
                 </div>
                 <div id="${kvContId}" class="khuvuc-list-wrap"></div>
             </div>
@@ -254,19 +296,19 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         
         if(response.ok) {
             if (isEdit) {
-                alert("✅ Cập nhật Sự kiện Thành công!\n" + (data.message || ''));
-                window.location.href = "organizer-dashboard.html";
+                showMascotMessage("✅ Cập nhật Sự kiện Thành công! " + (data.message || ''));
+                setTimeout(() => window.location.href = "event-management.html", 2500);
             } else {
-                alert(`✅ Khởi tạo Sự kiện Liên hoàn Thành công!\nSự kiện đã được lưu vào Cơ sở dữ liệu. Mã sự kiện sinh ra: [ ${data.eventId} ]`);
-                window.location.href = "index.html"; 
+                showMascotMessage(`✅ Khởi tạo Thành công! Mã sự kiện: [ ${data.eventId} ]`);
+                setTimeout(() => window.location.href = "index.html", 3000); 
             }
         } else {
-            alert("❌ Lỗi: " + (data.message || 'Kiểm tra lại hệ thống'));
+            showMascotMessage("❌ Lỗi: " + (data.message || 'Kiểm tra lại hệ thống'), true);
             submitBtn.disabled = false;
             submitBtn.innerHTML = isEdit ? '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> LƯU THAY ĐỔI' : '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
         }
     } catch(err) {
-        alert("⚠️ Không thể kết nối tới Database. Máy chủ 8081 không phản hồi. Vui lòng kiểm tra lại Backend.");
+        showMascotMessage("⚠️ Không thể kết nối tới Database. Máy chủ 8081 không phản hồi. Vui lòng kiểm tra lại Backend.", true);
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
     }

@@ -78,10 +78,90 @@ document.addEventListener('DOMContentLoaded', async () => {
             tiersContainer.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Sự kiện này chưa cập nhật phân khúc vé.</p>';
         }
         
+        // Xử lý Lịch
+        if (ev.schedules && ev.schedules.length > 0) {
+            initCalendar(ev.schedules, new Date(ev.startDate));
+        } else {
+            document.querySelector('.calendar-card').style.display = 'none';
+        }
+        
     } catch(e) {
+        console.error(e);
         document.getElementById('loading').innerHTML = "<span style='color:red'>Lỗi tải dữ liệu. API Backend cổng 8081 bị mất kết nối!</span>";
     }
 });
+
+function initCalendar(schedules, baseDate) {
+    const tabsContainer = document.getElementById('monthTabs');
+    const startMonth = baseDate.getMonth();
+    const startYear = baseDate.getFullYear();
+    
+    // Tạo 5 tab tháng
+    for (let i = 0; i < 5; i++) {
+        const d = new Date(startYear, startMonth + i, 1);
+        const m = d.getMonth() + 1;
+        const y = d.getFullYear();
+        
+        const count = schedules.filter(s => {
+            const sd = new Date(s.startTime);
+            return sd.getMonth() === d.getMonth() && sd.getFullYear() === d.getFullYear();
+        }).length;
+
+        const tab = document.createElement('div');
+        tab.className = `month-tab ${i === 0 ? 'active' : ''}`;
+        tab.innerHTML = `Th ${m} <span>${count} suất diễn</span>`;
+        tab.onclick = () => {
+            document.querySelectorAll('.month-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderCalendar(d.getMonth(), d.getFullYear(), schedules);
+        };
+        tabsContainer.appendChild(tab);
+    }
+    
+    // Render tháng đầu tiên
+    renderCalendar(startMonth, startYear, schedules);
+}
+
+function renderCalendar(month, year, schedules) {
+    const container = document.getElementById('calendarDays');
+    const title = document.getElementById('currentMonthYear');
+    container.innerHTML = '';
+    
+    const monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+    title.innerText = `${monthNames[month]}, ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay(); // 0: CN, 1: T2...
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Chỉnh sửa firstDay để Thứ 2 là cột đầu tiên (0 -> 6, 1 -> 0, 2 -> 1...)
+    let startingPos = firstDay === 0 ? 6 : firstDay - 1;
+
+    // Các ô trống đầu tháng
+    for (let i = 0; i < startingPos; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'day-cell';
+        container.appendChild(empty);
+    }
+
+    // Các ngày trong tháng
+    for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell current-month';
+        cell.innerText = day < 10 ? '0' + day : day;
+        
+        // Kiểm tra xem ngày này có suất diễn không
+        const hasEvent = schedules.some(s => {
+            const sd = new Date(s.startTime);
+            return sd.getDate() === day && sd.getMonth() === month && sd.getFullYear() === year;
+        });
+
+        if (hasEvent) {
+            cell.classList.add('has-event');
+        }
+
+        container.appendChild(cell);
+    }
+}
 
 // Update Header UI based on Auth JWT Token
 document.addEventListener('DOMContentLoaded', () => {

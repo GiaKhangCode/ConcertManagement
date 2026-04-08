@@ -1,4 +1,5 @@
 com\stellar\backend\entity\TaiKhoan.class
+com\stellar\backend\dto\LichDienDto.class
 com\stellar\backend\controller\OrganizerController.class
 com\stellar\backend\controller\UserController.class
 com\stellar\backend\repository\ViCaNhanRepository.class

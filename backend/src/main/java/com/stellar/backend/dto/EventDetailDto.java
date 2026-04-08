@@ -14,6 +14,7 @@ public class EventDetailDto {
     private String status;
     private String description; // Mô tả sự kiện
     private List<HangVeDto> ticketTiers;
+    private List<LichDienDto> schedules; // Danh sách các suất diễn
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -35,4 +36,6 @@ public class EventDetailDto {
     public void setDescription(String description) { this.description = description; }
     public List<HangVeDto> getTicketTiers() { return ticketTiers; }
     public void setTicketTiers(List<HangVeDto> ticketTiers) { this.ticketTiers = ticketTiers; }
+    public List<LichDienDto> getSchedules() { return schedules; }
+    public void setSchedules(List<LichDienDto> schedules) { this.schedules = schedules; }
 }

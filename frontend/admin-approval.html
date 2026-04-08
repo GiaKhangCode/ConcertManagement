@@ -354,7 +354,7 @@
             </div>
         </div>
         <div class="nav-links">
-            <a href="organizer-dashboard.html">Doanh Thu</a>
+            <a href="event-management.html">Quản lý Sự Kiện</a>
             <a href="index.html">Trang Chủ</a>
             <a href="profile.html" class="btn btn-outline small" id="authBtn">Hồ Sơ</a>
         </div>
@@ -574,6 +574,9 @@
                             <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
                                 📝 Sửa
                             </a>
+                            <button class="action-btn reject" onclick="deleteEvent(${ev.maSuKien})" style="background: rgba(255,0,0,0.1); color: #ff5555; border-color: rgba(255,0,0,0.2);">
+                                🗑️ Xóa
+                            </button>
                         </div>
                         <div class="processed-badge" id="badge-${ev.maSuKien}"></div>
                     </div>
@@ -620,6 +623,43 @@
                 }
             } catch (e) {
                 showToast('Lỗi kết nối. Thử lại sau.', 'error');
+            }
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm("⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA VĨNH VIỄN SỰ KIỆN NÀY?\nToàn bộ dữ liệu Lịch diễn, Hạng vé và Khu vực sẽ bị xóa sạch.")) {
+                return;
+            }
+
+            const token = localStorage.getItem('stellar_token');
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'Đã xóa sự kiện thành công.', 'success');
+                    // Xóa card khỏi UI
+                    const card = document.getElementById(`event-card-${id}`);
+                    if (card) {
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.8)';
+                        setTimeout(() => {
+                            card.remove();
+                            // Cập nhật số lượng
+                            const remaining = document.querySelectorAll('.approval-card:not(.processed)').length;
+                            document.getElementById('pendingCountText').textContent = `${remaining} sự kiện chờ duyệt`;
+                        }, 400);
+                    } else {
+                        // Nếu ở Feature Grid thì reload
+                        loadApprovedEvents(token);
+                    }
+                } else {
+                    showToast(data.message || 'Lỗi khi xóa sự kiện.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối khi xóa sự kiện.', 'error');
             }
         }
 
@@ -724,6 +764,9 @@
                             <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
                                 📝 Sửa
                             </a>
+                            <button class="action-btn reject" onclick="deleteEvent(${ev.maSuKien})" style="background: rgba(255,0,0,0.1); color: #ff5555; border-color: rgba(255,0,0,0.2);">
+                                🗑️ Xóa
+                            </button>
                         </div>
                     </div>
                 `;

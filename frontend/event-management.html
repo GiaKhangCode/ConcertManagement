@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Bảng điều khiển doanh thu dành cho Nhà Tổ Chức sự kiện trên Ve'ryGood.">
-    <title>Ve'ryGood | Doanh Thu Nhà Tổ Chức</title>
+    <meta name="description" content="Quản lý sự kiện và theo dõi doanh thu dành cho Nhà Tổ Chức trên Ve'ryGood.">
+    <title>Ve'ryGood | Quản Lý Sự Kiện</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* === ORGANIZER DASHBOARD STYLES === */
+        /* === EVENT MANAGEMENT STYLES === */
         .dashboard-hero {
-            background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(0, 229, 255, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1) 0%, rgba(138, 43, 226, 0.08) 100%);
             border: 1px solid var(--border-subtle);
             border-radius: 24px;
             padding: 3rem;
@@ -28,7 +28,7 @@
             right: -20%;
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(138, 43, 226, 0.2), transparent 70%);
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.15), transparent 70%);
             border-radius: 50%;
             animation: drift 25s infinite alternate ease-in-out;
         }
@@ -114,7 +114,7 @@
         .stat-value.glow-purple { color: #c864ff; text-shadow: 0 0 20px rgba(200, 100, 255, 0.3); }
         .stat-value.glow-cyan { color: #00e5ff; text-shadow: 0 0 20px rgba(0, 229, 255, 0.3); }
 
-        /* === REVENUE TABLE === */
+        /* === MANAGEMENT TABLE === */
         .revenue-section {
             margin-bottom: 4rem;
         }
@@ -349,8 +349,8 @@
     <main class="container">
         <!-- Dashboard Hero -->
         <section class="dashboard-hero fade-up">
-            <h1>📊 Bảng Điều Khiển <span class="neon-text">Doanh Thu</span></h1>
-            <p>Tổng hợp dữ liệu bán vé từ tất cả sự kiện bạn đã tổ chức trên Ve'ryGood.</p>
+            <h1>🎪 Quản Lý <span class="neon-text">Sự Kiện</span> & Doanh Thu</h1>
+            <p>Theo dõi trạng thái, chỉnh sửa thông tin và quản lý doanh thu từ tất cả sự kiện bạn đã tổ chức trên Ve'ryGood.</p>
         </section>
 
         <!-- Stats Cards -->
@@ -380,9 +380,9 @@
             </div>
         </div>
 
-        <!-- Revenue Table -->
+        <!-- Management Table -->
         <section class="revenue-section fade-up">
-            <h2>Chi Tiết Từng Sự Kiện</h2>
+            <h2>Danh Sách Sự Kiện</h2>
             <div class="revenue-table-wrapper">
                 <table class="revenue-table">
                     <thead>
@@ -437,13 +437,12 @@
                 return;
             }
 
-            // Kích hoạt hiệu ứng fade-up cho các section (trang này không dùng script.js chung)
+            // Kích hoạt hiệu ứng fade-up cho các section
             initScrollReveal();
 
             loadRevenue(token);
         });
 
-        // Scroll Reveal Animation — cần thiết vì trang này không import script.js
         function initScrollReveal() {
             const revealEls = document.querySelectorAll('.fade-up');
             const observer = new IntersectionObserver((entries) => {
@@ -473,7 +472,7 @@
                 const data = await res.json();
                 renderDashboard(data);
             } catch (e) {
-                console.error('Lỗi tải doanh thu:', e);
+                console.error('Lỗi tải dữ liệu:', e);
                 document.getElementById('revenueTableBody').innerHTML = `
                     <tr><td colspan="5">
                         <div class="empty-state">
@@ -514,7 +513,6 @@
                 return;
             }
 
-            // Tìm doanh thu cao nhất để scale biểu đồ
             const maxRevenue = Math.max(...data.chiTietSuKien.map(e => Number(e.doanhThu) || 0), 1);
 
             barChart.innerHTML = '';
@@ -530,7 +528,6 @@
                 `;
                 barChart.appendChild(barItem);
 
-                // Animate bars
                 setTimeout(() => {
                     barItem.querySelector('.bar').style.height = height + 'px';
                 }, 100 + idx * 150);
@@ -557,13 +554,42 @@
                     <td>${ev.soVeBan}</td>
                     <td><span class="revenue-amount">${revenue.toLocaleString('vi-VN')}đ</span></td>
                     <td>
-                        <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: var(--accent-secondary); color: var(--accent-secondary);">
-                            <i class="fa fa-edit"></i> Sửa
-                        </a>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                                <i class="fa fa-edit"></i> Sửa
+                            </a>
+                            ${JSON.parse(localStorage.getItem('stellar_roles') || '[]').includes('ROLE_ADMIN') ? `
+                            <button onclick="deleteEvent(${ev.maSuKien})" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff3366; color: #ff3366;">
+                                <i class="fa fa-trash"></i> Xóa
+                            </button>` : ''}
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm("⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA VĨNH VIỄN SỰ KIỆN NÀY?\nHành động này không thể hoàn tác.")) {
+                return;
+            }
+
+            const token = localStorage.getItem('stellar_token');
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Đã xóa sự kiện thành công.');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Lỗi khi xóa sự kiện.');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối khi xóa sự kiện.');
+            }
         }
     </script>
 </body>

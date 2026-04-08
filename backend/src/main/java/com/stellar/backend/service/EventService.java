@@ -5,6 +5,8 @@ import com.stellar.backend.entity.SuKien;
 import com.stellar.backend.dto.EventDetailDto;
 import com.stellar.backend.dto.EventResponseDto;
 import com.stellar.backend.dto.HangVeDto;
+import com.stellar.backend.dto.LichDienDto;
+import com.stellar.backend.repository.LichDienRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +27,12 @@ public class EventService {
     );
 
     private final SuKienRepository suKienRepository;
+    private final LichDienRepository lichDienRepository;
 
     // Constructor Injection instead of @RequiredArgsConstructor
-    public EventService(SuKienRepository suKienRepository) {
+    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository) {
         this.suKienRepository = suKienRepository;
+        this.lichDienRepository = lichDienRepository;
     }
 
     @Transactional(readOnly = true)
@@ -115,6 +119,17 @@ public class EventService {
             }).collect(Collectors.toList());
             dto.setTicketTiers(tiers);
         }
+
+        // Map danh sách Suất Diễn (Lịch Diễn)
+        dto.setSchedules(lichDienRepository.findBySuKien_MaSuKien(id).stream()
+            .map(ld -> new LichDienDto(
+                ld.getMaLichDien(),
+                ld.getTenLichDien(),
+                ld.getThoiGianBatDau(),
+                ld.getThoiGianKetThuc(),
+                ld.getTrangThaiLichDien()
+            )).collect(Collectors.toList()));
+
         return dto;
     }
 }
