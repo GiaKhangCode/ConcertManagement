@@ -45,6 +45,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('eventStatus').innerText = ev.status;
         document.getElementById('eventPoster').src = ev.image;
         
+        // Hiển thị mô tả
+        const descEl = document.getElementById('eventDescription');
+        if (ev.description && ev.description.trim() !== "") {
+            descEl.innerText = ev.description;
+        } else {
+            descEl.innerHTML = `
+                <p>Vượt qua mọi giới hạn của không gian và thời gian, sân khấu Live mang đến những màn trình diễn bùng nổ cùng công nghệ thiết kế ánh sáng tân tiến nhất. Chúng tôi kiến tạo nên một vũ trụ trải nghiệm đa giác quan, nơi bạn có thể chạm vào âm ba và nhìn thấy từng nhịp đập của cảm xúc.</p>
+                <p style="margin-top:20px;">Hãy cùng hàng ngàn khán giả khác hòa mình vào không khí cuồng nhiệt này và lưu giữ những kí ức phi thường. Hệ thống vé điện tử của chúng tôi đảm bảo chỗ ngồi có hạn luôn được bảo mật tuyệt vời. Chốt vé ngay để giành lấy tấm vé thông hành của bạn nhé!</p>
+            `;
+        }
+        
         const tiersContainer = document.getElementById('ticketTiersContainer');
         if(ev.ticketTiers && ev.ticketTiers.length > 0) {
             ev.ticketTiers.forEach(t => {

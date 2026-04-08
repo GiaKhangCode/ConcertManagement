@@ -23,6 +23,9 @@ public class HangVe {
     @Column(name = "TongSoLuong")
     private Integer tongSoLuong;
 
+    @OneToMany(mappedBy = "hangVe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<KhuVuc> khuVucList;
+
     // Getters and Setters
     public Long getMaHangVe() { return maHangVe; }
     public void setMaHangVe(Long maHangVe) { this.maHangVe = maHangVe; }
@@ -38,4 +41,7 @@ public class HangVe {
 
     public Integer getTongSoLuong() { return tongSoLuong; }
     public void setTongSoLuong(Integer tongSoLuong) { this.tongSoLuong = tongSoLuong; }
+
+    public java.util.List<KhuVuc> getKhuVucList() { return khuVucList; }
+    public void setKhuVucList(java.util.List<KhuVuc> khuVucList) { this.khuVucList = khuVucList; }
 }

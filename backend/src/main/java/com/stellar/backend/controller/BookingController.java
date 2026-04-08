@@ -11,11 +11,14 @@ import com.stellar.backend.repository.HangVeRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.TaiKhoanRepository;
 import com.stellar.backend.repository.VeRepository;
+import com.stellar.backend.repository.ViCaNhanRepository;
 import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import com.stellar.backend.entity.ViCaNhan;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -43,6 +46,10 @@ public class BookingController {
     @Autowired
     private TaiKhoanRepository taiKhoanRepository;
 
+    @Autowired
+    private ViCaNhanRepository viCaNhanRepository;
+
+    @Transactional
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(@RequestBody BookingRequestDto request) {
         // Lấy thông tin tài khoản đang login thông qua JWT Filter
@@ -59,14 +66,28 @@ public class BookingController {
         // Tính tiền dựa theo giá DB
         BigDecimal tongTien = hangVe.getGiaNiemYet().multiply(BigDecimal.valueOf(request.getSoLuong()));
 
+        // --- BẮT ĐẦU THANH TOÁN QUA VÍ ---
+        ViCaNhan vi = viCaNhanRepository.findByTaiKhoan_MaTaiKhoan(taiKhoan.getMaTaiKhoan())
+            .orElseThrow(() -> new RuntimeException("Người dùng chưa có ví cá nhân!"));
+
+        if (vi.getSoDu().compareTo(tongTien) < 0) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Số dư ví không đủ để thanh toán (" + tongTien + " VNĐ). Vui lòng nạp thêm!");
+            return ResponseEntity.badRequest().body(error);
+        }
+
+        // Trừ tiền
+        vi.setSoDu(vi.getSoDu().subtract(tongTien));
+        viCaNhanRepository.save(vi);
+        // --- KẾT THÚC THANH TOÁN ---
+
         // Khởi tạo một Đơn Mua
         DonMua donMua = new DonMua();
         donMua.setTaiKhoan(taiKhoan);
         donMua.setSuKien(suKien);
         donMua.setTongTien(tongTien);
-        // Giả sử tiền đã trừ tự động qua liên kết Ví (Stellar Pay)
         donMua.setTrangThaiThanhToan("Đã thanh toán"); 
-        donMua.setPhuongThucThanhToan("Stellar Pay");
+        donMua.setPhuongThucThanhToan("Ví cá nhân (Ve'ryGood Pay)");
         donMua = donMuaRepository.save(donMua);
 
         // Khởi tạo hàng loạt các dòng dữ liệu VÉ thật phụ thuộc vào số lượng

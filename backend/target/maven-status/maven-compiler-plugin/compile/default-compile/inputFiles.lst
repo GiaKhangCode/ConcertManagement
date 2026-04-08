@@ -28,6 +28,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\HangVe.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DiaDiemRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\JwtResponse.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\RevenueResponseDto.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\KhuVucDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\LoginRequest.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DonMuaRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\security\SecurityConfig.java

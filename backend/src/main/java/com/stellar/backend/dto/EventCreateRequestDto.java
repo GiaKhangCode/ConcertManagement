@@ -12,7 +12,8 @@ public class EventCreateRequestDto {
     private LocalDateTime thoiGianNgungBanVe;
     private String anhBiaUrl;
     private String phanLoai;
-    
+    private String moTa; // Mô tả sự kiện
+
     private List<LichDienDto> lichDienList;
     private List<HangVeDto> hangVeList;
 
@@ -32,6 +33,8 @@ public class EventCreateRequestDto {
     public void setAnhBiaUrl(String anhBiaUrl) { this.anhBiaUrl = anhBiaUrl; }
     public String getPhanLoai() { return phanLoai; }
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }
+    public String getMoTa() { return moTa; }
+    public void setMoTa(String moTa) { this.moTa = moTa; }
     public List<LichDienDto> getLichDienList() { return lichDienList; }
     public void setLichDienList(List<LichDienDto> lichDienList) { this.lichDienList = lichDienList; }
     public List<HangVeDto> getHangVeList() { return hangVeList; }

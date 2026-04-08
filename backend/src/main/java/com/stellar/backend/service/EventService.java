@@ -13,8 +13,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Danh sách trạng thái được phép hiển thị công khai cho khách hàng
+// (các sự kiện "Chờ phê duyệt" và "Bị từ chối" sẽ KHÔNG được hiển thị)
+
 @Service
 public class EventService {
+
+    // Chỉ hiển thị sự kiện đã được Admin phê duyệt cho khách hàng
+    private static final List<String> TRANG_THAI_HIEN_THI = List.of(
+            "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc"
+    );
+
     private final SuKienRepository suKienRepository;
 
     // Constructor Injection instead of @RequiredArgsConstructor
@@ -24,12 +33,15 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventResponseDto> getAllEvents() {
-        return suKienRepository.findAll().stream().map(this::mapToEventResponseDto).collect(Collectors.toList());
+        // Chỉ trả về sự kiện đã được phê duyệt — khách hàng KHÔNG thấy sự kiện chờ duyệt
+        return suKienRepository.findByTrangThaiIn(TRANG_THAI_HIEN_THI)
+                .stream().map(this::mapToEventResponseDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<EventResponseDto> searchEvents(String keyword) {
-        return suKienRepository.findByTenSuKienContainingIgnoreCaseOrDiaDiem_TenDiaDiemContainingIgnoreCase(keyword, keyword)
+        // Tìm kiếm cũng chỉ trả về sự kiện đã được phê duyệt
+        return suKienRepository.searchByKeywordAndTrangThaiIn(keyword, TRANG_THAI_HIEN_THI)
                 .stream().map(this::mapToEventResponseDto).collect(Collectors.toList());
     }
 
@@ -73,6 +85,7 @@ public class EventService {
         dto.setStartDate(sk.getThoiGianBD());
         dto.setEndDate(sk.getThoiGianKT());
         dto.setStatus(sk.getTrangThai());
+        dto.setDescription(sk.getMoTa()); // Truyền mô tả xuống frontend
         
         if (sk.getDanhSachHangVe() != null) {
             List<HangVeDto> tiers = sk.getDanhSachHangVe().stream().map(hv -> {
@@ -80,6 +93,14 @@ public class EventService {
                 hDto.setId(hv.getMaHangVe());
                 hDto.setName(hv.getTenHangVe());
                 hDto.setPrice(hv.getGiaNiemYet());
+                
+                // Map từng khu vực của hạng vé này
+                if (hv.getKhuVucList() != null) {
+                    List<com.stellar.backend.dto.KhuVucDto> kvList = hv.getKhuVucList().stream()
+                        .map(kv -> new com.stellar.backend.dto.KhuVucDto(kv.getTenKhuVuc(), kv.getSucChuaKv()))
+                        .collect(Collectors.toList());
+                    hDto.setKhuVucList(kvList);
+                }
                 return hDto;
             }).collect(Collectors.toList());
             dto.setTicketTiers(tiers);

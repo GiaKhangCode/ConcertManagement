@@ -8,6 +8,6 @@ public class StellarPortalBackendApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(StellarPortalBackendApplication.class, args);
-        System.out.println("--------- STELLAR PORTAL BACKEND STARTED ---------");
+        System.out.println("--------- Ve'ryGood BACKEND STARTED ---------");
     }
 }

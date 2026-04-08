@@ -67,6 +67,7 @@ public class AdminController {
             suKien.setThoiGianNgungBanVe(request.getThoiGianNgungBanVe());
             suKien.setAnhBiaUrl(request.getAnhBiaUrl());
             suKien.setPhanLoai(request.getPhanLoai());
+            suKien.setMoTa(request.getMoTa()); // Lưu mô tả sự kiện
             suKien.setTrangThai("Chờ phê duyệt");
             suKien.setNguoiTao(nguoiTao); // Gán nhà tổ chức
 
@@ -136,6 +137,7 @@ public class AdminController {
             item.put("thoiGianKT", sk.getThoiGianKT());
             item.put("anhBiaUrl", sk.getAnhBiaUrl());
             item.put("phanLoai", sk.getPhanLoai());
+            item.put("moTa", sk.getMoTa()); // Gửi mô tả lên để Admin xem xét
             if (sk.getDiaDiem() != null) {
                 item.put("diaDiem", sk.getDiaDiem().getTenDiaDiem());
             }

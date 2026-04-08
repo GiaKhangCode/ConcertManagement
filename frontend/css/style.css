@@ -226,16 +226,6 @@ h1, h2, h3, h4, .logo {
     transform: rotateY(-15deg) rotateX(5deg);
 }
 
-.holo-text {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 4rem;
-    font-weight: 800;
-    color: rgba(255,255,255,0.9);
-    text-shadow: 0 0 20px #fff;
-    mix-blend-mode: overlay;
-    transform: translateZ(50px);
-}
-
 /* Category Filters */
 .filters-section { margin-bottom: 3rem; }
 .categories {
@@ -276,10 +266,113 @@ h1, h2, h3, h4, .logo {
     width: 40px; height: 3px; background: var(--accent-secondary);
 }
 
+/* Event Grid Carousel */
+.carousel-wrapper {
+    position: relative;
+    padding: 2px;
+    border-radius: 24px;
+    margin: 2rem 0;
+    background: var(--bg-dark);
+    z-index: 1;
+}
+
+.carousel-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 24px;
+    background: conic-gradient(from var(--border-angle), 
+                               transparent 80%, 
+                               var(--accent-secondary) 88%, 
+                               #fff 95%, 
+                               var(--accent-secondary) 98%,
+                               transparent 100%);
+    animation: border-beam-rotate 3s linear infinite;
+    z-index: -1;
+    filter: blur(2px);
+}
+
+.carousel-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 26px;
+    background: conic-gradient(from var(--border-angle), 
+                               transparent 80%, 
+                               var(--accent-secondary) 88%, 
+                               #fff 95%, 
+                               var(--accent-secondary) 98%,
+                               transparent 100%);
+    animation: border-beam-rotate 3s linear infinite;
+    z-index: -1;
+    filter: blur(15px);
+    opacity: 0.8;
+}
+
+.carousel-track {
+    width: 100%;
+    overflow: hidden;
+    padding: 3rem 1rem;
+    position: relative;
+    background: var(--bg-dark);
+    border-radius: 22px;
+}
+
+.carousel-track::before,
+.carousel-track::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 120px;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.carousel-track::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-dark) 30%, transparent 100%);
+}
+
+.carousel-track::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-dark) 30%, transparent 100%);
+}
+
+@property --border-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes border-beam-rotate {
+    from { --border-angle: 0deg; }
+    to { --border-angle: 360deg; }
+}
+
+/* Remove old beam elements */
+.border-beam { display: none; }
+
 .event-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    display: flex;
     gap: 2rem;
+    width: max-content;
+    animation: scroll-left 60s linear infinite;
+}
+
+.static-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.event-grid:hover {
+    animation-play-state: paused;
+}
+
+.event-grid .event-card {
+    flex: 0 0 320px;
 }
 
 .event-card {
@@ -291,6 +384,11 @@ h1, h2, h3, h4, .logo {
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     backdrop-filter: blur(10px);
+}
+
+@keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 .event-card:hover {
@@ -376,12 +474,20 @@ footer { border-top: 1px solid var(--border-subtle); padding: 4rem 4% 2rem; back
 .copyright { text-align: center; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-subtle); padding-top: 2rem; }
 
 /* Animations */
-.fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 0.6s ease forwards; }
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
+.fade-up { 
+    opacity: 0; 
+    transform: translateY(30px); 
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+.fade-up.visible { 
+    opacity: 1; 
+    transform: translateY(0); 
+}
+
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.2s; }
+.stagger-3 { transition-delay: 0.3s; }
 
 /* Mascot Companion */
 .mascot-companion {

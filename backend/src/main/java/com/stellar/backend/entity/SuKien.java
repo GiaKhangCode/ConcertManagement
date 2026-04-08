@@ -46,6 +46,9 @@ public class SuKien {
     @Column(name = "PhanLoai")
     private String phanLoai;
 
+    @Column(name = "MoTa", columnDefinition = "CLOB")
+    private String moTa;
+
     @Column(name = "LaSuKienNoiBat")
     private Integer laSuKienNoiBat = 0;
 
@@ -85,6 +88,9 @@ public class SuKien {
 
     public String getPhanLoai() { return phanLoai; }
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }
+
+    public String getMoTa() { return moTa; }
+    public void setMoTa(String moTa) { this.moTa = moTa; }
 
     public Integer getLaSuKienNoiBat() { return laSuKienNoiBat; }
     public void setLaSuKienNoiBat(Integer laSuKienNoiBat) { this.laSuKienNoiBat = laSuKienNoiBat; }

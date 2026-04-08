@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -436,8 +436,26 @@
                 return;
             }
 
+            // Kích hoạt hiệu ứng fade-up cho các section (trang này không dùng script.js chung)
+            initScrollReveal();
+
             loadRevenue(token);
         });
+
+        // Scroll Reveal Animation — cần thiết vì trang này không import script.js
+        function initScrollReveal() {
+            const revealEls = document.querySelectorAll('.fade-up');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+            revealEls.forEach(el => observer.observe(el));
+        }
+
 
         async function loadRevenue(token) {
             try {

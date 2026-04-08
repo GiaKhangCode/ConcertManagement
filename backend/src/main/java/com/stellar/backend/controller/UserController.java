@@ -56,6 +56,32 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/wallet/topup")
+    public ResponseEntity<?> topUpWallet(@RequestBody java.util.Map<String, Object> request) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        java.math.BigDecimal amount = new java.math.BigDecimal(request.get("amount").toString());
+        if (amount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Số tiền nạp phải lớn hơn 0!"));
+        }
+
+        ViCaNhan vi = viCaNhanRepository.findByTaiKhoan_MaTaiKhoan(userDetails.getId())
+            .orElseGet(() -> {
+                ViCaNhan newVi = new ViCaNhan();
+                newVi.setTaiKhoan(taiKhoanRepository.findById(userDetails.getId()).get());
+                newVi.setSoDu(java.math.BigDecimal.ZERO);
+                return newVi;
+            });
+
+        vi.setSoDu(vi.getSoDu().add(amount));
+        viCaNhanRepository.save(vi);
+
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Nạp tiền thành công!",
+            "newBalance", vi.getSoDu()
+        ));
+    }
+
     @GetMapping("/tickets")
     public ResponseEntity<?> getUserTickets() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

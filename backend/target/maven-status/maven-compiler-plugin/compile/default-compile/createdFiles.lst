@@ -33,6 +33,7 @@ com\stellar\backend\repository\NhomQuyenRepository.class
 com\stellar\backend\repository\SuKienRepository.class
 com\stellar\backend\dto\EventCreateRequestDto$LichDienDto.class
 com\stellar\backend\entity\DiaDiem.class
+com\stellar\backend\dto\KhuVucDto.class
 com\stellar\backend\dto\RevenueResponseDto$EventRevenueDetail.class
 com\stellar\backend\controller\AdminController.class
 com\stellar\backend\entity\ViCaNhan.class

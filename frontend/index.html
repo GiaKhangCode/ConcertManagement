@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div class="custom-cursor"></div>
@@ -16,7 +17,7 @@
     <!-- Background Effects -->
     <div class="bg-mesh primary-mesh"></div>
     <div class="bg-mesh secondary-mesh"></div>
-
+ 
     <header class="navbar">
         <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
         <div class="nav-center">
@@ -33,10 +34,10 @@
             <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
     </header>
-
+ 
     <main class="container">
         <!-- Featured Carousel Hero -->
-        <section class="featured-hero">
+        <section class="featured-hero fade-up">
             <div class="feature-content">
                 <span class="badge fade-up">SỰ KIỆN NỔI BẬT</span>
                 <h1 class="fade-up stagger-1">THE ERAS TOUR <br>TRẢI NGHIỆM ĐA CHIỀU</h1>
@@ -54,11 +55,10 @@
             <div class="feature-visual" id="heroVisual">
                 <div class="hologram-card">
                     <div class="noise-overlay"></div>
-                    <div class="holo-text">T - T O U R</div>
                 </div>
             </div>
         </section>
-
+ 
         <!-- Category Filters -->
         <section class="filters-section fade-up stagger-2">
             <div class="categories" id="categories">
@@ -69,12 +69,14 @@
                 <button class="cat-pill" data-filter="sport">Thể Thao</button>
             </div>
         </section>
-
+ 
         <!-- Event Grid -->
-        <section class="events-section">
+        <section class="events-section fade-up">
             <h2 class="section-title">Đang Thịnh Hành</h2>
             
-            <div class="event-grid" id="eventGrid">
+            <div class="carousel-wrapper">
+                <div class="carousel-track">
+                    <div class="event-grid" id="eventGrid">
                 
                 <!-- Event Card 1 -->
                 <article class="event-card fade-up stagger-1" data-category="music">
@@ -93,7 +95,7 @@
                         </div>
                     </div>
                 </article>
-
+ 
                 <!-- Event Card 2 -->
                 <article class="event-card fade-up stagger-2" data-category="workshop">
                     <div class="card-image bg-2">
@@ -111,7 +113,7 @@
                         </div>
                     </div>
                 </article>
-
+ 
                 <!-- Event Card 3 -->
                 <article class="event-card fade-up stagger-3" data-category="theater">
                     <div class="card-image bg-3">
@@ -129,7 +131,7 @@
                         </div>
                     </div>
                 </article>
-
+ 
                 <!-- Event Card 4 -->
                 <article class="event-card fade-up stagger-3" data-category="music">
                     <div class="card-image bg-4">
@@ -147,7 +149,7 @@
                         </div>
                     </div>
                 </article>
-
+ 
                 <!-- Event Card 5 -->
                 <article class="event-card fade-up stagger-3" data-category="sport">
                     <div class="card-image bg-5">
@@ -165,7 +167,7 @@
                         </div>
                     </div>
                 </article>
-
+ 
                 <!-- Event Card 6 -->
                 <article class="event-card fade-up stagger-3" data-category="workshop">
                     <div class="card-image bg-6">
@@ -183,12 +185,144 @@
                         </div>
                     </div>
                 </article>
-
+ 
+                </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
 
-    <footer>
+    <!-- Music Section -->
+    <section class="events-section fade-up">
+        <h2 class="section-title">Âm Nhạc</h2>
+        <div class="static-grid" id="musicGrid">
+            <!-- Event Card 1 -->
+            <article class="event-card" data-category="music">
+                <div class="card-image bg-1">
+                    <div class="status-badge live">Đang Bán</div>
+                </div>
+                <div class="card-body">
+                    <h3>Đêm Nhạc: Giao Lộ Thời Gian</h3>
+                    <div class="event-info">
+                        <span class="date">15 Thg 10, 2026</span>
+                        <span class="location">Nhà Hát Lớn, HN</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>500.000đ</span></div>
+                        <button class="buy-btn">Mua</button>
+                    </div>
+                </div>
+            </article>
+            <!-- Event Card 4 -->
+            <article class="event-card" data-category="music">
+                <div class="card-image bg-4">
+                    <div class="status-badge live">Đang Bán</div>
+                </div>
+                <div class="card-body">
+                    <h3>Indie Night: Chìm Sâu</h3>
+                    <div class="event-info">
+                        <span class="date">10 Thg 10, 2026</span>
+                        <span class="location">Complex 01, HN</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>250.000đ</span></div>
+                        <button class="buy-btn">Mua</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Theater & Arts Section -->
+    <section class="events-section fade-up">
+        <h2 class="section-title">Sân Khấu & Nghệ Thuật</h2>
+        <div class="static-grid" id="theaterGrid">
+            <!-- Event Card 3 -->
+            <article class="event-card" data-category="theater">
+                <div class="card-image bg-3">
+                    <div class="status-badge soon">Sắp Mở Bán</div>
+                </div>
+                <div class="card-body">
+                    <h3>Hành Trình Giác Quan - Kịch Nói</h3>
+                    <div class="event-info">
+                        <span class="date">05 Thg 12, 2026</span>
+                        <span class="location">Sân khấu Idecaf, HCM</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>350.000đ</span></div>
+                        <button class="buy-btn outline">Nhận Thông Báo</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Workshop Section -->
+    <section class="events-section fade-up">
+        <h2 class="section-title">Workshop & Hội Thảo</h2>
+        <div class="static-grid" id="workshopGrid">
+            <!-- Event Card 2 -->
+            <article class="event-card" data-category="workshop">
+                <div class="card-image bg-2">
+                    <div class="status-badge alert">Sắp Hết</div>
+                </div>
+                <div class="card-body">
+                    <h3>Tech Summit: AI & Tương Lai</h3>
+                    <div class="event-info">
+                        <span class="date">22 Thg 11, 2026</span>
+                        <span class="location">Trung tâm Triển lãm SECC, HCM</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>1.200.000đ</span></div>
+                        <button class="buy-btn">Mua</button>
+                    </div>
+                </div>
+            </article>
+            <!-- Event Card 6 -->
+            <article class="event-card" data-category="workshop">
+                <div class="card-image bg-6">
+                    <div class="status-badge live">Đang Bán</div>
+                </div>
+                <div class="card-body">
+                    <h3>Workshop Gốm Sứ Chữa Lành</h3>
+                    <div class="event-info">
+                        <span class="date">Cuối tuần</span>
+                        <span class="location">Noir Studio, Đà Nẵng</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>600.000đ</span></div>
+                        <button class="buy-btn">Mua</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Sport Section -->
+    <section class="events-section fade-up">
+        <h2 class="section-title">Thể Thao</h2>
+        <div class="static-grid" id="sportGrid">
+            <!-- Event Card 5 -->
+            <article class="event-card" data-category="sport">
+                <div class="card-image bg-5">
+                    <div class="status-badge alert">Sắp Hết</div>
+                </div>
+                <div class="card-body">
+                    <h3>Giải Võ Thuật Tổng Hợp LION C10</h3>
+                    <div class="event-info">
+                        <span class="date">18 Thg 11, 2026</span>
+                        <span class="location">Cung Thể thao Quần Ngựa, HN</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price">Từ <span>400.000đ</span></div>
+                        <button class="buy-btn">Mua</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+    </main>
+ 
+    <footer class="fade-up">
         <div class="footer-content">
             <div class="footer-col">
                 <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
@@ -209,13 +343,13 @@
         </div>
         <div class="copyright">© 2026 Ve'ryGood. All rights reserved.</div>
     </footer>
-
+ 
     <!-- Mascot Companion -->
     <div class="mascot-companion" id="mascotCompanion">
         <div class="mascot-tooltip">Hi! Cần gợi ý sự kiện Hot?</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
-
+ 
     <script src="js/script.js"></script>
 </body>
 </html>

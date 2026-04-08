@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -184,7 +184,7 @@
             font-weight: 600;
             font-size: 0.85rem;
             border: none;
-            cursor: none;
+            cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
@@ -325,6 +325,17 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 768px) {
             .approval-grid { grid-template-columns: 1fr; }
         }
@@ -435,9 +446,27 @@
                 return;
             }
 
+            // Kích hoạt hiệu ứng fade-up cho các section (vì trang này không dùng script.js chung)
+            initScrollReveal();
+
             loadPendingEvents(token);
             loadApprovedEvents(token);
         });
+
+        // Scroll Reveal Animation — cần thiết vì trang này không import script.js
+        function initScrollReveal() {
+            const revealEls = document.querySelectorAll('.fade-up');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+            revealEls.forEach(el => observer.observe(el));
+        }
+
 
         async function loadPendingEvents(token) {
             const grid = document.getElementById('approvalGrid');
@@ -452,6 +481,19 @@
                     return;
                 }
 
+                if (!res.ok) {
+                    let errMsg = `Lỗi server (${res.status})`;
+                    try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(_) {}
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <div class="empty-icon">⚠️</div>
+                            <h3>Lỗi tải dữ liệu</h3>
+                            <p>${errMsg}</p>
+                        </div>`;
+                    document.getElementById('pendingCountText').textContent = 'Không thể tải';
+                    return;
+                }
+
                 const events = await res.json();
                 renderPendingEvents(events);
             } catch (e) {
@@ -462,6 +504,7 @@
                         <h3>Không thể kết nối Backend</h3>
                         <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
                     </div>`;
+                document.getElementById('pendingCountText').textContent = 'Không thể tải';
             }
         }
 
@@ -504,6 +547,9 @@
                             <span><span class="icon">📅</span> ${dateStr}</span>
                             <span><span class="icon">📍</span> ${ev.diaDiem || 'Chưa cập nhật'}</span>
                             <span><span class="icon">🏷️</span> ${ev.phanLoai || 'Chưa phân loại'}</span>
+                        </div>
+                        <div style="margin-bottom: 1.2rem; font-size: 0.85rem; color: #a0a5b5; line-height: 1.5; max-height: 80px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; white-space: pre-wrap;">
+                            ${ev.moTa ? ev.moTa : '<i style="opacity:0.5">Không có mô tả.</i>'}
                         </div>
                         ${ev.nguoiTao ? `<div class="organizer-tag">👤 ${ev.nguoiTao}</div>` : ''}
                         <div class="card-actions">
@@ -588,11 +634,36 @@
                 const res = await fetch('http://localhost:8081/api/admin/approved-events', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                if (!res.ok) return;
+
+                if (res.status === 403 || res.status === 401) {
+                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-icon">🔒</div>
+                        <h3>Không có quyền truy cập</h3>
+                    </div>`;
+                    return;
+                }
+
+                if (!res.ok) {
+                    let errMsg = `Lỗi server (${res.status})`;
+                    try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(_) {}
+                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-icon">⚠️</div>
+                        <h3>Lỗi tải danh sách</h3>
+                        <p>${errMsg}</p>
+                    </div>`;
+                    return;
+                }
+
                 const events = await res.json();
                 renderApprovedEvents(events);
             } catch (e) {
                 console.error('Lỗi tải sự kiện đã phê duyệt:', e);
+                // Hiển thị empty state thay vì để spinner bị treo mãi
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
+                    <div class="empty-icon">⚠️</div>
+                    <h3>Không thể kết nối Backend</h3>
+                    <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
+                </div>`;
             }
         }
 

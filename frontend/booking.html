@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -77,25 +77,30 @@
             text-align: center;
             font-size: 0.9rem;
             color: #a0a5b5;
+            transition: all 0.3s;
         }
         
         .zone-card.selected {
             border-color: var(--primary-cyan);
             background: rgba(0, 243, 255, 0.1);
             color: var(--primary-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
         }
 
         /* Khu form booking */
         .booking-details {
             padding: 40px;
+            display: flex;
+            flex-direction: column;
         }
 
         .booking-title {
             font-family: 'Unbounded', sans-serif;
             font-size: 1.8rem;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             background: linear-gradient(90deg, #fff, var(--primary-cyan));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -108,80 +113,60 @@
             font-size: 0.85rem;
             color: #eab8ff;
             margin-bottom: 30px;
+            width: fit-content;
         }
 
-        .form-group {
-            margin-bottom: 25px;
+        .booking-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            color: #a0a5b5;
+        .booking-box h3 {
             font-size: 0.9rem;
+            color: #a0a5b5;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .zone-select {
+        .form-input {
             width: 100%;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border-radius: 10px;
             font-family: inherit;
             outline: none;
-            cursor: pointer;
-            appearance: none;
-        }
-        
-        .zone-select option {
-            background: #141928;
-            color: white;
+            transition: border-color 0.3s;
         }
 
-        .qty-controls {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            overflow: hidden;
-            width: fit-content;
+        .form-input:focus {
+            border-color: var(--primary-cyan);
         }
 
-        .qty-btn {
-            background: transparent;
-            border: none;
-            color: #fff;
-            width: 50px;
-            height: 50px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .qty-btn:hover { background: rgba(0, 243, 255, 0.2); }
-
-        .qty-input {
-            width: 60px;
-            height: 50px;
-            background: transparent;
-            border: none;
-            color: var(--primary-cyan);
-            text-align: center;
-            font-size: 1.2rem;
-            font-family: 'Space Mono', monospace;
-            font-weight: bold;
-            outline: none;
-        }
-
-        .price-total {
-            font-family: 'Unbounded', sans-serif;
-            font-size: 1.5rem;
-            color: var(--primary-cyan);
-            margin: 30px 0;
+        .price-total-box {
+            margin-top: auto;
             padding-top: 20px;
             border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .price-total-label {
+            color: #a0a5b5;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .price-total-value {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary-cyan);
         }
 
         .checkout-btn {
@@ -196,11 +181,21 @@
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .checkout-btn:hover {
+        .checkout-btn:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(0, 243, 255, 0.4);
+        }
+
+        .checkout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .back-home {
@@ -218,8 +213,19 @@
         
         .back-home:hover { color: var(--primary-cyan); }
 
-        @media (max-width: 800px) {
-            .booking-page-container { grid-template-columns: 1fr; }
+        .wallet-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 850px) {
+            .booking-page-container { grid-template-columns: 1fr; max-height: none; }
             .stage-map { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
         }
     </style>
@@ -229,130 +235,189 @@
     <div class="bg-mesh primary-mesh"></div>
     <div class="bg-mesh secondary-mesh"></div>
 
-    <a href="#" onclick="window.history.back(); return false;" class="back-home"><i class="fa fa-arrow-left"></i> Quay lại Sự kiện</a>
+    <a href="#" onclick="window.history.back(); return false;" class="back-home"><i class="fa fa-arrow-left"></i> Quay lại</a>
 
     <div class="booking-page-container">
-        <!-- Khu vực Map -->
+        <!-- Cột Trái: Sơ đồ Sân khấu -->
         <div class="stage-map">
             <div class="stage-box">MAIN STAGE</div>
-            <div class="zone-mock">
-                <div class="zone-card selected">Khu vực LEFT WING</div>
-                <div class="zone-card">Khu vực RIGHT WING</div>
-                <div class="zone-card">Khu vực CAO TẦNG</div>
-                <div class="zone-card">Khu vực VIP LOUNGE</div>
+            <div id="stageZoneList" class="zone-mock">
+                <!-- Khu vực sẽ được JS render -->
+                <p style="grid-column: 1/-1; color: #a0a5b5; text-align: center;">Đang tải sơ đồ...</p>
             </div>
         </div>
 
-        <!-- Khu vực Control -->
+        <!-- Cột Phải: Thông tin đặt vé -->
         <div class="booking-details">
-            <h1 class="booking-title">THIẾT LẬP VÉ</h1>
-            <div class="tier-label" id="lblTierName">Đang tải cấu hình vé...</div>
+            <h1 class="booking-title">ĐẶT VÉ</h1>
+            <div class="tier-label" id="lblTierName">Đang tải...</div>
 
-            <div class="form-group">
-                <label>Chọn Khu Vực (Zone Selection)</label>
-                <select class="zone-select">
-                    <option value="left">Cổng Trái - Left Wing (+0 VNĐ)</option>
-            <div class="booking-container fade-in">
-        <h2 style="text-align: center; color: var(--primary-cyan); font-family: 'Unbounded', sans-serif; font-size: 2rem; margin-bottom: 30px;">ĐẶT VÉ SỰ KIỆN</h2>
-
-        <div class="booking-box">
-            <h3><i class="fa fa-ticket-alt"></i> CHỌN SỐ LƯỢNG VÉ</h3>
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <input type="number" id="ticketQuantity" value="1" min="1" max="10" class="form-input" style="flex:1;">
-                <span style="color: #a0a5b5; font-size: 0.9rem;">(Tối đa 10 vé / giao dịch)</span>
+            <div class="booking-box">
+                <h3><i class="fa fa-ticket-alt"></i> SỐ LƯỢNG VÉ</h3>
+                <input type="number" id="ticketQuantity" value="1" min="1" max="10" class="form-input" onchange="updateUIPrice()">
+                <div style="font-size: 0.75rem; color: #a0a5b5; margin-top: 8px;">(Tối đa 10 vé / giao dịch)</div>
             </div>
-        </div>
 
-        <div class="booking-box" style="margin-top: 20px;">
-            <h3 style="color: var(--primary-purple);"><i class="fa fa-map-marked-alt"></i> CHỌN KHU VỰC SÂN KHẤU</h3>
-            <select id="zoneSelect" class="form-input">
-                <!-- Data will be loaded via JS -->
-            </select>
-        </div>
+            <div class="booking-box">
+                <h3><i class="fa fa-map-marked-alt"></i> CHỌN KHU VỰC</h3>
+                <select id="zoneSelect" class="form-input" onchange="syncZoneSelection()">
+                    <!-- Options loaded via JS -->
+                </select>
+            </div>
 
-        <div style="margin-top: 40px; text-align: center;">
-            <button class="btn btn-primary glow-btn" id="confirmBookingBtn" onclick="submitBooking()" style="font-size: 1.2rem; padding: 20px 40px; width: 100%; border-radius: 12px; font-family: 'Unbounded', sans-serif; transition: all 0.3s;">
-                XÁC NHẬN ĐẶT VÉ
-            </button>
+            <div class="booking-box" style="border-color: rgba(0, 243, 255, 0.3);">
+                <h3><i class="fa fa-wallet"></i> THANH TOÁN QUA VÍ</h3>
+                <div class="wallet-info">
+                    <span style="color: #a0a5b5; font-size: 0.85rem;">SỐ DƯ HIỆN TẠI:</span>
+                    <span id="userWalletBalance" style="font-family: 'Space Mono', monospace; font-weight: bold; color: var(--primary-cyan);">--- VNĐ</span>
+                </div>
+            </div>
+
+            <div class="price-total-box">
+                <div class="price-total-label">TỔNG CỘNG THANH TOÁN</div>
+                <div class="price-total-value" id="lblTotalPrice">0 VNĐ</div>
+                <button class="checkout-btn" id="confirmBookingBtn" onclick="submitBooking()">
+                    XÁC NHẬN ĐẶT VÉ <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Custom cursor
+        // Custom cursor logic
         const cursor = document.querySelector('.custom-cursor');
         document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
 
-        // URL Params
+        // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('eventId');
         const tierId = urlParams.get('tierId');
         const tierName = urlParams.get('tierName');
-        
-        let qty = 1;
-        let unitPrice = 0; // Chúng ta sẽ fetch lại event details để lấy unitPrice chính xác.
 
-        document.getElementById('lblTierName').innerText = tierName ? `Hạng: ${tierName}` : "Hạng vé tiêu chuẩn";
+        let unitPrice = 0;
+        let userBalance = 0;
 
-        // Fetch giá vé từ DB (Để đảm bảo tính toàn vẹn)
-        async function fetchPrice() {
-            try {
-                const response = await fetch('http://localhost:8081/api/events/' + eventId);
-                const ev = await response.json();
-                const matchedTier = ev.ticketTiers.find(t => t.id == tierId);
-                if(matchedTier) {
-                    unitPrice = matchedTier.price;
-                    updateUIPrice();
-                }
-            } catch(e) {
-                document.getElementById('lblTotalPrice').innerText = "Lỗi xác thực giá (Backend Offline)";
-            }
-        }
-        
-        if(eventId && tierId) fetchPrice();
+        document.getElementById('lblTierName').innerText = tierName ? `Hạng: ${tierName}` : "Hạng vé";
 
-        function updateQty(delta) {
-            qty += delta;
-            if (qty < 1) qty = 1;
-            if (qty > 10) qty = 10; // Max 10 vé
-            document.getElementById('inpQty').value = qty;
-            updateUIPrice();
-        }
-
-        function updateUIPrice() {
-            const total = qty * unitPrice;
-            document.getElementById('lblTotalPrice').innerText = total.toLocaleString('vi-VN') + " VNĐ";
-        }
-
-        async function submitBooking() {
+        async function initData() {
             const token = localStorage.getItem('stellar_token');
             if(!token) {
-                alert("Bạn cần Đăng Nhập để đi tiếp!");
+                alert("Vui lòng đăng nhập để tiếp tục!");
                 window.location.href = 'auth.html';
                 return;
             }
 
-            const btn = document.querySelector('.checkout-btn');
-            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG TRUYỀN DỮ LIỆU...';
+            try {
+                // 1. Lấy thông tin Ví
+                const profRes = await fetch('http://localhost:8081/api/user/profile', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if(profRes.ok) {
+                    const profile = await profRes.json();
+                    userBalance = profile.walletBalance || 0;
+                    document.getElementById('userWalletBalance').innerText = userBalance.toLocaleString('vi-VN') + " VNĐ";
+                }
+
+                // 2. Lấy thông tin Sự kiện & Khu vực
+                const response = await fetch(`http://localhost:8081/api/events/${eventId}`);
+                const ev = await response.json();
+                const matchedTier = ev.ticketTiers.find(t => t.id == tierId);
+                
+                if(matchedTier) {
+                    unitPrice = matchedTier.price;
+                    renderZones(matchedTier.khuVucList);
+                    updateUIPrice();
+                } else {
+                    alert("Không tìm thấy thông tin hạng vé này.");
+                }
+
+            } catch(e) {
+                console.error("Lỗi khởi tạo:", e);
+                document.getElementById('userWalletBalance').innerText = "Lỗi kết nối";
+            }
+        }
+
+        function renderZones(khuVucList) {
+            const select = document.getElementById('zoneSelect');
+            const stageList = document.getElementById('stageZoneList');
+
+            if (!khuVucList || khuVucList.length === 0) {
+                select.innerHTML = '<option value="">Mặc định</option>';
+                stageList.innerHTML = '<div class="zone-card selected">Sân khấu mặc định</div>';
+                return;
+            }
+
+            let selectHtml = '';
+            let stageHtml = '';
+
+            khuVucList.forEach((kv, index) => {
+                const isFirst = index === 0;
+                selectHtml += `<option value="${kv.name}">${kv.name} (Sức chứa: ${kv.capacity})</option>`;
+                stageHtml += `
+                    <div class="zone-card ${isFirst ? 'selected' : ''}" data-zone="${kv.name}">
+                        ${kv.name}<br>
+                        <small style="opacity: 0.6; font-size: 0.7rem;">SỨC CHỨA: ${kv.capacity}</small>
+                    </div>
+                `;
+            });
+
+            select.innerHTML = selectHtml;
+            stageList.innerHTML = stageHtml;
+        }
+
+        function syncZoneSelection() {
+            const selectedZone = document.getElementById('zoneSelect').value;
+            document.querySelectorAll('.zone-card').forEach(card => {
+                if (card.dataset.zone === selectedZone) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        function updateUIPrice() {
+            const qty = parseInt(document.getElementById('ticketQuantity').value) || 1;
+            const total = qty * unitPrice;
+            document.getElementById('lblTotalPrice').innerText = total.toLocaleString('vi-VN') + " VNĐ";
+            
+            // Highlight nếu không đủ tiền
+            const totalEl = document.getElementById('lblTotalPrice');
+            if (total > userBalance) {
+                totalEl.style.color = '#ff4d4d';
+            } else {
+                totalEl.style.color = 'var(--primary-cyan)';
+            }
+        }
+
+        async function submitBooking() {
+            const token = localStorage.getItem('stellar_token');
+            const qty = parseInt(document.getElementById('ticketQuantity').value);
+
+            if (qty * unitPrice > userBalance) {
+                alert("Số dư trong ví của bạn không đủ để thực hiện giao dịch này. Vui lòng nạp thêm!");
+                return;
+            }
+
+            const btn = document.getElementById('confirmBookingBtn');
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG XỬ LÝ...';
             btn.disabled = true;
 
             try {
-                const payload = {
-                    maSuKien: parseInt(eventId),
-                    maHangVe: parseInt(ticketTierId),
-                    soLuong: parseInt(qty)
-                };
-
                 const response = await fetch('http://localhost:8081/api/booking/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token
                     },
-                    // Sửa lại ticketTierId thành tierId do biến toàn cục gọi khác
-                    body: JSON.stringify({ maSuKien: parseInt(eventId), maHangVe: parseInt(tierId), soLuong: parseInt(qty) })
+                    body: JSON.stringify({ 
+                        maSuKien: parseInt(eventId), 
+                        maHangVe: parseInt(tierId), 
+                        soLuong: qty 
+                    })
                 });
 
                 const data = await response.json();
@@ -360,16 +425,19 @@
                 if(response.ok) {
                     window.location.href = `checkout.html?invoiceId=${data.invoiceId}&tickets=${data.totalTickets}`;
                 } else {
-                    alert("❌ Lỗi: " + (data.message || 'Hủy giao dịch.'));
-                    btn.innerHTML = '<i class="fa fa-lock" style="margin-right:8px;"></i> CHỐT GIAO DỊCH VÀ XUẤT VÉ';
+                    alert("❌ Thất bại: " + (data.message || 'Hủy giao dịch.'));
+                    btn.innerHTML = 'XÁC NHẬN ĐẶT VÉ <i class="fa fa-chevron-right"></i>';
                     btn.disabled = false;
                 }
             } catch(err) {
-                alert("⚠️ Lỗi Tín hiệu Máy chủ (Backend).");
-                btn.innerHTML = '<i class="fa fa-lock" style="margin-right:8px;"></i> CHỐT GIAO DỊCH VÀ XUẤT VÉ';
+                alert("⚠️ Lỗi hệ thống. Vui lòng thử lại sau.");
+                btn.innerHTML = 'XÁC NHẬN ĐẶT VÉ <i class="fa fa-chevron-right"></i>';
                 btn.disabled = false;
             }
         }
+
+        // Khởi tạo
+        if(eventId && tierId) initData();
     </script>
 </body>
 </html>

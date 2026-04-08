@@ -34,49 +34,60 @@ public class OrganizerController {
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
     public ResponseEntity<?> getRevenue() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
-        Long userId = userDetails.getId();
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+            Long userId = userDetails.getId();
 
-        // Lấy tất cả sự kiện do user này tạo
-        List<SuKien> suKienList = suKienRepository.findByNguoiTao_MaTaiKhoan(userId);
+            // Lấy tất cả sự kiện do user này tạo
+            List<SuKien> suKienList = suKienRepository.findByNguoiTao_MaTaiKhoan(userId);
 
-        BigDecimal tongDoanhThu = BigDecimal.ZERO;
-        int tongSoVeBan = 0;
-        List<RevenueResponseDto.EventRevenueDetail> chiTiet = new ArrayList<>();
+            BigDecimal tongDoanhThu = BigDecimal.ZERO;
+            int tongSoVeBan = 0;
+            List<RevenueResponseDto.EventRevenueDetail> chiTiet = new ArrayList<>();
 
-        for (SuKien sk : suKienList) {
-            // Lấy tất cả Đơn Mua của sự kiện này
-            List<DonMua> donMuas = donMuaRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
+            for (SuKien sk : suKienList) {
+                // Lấy tất cả Đơn Mua của sự kiện này
+                List<DonMua> donMuas = donMuaRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
 
-            BigDecimal doanhThuSK = BigDecimal.ZERO;
-            int soVeSK = 0;
+                BigDecimal doanhThuSK = BigDecimal.ZERO;
+                int soVeSK = 0;
 
-            for (DonMua dm : donMuas) {
-                doanhThuSK = doanhThuSK.add(dm.getTongTien());
-                // Tính số vé = tổng tiền / giá hạng vé (gần đúng), hoặc dùng count vé
-                soVeSK++;
+                for (DonMua dm : donMuas) {
+                    // Null-safe: tránh NullPointerException nếu tongTien chưa được set
+                    if (dm.getTongTien() != null) {
+                        doanhThuSK = doanhThuSK.add(dm.getTongTien());
+                    }
+                    soVeSK++;
+                }
+
+                tongDoanhThu = tongDoanhThu.add(doanhThuSK);
+                tongSoVeBan += soVeSK;
+
+                RevenueResponseDto.EventRevenueDetail detail = new RevenueResponseDto.EventRevenueDetail();
+                detail.setMaSuKien(sk.getMaSuKien());
+                detail.setTenSuKien(sk.getTenSuKien());
+                detail.setTrangThai(sk.getTrangThai());
+                detail.setDoanhThu(doanhThuSK);
+                detail.setSoVeBan(soVeSK);
+                detail.setAnhBiaUrl(sk.getAnhBiaUrl());
+                chiTiet.add(detail);
             }
 
-            tongDoanhThu = tongDoanhThu.add(doanhThuSK);
-            tongSoVeBan += soVeSK;
+            RevenueResponseDto response = new RevenueResponseDto();
+            response.setTongDoanhThu(tongDoanhThu);
+            response.setTongSoVeBan(tongSoVeBan);
+            response.setTongSoSuKien(suKienList.size());
+            response.setChiTietSuKien(chiTiet);
 
-            RevenueResponseDto.EventRevenueDetail detail = new RevenueResponseDto.EventRevenueDetail();
-            detail.setMaSuKien(sk.getMaSuKien());
-            detail.setTenSuKien(sk.getTenSuKien());
-            detail.setTrangThai(sk.getTrangThai());
-            detail.setDoanhThu(doanhThuSK);
-            detail.setSoVeBan(soVeSK);
-            detail.setAnhBiaUrl(sk.getAnhBiaUrl());
-            chiTiet.add(detail);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            // Trả về lỗi rõ ràng thay vì để Spring tự ném 500
+            return ResponseEntity.internalServerError().body(
+                java.util.Map.of("message", "Lỗi tải dữ liệu doanh thu: " + e.getMessage())
+            );
         }
-
-        RevenueResponseDto response = new RevenueResponseDto();
-        response.setTongDoanhThu(tongDoanhThu);
-        response.setTongSoVeBan(tongSoVeBan);
-        response.setTongSoSuKien(suKienList.size());
-        response.setChiTietSuKien(chiTiet);
-
-        return ResponseEntity.ok(response);
     }
+
 }

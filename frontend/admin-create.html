@@ -21,7 +21,7 @@
     </nav>
 
     <div class="admin-container" style="max-width: 1200px; margin: 100px auto 50px; padding: 0 20px; color: white;">
-        <h1 style="font-family: 'Unbounded', sans-serif; margin-bottom: 30px; font-size: 2.2rem; background: linear-gradient(90deg, #fff, var(--primary-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TẠO SỰ KIỆN MỚI</h1>
+        <h1 style="font-family: 'Unbounded', sans-serif; margin-bottom: 30px; font-size: 2.2rem; background: linear-gradient(90deg, #fff, var(--primary-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">TẠO SỰ KIỆN MỚI</h1>
         
         <form id="createEventForm" style="background: rgba(20, 25, 40, 0.8); border: 1px solid var(--primary-cyan); padding: 40px; border-radius: 20px; box-shadow: 0 0 50px rgba(0,243,255,0.1); backdrop-filter: blur(20px);">
             
@@ -70,7 +70,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Bắt Đầu Sự Kiện (Tổng quát)</label>
                     <input type="datetime-local" id="thoiGianBD" class="form-input" required>
@@ -79,6 +79,15 @@
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Kết Thúc Sự Kiện</label>
                     <input type="datetime-local" id="thoiGianKT" class="form-input" required>
                 </div>
+            </div>
+
+            <div style="margin-bottom: 40px;">
+                <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">
+                    📝 Mô Tả Sự Kiện <span style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">(Không bắt buộc)</span>
+                </label>
+                <textarea id="moTa" class="form-input" rows="5"
+                    placeholder="Mô tả chi tiết về sự kiện: nội dung chương trình, nghệ sĩ biểu diễn, lưu ý cho khán giả..."
+                    style="resize: vertical; min-height: 120px; line-height: 1.6;"></textarea>
             </div>
 
             <h3 style="color: #eab8ff; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; font-family: 'Unbounded', sans-serif; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">

@@ -11,6 +11,7 @@ public class EventDetailDto {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String status;
+    private String description; // Mô tả sự kiện
     private List<HangVeDto> ticketTiers;
 
     public Long getId() { return id; }
@@ -27,6 +28,8 @@ public class EventDetailDto {
     public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public List<HangVeDto> getTicketTiers() { return ticketTiers; }
     public void setTicketTiers(List<HangVeDto> ticketTiers) { this.ticketTiers = ticketTiers; }
 }

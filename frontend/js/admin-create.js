@@ -164,6 +164,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         thoiGianNgungBanVe: document.getElementById('thoiGianNgungBanVe').value,
         anhBiaUrl: document.getElementById('anhBiaUrl').value,
         phanLoai: document.getElementById('phanLoai').value,
+        moTa: document.getElementById('moTa').value,
         lichDienList: lichDienList,
         hangVeList: hangVeList
     };
