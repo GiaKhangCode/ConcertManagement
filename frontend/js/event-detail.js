@@ -168,16 +168,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentUser = localStorage.getItem('stellar_user');
     const authBtn = document.querySelector('.navbar .btn.btn-outline');
     if(authBtn && currentUser) {
-        authBtn.innerHTML = `<i class="fa fa-user-astronaut" style="margin-right: 8px;"></i> ${currentUser}`;
+        authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
         authBtn.href = "profile.html";
-        authBtn.classList.remove('btn-outline');
-        authBtn.style.background = 'linear-gradient(90deg, var(--primary-purple), var(--primary-cyan))';
-        authBtn.style.color = '#fff';
-        authBtn.style.border = 'none';
-        
-        attachCursorEvents([authBtn]);
+        authBtn.className = 'btn btn-account';
     } else if(authBtn) {
         authBtn.href = "auth.html";
+    }
+
+    // Role-based Access Control UI
+    const rolesStr = localStorage.getItem('stellar_roles');
+    if(rolesStr) {
+        try {
+            const roles = JSON.parse(rolesStr);
+            const createEventNav = document.getElementById('createEventNav');
+            const revenueNav = document.getElementById('revenueNav');
+            const adminNav = document.getElementById('adminNav');
+            const myTicketsNav = document.getElementById('myTicketsNav');
+
+            if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
+
+            if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                createEventNav.style.display = 'inline-flex';
+            }
+            if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                revenueNav.style.display = 'inline-flex';
+            }
+            if(adminNav && roles.includes('ROLE_ADMIN')) {
+                adminNav.style.display = 'inline-flex';
+            }
+        } catch(e) {}
     }
 });
 

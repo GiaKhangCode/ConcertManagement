@@ -348,15 +348,13 @@
 
     <header class="navbar">
         <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
-        <div class="nav-center">
-            <div class="search-bar" style="visibility:hidden;">
-                <input type="text" placeholder="">
-            </div>
-        </div>
         <div class="nav-links">
-            <a href="event-management.html">Quản lý Sự Kiện</a>
-            <a href="index.html">Trang Chủ</a>
-            <a href="profile.html" class="btn btn-outline small" id="authBtn">Hồ Sơ</a>
+            <a href="index.html" class="nav-btn"><i class="fa fa-home"></i> Trang Chủ</a>
+            <a href="profile.html" style="display:none;" id="myTicketsNav" class="nav-btn"><i class="fa fa-ticket-alt"></i> Vé của tôi</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn active"><i class="fa fa-shield-alt"></i> Duyệt Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn"><i class="fa fa-chart-line"></i> Quản Lý Sự Kiện</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn"><i class="fa fa-plus-circle"></i> Tạo Sự Kiện</a>
+            <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
     </header>
 
@@ -427,10 +425,43 @@
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        // Kiểm tra quyền truy cập
+        // Kiểm tra quyền truy cập & Đồng bộ Header
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('stellar_token');
+            const currentUser = localStorage.getItem('stellar_user');
+            const authBtn = document.getElementById('authBtn');
+            if(authBtn && currentUser) {
+                authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
+                authBtn.href = "profile.html";
+                authBtn.className = 'btn btn-account';
+            } else if(authBtn) {
+                authBtn.href = "auth.html";
+            }
+
+            // Role-based Access Control UI
             const rolesStr = localStorage.getItem('stellar_roles');
+            if(rolesStr) {
+                try {
+                    const roles = JSON.parse(rolesStr);
+                    const createEventNav = document.getElementById('createEventNav');
+                    const revenueNav = document.getElementById('revenueNav');
+                    const adminNav = document.getElementById('adminNav');
+                    const myTicketsNav = document.getElementById('myTicketsNav');
+
+                    if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
+
+                    if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                        createEventNav.style.display = 'inline-flex';
+                    }
+                    if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                        revenueNav.style.display = 'inline-flex';
+                    }
+                    if(adminNav && roles.includes('ROLE_ADMIN')) {
+                        adminNav.style.display = 'inline-flex';
+                    }
+                } catch(e) {}
+            }
+
+            const token = localStorage.getItem('stellar_token');
 
             if (!token) {
                 window.location.href = 'auth.html';

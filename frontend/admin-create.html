@@ -14,13 +14,17 @@
     <div class="custom-cursor"></div>
     <div class="bg-mesh primary-mesh"></div>
     
-    <nav class="navbar" style="border-bottom: 1px solid rgba(0, 243, 255, 0.2); background: rgba(10, 14, 23, 0.9); backdrop-filter: blur(10px);">
+    <header class="navbar">
         <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
         <div class="nav-links">
-            <a href="admin-approval.html" id="navApprovalBtn" style="display:none;"><i class="fa fa-check-circle"></i> KIỂM DUYỆT</a>
-            <a href="index.html"><i class="fa fa-home"></i> VỀ TRANG CHỦ</a>
+            <a href="index.html" class="nav-btn"><i class="fa fa-home"></i> Trang Chủ</a>
+            <a href="profile.html" style="display:none;" id="myTicketsNav" class="nav-btn"><i class="fa fa-ticket-alt"></i> Vé của tôi</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn"><i class="fa fa-shield-alt"></i> Duyệt Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn"><i class="fa fa-chart-line"></i> Quản Lý Sự Kiện</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn active"><i class="fa fa-plus-circle"></i> Tạo Sự Kiện</a>
+            <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
-    </nav>
+    </header>
 
     <div class="admin-container" style="max-width: 1200px; margin: 100px auto 50px; padding: 0 20px; color: white;">
         <h1 style="font-family: 'Unbounded', sans-serif; margin-bottom: 30px; font-size: 2.2rem; background: linear-gradient(90deg, #fff, var(--primary-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">TẠO SỰ KIỆN MỚI</h1>
@@ -198,12 +202,40 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="js/admin-create.js"></script>
     <script>
+        // Kiểm tra quyền truy cập & Đồng bộ Header
         document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = localStorage.getItem('stellar_user');
+            const authBtn = document.getElementById('authBtn');
+            if(authBtn && currentUser) {
+                authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
+                authBtn.href = "profile.html";
+                authBtn.className = 'btn btn-account';
+            } else if(authBtn) {
+                authBtn.href = "auth.html";
+            }
+
+            // Role-based Access Control UI
             const rolesStr = localStorage.getItem('stellar_roles');
-            let roles = [];
-            try { roles = JSON.parse(rolesStr || '[]'); } catch(e) {}
-            if (roles.includes('ROLE_ADMIN')) {
-                document.getElementById('navApprovalBtn').style.display = 'inline-block';
+            if(rolesStr) {
+                try {
+                    const roles = JSON.parse(rolesStr);
+                    const createEventNav = document.getElementById('createEventNav');
+                    const revenueNav = document.getElementById('revenueNav');
+                    const adminNav = document.getElementById('adminNav');
+                    const myTicketsNav = document.getElementById('myTicketsNav');
+
+                    if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
+
+                    if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                        createEventNav.style.display = 'inline-flex';
+                    }
+                    if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                        revenueNav.style.display = 'inline-flex';
+                    }
+                    if(adminNav && roles.includes('ROLE_ADMIN')) {
+                        adminNav.style.display = 'inline-flex';
+                    }
+                } catch(e) {}
             }
         });
     </script>
