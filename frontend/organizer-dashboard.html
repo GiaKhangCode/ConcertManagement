@@ -391,11 +391,12 @@
                             <th>Trạng thái</th>
                             <th>Đơn mua</th>
                             <th>Doanh thu</th>
+                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="revenueTableBody">
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 <div class="loading-spinner"><div class="spinner"></div></div>
                             </td>
                         </tr>
@@ -474,7 +475,7 @@
             } catch (e) {
                 console.error('Lỗi tải doanh thu:', e);
                 document.getElementById('revenueTableBody').innerHTML = `
-                    <tr><td colspan="4">
+                    <tr><td colspan="5">
                         <div class="empty-state">
                             <div class="empty-icon">⚠️</div>
                             <h3>Không thể kết nối Backend</h3>
@@ -504,7 +505,7 @@
                         <a href="admin-create.html" class="btn btn-primary glow-btn">Tạo Sự Kiện Đầu Tiên</a>
                     </div>`;
                 document.getElementById('revenueTableBody').innerHTML = `
-                    <tr><td colspan="4">
+                    <tr><td colspan="5">
                         <div class="empty-state">
                             <div class="empty-icon">📭</div>
                             <h3>Chưa có sự kiện nào</h3>
@@ -555,6 +556,11 @@
                     <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
                     <td>${ev.soVeBan}</td>
                     <td><span class="revenue-amount">${revenue.toLocaleString('vi-VN')}đ</span></td>
+                    <td>
+                        <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                            <i class="fa fa-edit"></i> Sửa
+                        </a>
+                    </td>
                 `;
                 tbody.appendChild(row);
             });

@@ -11,6 +11,7 @@ public class EventCreateRequestDto {
     private LocalDateTime thoiGianMoBanVe;
     private LocalDateTime thoiGianNgungBanVe;
     private String anhBiaUrl;
+    private String anhThumbnailUrl;
     private String phanLoai;
     private String moTa; // Mô tả sự kiện
 
@@ -31,6 +32,8 @@ public class EventCreateRequestDto {
     public void setThoiGianNgungBanVe(LocalDateTime thoiGianNgungBanVe) { this.thoiGianNgungBanVe = thoiGianNgungBanVe; }
     public String getAnhBiaUrl() { return anhBiaUrl; }
     public void setAnhBiaUrl(String anhBiaUrl) { this.anhBiaUrl = anhBiaUrl; }
+    public String getAnhThumbnailUrl() { return anhThumbnailUrl; }
+    public void setAnhThumbnailUrl(String anhThumbnailUrl) { this.anhThumbnailUrl = anhThumbnailUrl; }
     public String getPhanLoai() { return phanLoai; }
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }
     public String getMoTa() { return moTa; }

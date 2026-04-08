@@ -7,6 +7,7 @@ public class EventDetailDto {
     private Long id;
     private String title;
     private String image;
+    private String thumbnail;
     private String location;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -20,6 +21,8 @@ public class EventDetailDto {
     public void setTitle(String title) { this.title = title; }
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
+    public String getThumbnail() { return thumbnail; }
+    public void setThumbnail(String thumbnail) { this.thumbnail = thumbnail; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public LocalDateTime getStartDate() { return startDate; }

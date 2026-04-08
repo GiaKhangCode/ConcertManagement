@@ -171,7 +171,7 @@ function updateFeaturedHero(featured) {
         if(heroDetailBtn) heroDetailBtn.onclick = () => window.location.href = `event-detail.html?id=${featured.id}`;
         
         if(hologramCard) {
-            hologramCard.style.backgroundImage = `url('${featured.image}')`;
+            hologramCard.style.backgroundImage = `url('${featured.poster || featured.image}')`;
             hologramCard.style.backgroundSize = 'cover';
             hologramCard.style.backgroundPosition = 'center';
         }

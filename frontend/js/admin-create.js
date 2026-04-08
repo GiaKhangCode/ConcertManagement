@@ -31,29 +31,80 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch(e) { console.error("Lỗi tải danh sách địa điểm."); }
 
-    // Init 1 instance để user đỡ tốn công ấn Added
-    addLichDien();
-    addHangVe();
+    // Init 1 instance để user đỡ tốn công ấn Added (Chỉ khi tạo mới)
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+
+    if (eventId) {
+        // Chế độ chỉnh sửa
+        document.querySelector('h1').textContent = "CHỈNH SỬA SỰ KIỆN";
+        document.title = "Chỉnh sửa Sự Kiện | Ve'ryGood";
+        loadEventData(eventId, token);
+    } else {
+        // Chế độ tạo mới
+        addLichDien();
+        addHangVe();
+    }
 });
 
-function addLichDien() {
+async function loadEventData(id, token) {
+    try {
+        const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error("Không thể tải dữ liệu sự kiện.");
+
+        const data = await res.json();
+
+        // Điền thông tin cơ bản
+        document.getElementById('tenSuKien').value = data.tenSuKien;
+        document.getElementById('maDiaDiem').value = data.maDiaDiem;
+        document.getElementById('thoiGianBD').value = data.thoiGianBD;
+        document.getElementById('thoiGianKT').value = data.thoiGianKT;
+        document.getElementById('thoiGianMoBanVe').value = data.thoiGianMoBanVe;
+        document.getElementById('thoiGianNgungBanVe').value = data.thoiGianNgungBanVe;
+        document.getElementById('eventPoster').value = data.anhBiaUrl;
+        document.getElementById('eventThumbnail').value = data.anhThumbnailUrl;
+        document.getElementById('phanLoai').value = data.phanLoai;
+        document.getElementById('moTa').value = data.moTa || '';
+
+        // Điền Lịch diễn
+        if (data.lichDienList && data.lichDienList.length > 0) {
+            data.lichDienList.forEach(ld => {
+                addLichDien(ld);
+            });
+        }
+
+        // Điền Hạng vé
+        if (data.hangVeList && data.hangVeList.length > 0) {
+            data.hangVeList.forEach(hv => {
+                addHangVe(hv);
+            });
+        }
+    } catch (e) {
+        alert("Lỗi: " + e.message);
+        window.location.href = "organizer-dashboard.html";
+    }
+}
+
+function addLichDien(data = null) {
     lichDienCount++;
-    const id = `ld_${Date.now()}`;
+    const id = `ld_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const html = `
         <div class="dynamic-box" id="${id}">
             <button class="remove-btn" type="button" onclick="removeEl('${id}')"><i class="fa fa-times-circle"></i></button>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                 <div>
                     <label style="font-size: 0.85rem; color: #a0a5b5; margin-bottom:5px; display:block;">Tên Phiên Diễn (VD: Đêm 1)</label>
-                    <input type="text" class="form-input ld-name" required placeholder="Day 1, Đêm nghệ thuật...">
+                    <input type="text" class="form-input ld-name" required placeholder="Day 1, Đêm nghệ thuật..." value="${data ? data.tenLichDien : ''}">
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #a0a5b5; margin-bottom:5px; display:block;">Bắt Đầu Lúc</label>
-                    <input type="datetime-local" class="form-input ld-start" required>
+                    <input type="datetime-local" class="form-input ld-start" required value="${data ? data.thoiGianBatDau : ''}">
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #a0a5b5; margin-bottom:5px; display:block;">Kết Thúc Lúc</label>
-                    <input type="datetime-local" class="form-input ld-end" required>
+                    <input type="datetime-local" class="form-input ld-end" required value="${data ? data.thoiGianKetThuc : ''}">
                 </div>
             </div>
         </div>
@@ -61,9 +112,9 @@ function addLichDien() {
     document.getElementById('lichDienContainer').insertAdjacentHTML('beforeend', html);
 }
 
-function addHangVe() {
+function addHangVe(data = null) {
     hangVeCount++;
-    const hvId = `hv_${Date.now()}`;
+    const hvId = `hv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const kvContId = `kv_cont_${hvId}`;
     
     const html = `
@@ -73,15 +124,15 @@ function addHangVe() {
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;">
                 <div>
                     <label style="font-size: 0.85rem; color: #ffb86c; margin-bottom:5px; display:block;"><i class="fa fa-star"></i> Tên Hạng Vé</label>
-                    <input type="text" class="form-input hv-name" required placeholder="Ví dụ: Khu vực VIP, Mới Nhất...">
+                    <input type="text" class="form-input hv-name" required placeholder="Ví dụ: Khu vực VIP, Mới Nhất..." value="${data ? data.tenHangVe : ''}">
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #ffb86c; margin-bottom:5px; display:block;">Đơn Giá (VNĐ)</label>
-                    <input type="number" class="form-input hv-price" required min="0" placeholder="1000000">
+                    <input type="number" class="form-input hv-price" required min="0" placeholder="1000000" value="${data ? data.giaNiemYet : ''}">
                 </div>
                 <div>
                     <label style="font-size: 0.85rem; color: #ffb86c; margin-bottom:5px; display:block;">Số Lượng Phát Hành</label>
-                    <input type="number" class="form-input hv-qty" required min="1" placeholder="100">
+                    <input type="number" class="form-input hv-qty" required min="1" placeholder="100" value="${data ? data.tongSoLuong : ''}">
                 </div>
             </div>
             
@@ -96,20 +147,25 @@ function addHangVe() {
         </div>
     `;
     document.getElementById('hangVeContainer').insertAdjacentHTML('beforeend', html);
-    addKhuVuc(kvContId);
+    
+    if (data && data.khuVucList && data.khuVucList.length > 0) {
+        data.khuVucList.forEach(kv => addKhuVuc(kvContId, kv));
+    } else {
+        addKhuVuc(kvContId);
+    }
 }
 
-function addKhuVuc(containerId) {
-    const id = `kv_${Date.now()}`;
+function addKhuVuc(containerId, data = null) {
+    const id = `kv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const html = `
         <div class="sub-box kv-item" id="${id}" style="display: flex; gap: 20px; align-items: flex-end;">
             <div style="flex: 2;">
                 <label style="font-size: 0.8rem; color: #a0a5b5; margin-bottom:5px; display:block;">Tên Khu Vực / Cửa (Cổng Center, Zone A...)</label>
-                <input type="text" class="form-input kv-name" required placeholder="Sảnh Chính, Khán đài A...">
+                <input type="text" class="form-input kv-name" required placeholder="Sảnh Chính, Khán đài A..." value="${data ? data.tenKhuVuc : ''}">
             </div>
             <div style="flex: 1;">
                 <label style="font-size: 0.8rem; color: #a0a5b5; margin-bottom:5px; display:block;">Sức Chứa Khu Vực (Max Seats)</label>
-                <input type="number" class="form-input kv-capacity" required min="0" value="50">
+                <input type="number" class="form-input kv-capacity" required min="0" value="${data ? data.sucChuaKv : '50'}">
             </div>
             <button class="remove-btn" style="position: static; color: #ff5555; padding: 15px; flex: 0; background:rgba(255,0,0,0.1); border-radius:10px;" type="button" onclick="removeEl('${id}')"><i class="fa fa-trash-alt"></i></button>
         </div>
@@ -162,20 +218,31 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         thoiGianKT: document.getElementById('thoiGianKT').value,
         thoiGianMoBanVe: document.getElementById('thoiGianMoBanVe').value,
         thoiGianNgungBanVe: document.getElementById('thoiGianNgungBanVe').value,
-        anhBiaUrl: document.getElementById('anhBiaUrl').value,
+        anhBiaUrl: document.getElementById('eventPoster').value,
+        anhThumbnailUrl: document.getElementById('eventThumbnail').value,
         phanLoai: document.getElementById('phanLoai').value,
         moTa: document.getElementById('moTa').value,
         lichDienList: lichDienList,
         hangVeList: hangVeList
     };
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+    const isEdit = !!eventId;
+
     const submitBtn = document.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG LƯU THÔNG TIN KHỞI TẠO...';
+    submitBtn.innerHTML = isEdit ? '<i class="fa fa-spinner fa-spin"></i> ĐANG CẬP NHẬT THÔNG TIN...' : '<i class="fa fa-spinner fa-spin"></i> ĐANG LƯU THÔNG TIN KHỞI TẠO...';
+
+    const apiUrl = isEdit 
+        ? `http://localhost:8081/api/admin/events/update/${eventId}`
+        : 'http://localhost:8081/api/admin/events/create';
+    
+    const method = isEdit ? 'PUT' : 'POST';
 
     try {
-        const response = await fetch('http://localhost:8081/api/admin/events/create', {
-            method: 'POST',
+        const response = await fetch(apiUrl, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
@@ -186,12 +253,17 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         const data = await response.json();
         
         if(response.ok) {
-            alert(`✅ Khởi tạo Sự kiện Liên hoàn Thành công!\nSự kiện đã được lưu vào Cơ sở dữ liệu. Mã sự kiện sinh ra: [ ${data.eventId} ]`);
-            window.location.href = "index.html"; 
+            if (isEdit) {
+                alert("✅ Cập nhật Sự kiện Thành công!\n" + (data.message || ''));
+                window.location.href = "organizer-dashboard.html";
+            } else {
+                alert(`✅ Khởi tạo Sự kiện Liên hoàn Thành công!\nSự kiện đã được lưu vào Cơ sở dữ liệu. Mã sự kiện sinh ra: [ ${data.eventId} ]`);
+                window.location.href = "index.html"; 
+            }
         } else {
-            alert("❌ Lỗi Trùng Lặp hoặc Lỗi Cú pháp Truyền JSON: " + (data.message || 'Kiểm tra lại hệ thống'));
+            alert("❌ Lỗi: " + (data.message || 'Kiểm tra lại hệ thống'));
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
+            submitBtn.innerHTML = isEdit ? '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> LƯU THAY ĐỔI' : '<i class="fa fa-check-circle" style="margin-right: 15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
         }
     } catch(err) {
         alert("⚠️ Không thể kết nối tới Database. Máy chủ 8081 không phản hồi. Vui lòng kiểm tra lại Backend.");

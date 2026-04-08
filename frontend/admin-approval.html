@@ -537,12 +537,24 @@
                     : 'Chưa xác định';
 
                 card.innerHTML = `
-                    <div class="card-banner" style="background-image: url('${ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
+                    <div class="card-banner" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}');">
                         <div class="overlay"></div>
                         <div class="status-tag">⏳ Chờ phê duyệt</div>
                     </div>
                     <div class="card-content">
                         <h3>${ev.tenSuKien}</h3>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 1.2rem;">
+                            <div style="flex: 1; text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a0a5b5; margin-bottom: 5px;">ẢNH CARD (THUMBNAIL)</div>
+                                <img src="${ev.anhThumbnailUrl || 'https://via.placeholder.com/100x60'}" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                            </div>
+                            <div style="flex: 1; text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a0a5b5; margin-bottom: 5px;">ẢNH 3D (POSTER)</div>
+                                <img src="${ev.anhBiaUrl || 'https://via.placeholder.com/100x60'}" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                            </div>
+                        </div>
+
                         <div class="card-meta">
                             <span><span class="icon">📅</span> ${dateStr}</span>
                             <span><span class="icon">📍</span> ${ev.diaDiem || 'Chưa cập nhật'}</span>
@@ -559,6 +571,9 @@
                             <button class="action-btn reject" onclick="rejectEvent(${ev.maSuKien})">
                                 ❌ Từ Chối
                             </button>
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
+                                📝 Sửa
+                            </a>
                         </div>
                         <div class="processed-badge" id="badge-${ev.maSuKien}"></div>
                     </div>
@@ -704,8 +719,11 @@
                         </div>
                         <div class="card-actions">
                             <button class="action-btn approve" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
-                                🌟 Đặt làm Hero
+                                🌟 Hero
                             </button>
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
+                                📝 Sửa
+                            </a>
                         </div>
                     </div>
                 `;

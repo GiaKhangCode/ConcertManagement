@@ -41,7 +41,10 @@ public class SuKien {
     private List<HangVe> danhSachHangVe;
 
     @Column(name = "AnhBiaURL")
-    private String anhBiaUrl;
+    private String anhBiaUrl; // Sẽ dùng làm ảnh Poster (Thẻ 3D)
+
+    @Column(name = "AnhThumbnailURL")
+    private String anhThumbnailUrl; // Sẽ dùng làm ảnh Card hiển thị
 
     @Column(name = "PhanLoai")
     private String phanLoai;
@@ -85,6 +88,9 @@ public class SuKien {
 
     public String getAnhBiaUrl() { return anhBiaUrl; }
     public void setAnhBiaUrl(String anhBiaUrl) { this.anhBiaUrl = anhBiaUrl; }
+
+    public String getAnhThumbnailUrl() { return anhThumbnailUrl; }
+    public void setAnhThumbnailUrl(String anhThumbnailUrl) { this.anhThumbnailUrl = anhThumbnailUrl; }
 
     public String getPhanLoai() { return phanLoai; }
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }

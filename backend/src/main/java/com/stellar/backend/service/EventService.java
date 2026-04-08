@@ -65,7 +65,12 @@ public class EventService {
         }
         dto.setStartingPrice(lowest != null ? lowest : BigDecimal.ZERO);
         
-        dto.setImage(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png?text=No+Cover");
+        // Sử dụng ảnh Thumbnail cho danh sách (Card hiển thị)
+        dto.setImage(sk.getAnhThumbnailUrl() != null && !sk.getAnhThumbnailUrl().isEmpty() ? sk.getAnhThumbnailUrl() : "https://via.placeholder.com/640x480.png?text=No+Thumbnail");
+        
+        // Sử dụng ảnh Bia làm Poster (Cho thẻ 3D)
+        dto.setPoster(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png?text=No+Poster");
+        
         dto.setCategory(sk.getPhanLoai() != null && !sk.getPhanLoai().isEmpty() ? sk.getPhanLoai() : "music");
         dto.setIsFeatured(sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1);
         
@@ -78,7 +83,12 @@ public class EventService {
         EventDetailDto dto = new EventDetailDto();
         dto.setId(sk.getMaSuKien());
         dto.setTitle(sk.getTenSuKien());
-        dto.setImage(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png");
+        
+        // Ảnh Poster (Thẻ 3D)
+        dto.setImage(sk.getAnhBiaUrl() != null && !sk.getAnhBiaUrl().isEmpty() ? sk.getAnhBiaUrl() : "https://via.placeholder.com/640x480.png?text=No+Poster");
+        // Ảnh Thumbnail (Card hiển thị)
+        dto.setThumbnail(sk.getAnhThumbnailUrl() != null && !sk.getAnhThumbnailUrl().isEmpty() ? sk.getAnhThumbnailUrl() : "https://via.placeholder.com/640x480.png?text=No+Thumbnail");
+        
         if (sk.getDiaDiem() != null) {
             dto.setLocation(sk.getDiaDiem().getTenDiaDiem() + ", " + sk.getDiaDiem().getTinhThanh());
         }

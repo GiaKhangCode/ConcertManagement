@@ -55,8 +55,14 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div>
-                    <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Link Ảnh Bìa (Poster URL)</label>
-                    <input type="text" id="anhBiaUrl" class="form-input" placeholder="https://unsplash.com/ảnh...">
+                    <div class="form-group">
+                        <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;"><i class="fa fa-image"></i> URL Ảnh Poster (Thẻ 3D & Chi tiết)</label>
+                        <input type="text" id="eventPoster" class="form-input" placeholder="https://example.com/poster.jpg" required>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;"><i class="fa fa-image"></i> URL Ảnh Thumbnail (Card hiển thị)</label>
+                        <input type="text" id="eventThumbnail" class="form-input" placeholder="https://example.com/thumbnail.jpg" required>
+                    </div>
                 </div>
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Phân Loại Sự Kiện</label>

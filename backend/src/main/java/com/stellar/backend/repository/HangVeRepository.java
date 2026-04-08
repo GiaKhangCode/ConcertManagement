@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface HangVeRepository extends JpaRepository<HangVe, Long> {
     List<HangVe> findBySuKien_MaSuKien(Long maSuKien);
+    void deleteBySuKien_MaSuKien(Long maSuKien);
 }

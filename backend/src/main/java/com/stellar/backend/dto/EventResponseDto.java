@@ -9,7 +9,8 @@ public class EventResponseDto {
     private String location;
     private BigDecimal startingPrice;
     private String status;
-    private String image;
+    private String image; // Thumbnail
+    private String poster; // Poster (cho thẻ 3D)
     private String category;
     private Boolean isFeatured;
 
@@ -34,6 +35,9 @@ public class EventResponseDto {
 
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
+
+    public String getPoster() { return poster; }
+    public void setPoster(String poster) { this.poster = poster; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
