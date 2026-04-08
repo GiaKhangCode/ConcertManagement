@@ -8,7 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
     <style>
         /* === EVENT MANAGEMENT STYLES === */
         .dashboard-hero {
@@ -21,18 +23,6 @@
             overflow: hidden;
         }
 
-        .dashboard-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(0, 229, 255, 0.15), transparent 70%);
-            border-radius: 50%;
-            animation: drift 25s infinite alternate ease-in-out;
-        }
-
         .dashboard-hero h1 {
             font-size: clamp(1.8rem, 3vw, 2.8rem);
             margin-bottom: 0.5rem;
@@ -43,7 +33,6 @@
             font-size: 1.05rem;
         }
 
-        /* === STATS GRID === */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -58,14 +47,6 @@
             padding: 2rem;
             backdrop-filter: blur(10px);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .stat-card .stat-icon {
@@ -79,49 +60,14 @@
             font-size: 1.4rem;
         }
 
-        .stat-card .stat-icon.revenue {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 229, 255, 0.1));
-            color: #00ff88;
-        }
-
-        .stat-card .stat-icon.tickets {
-            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(200, 100, 255, 0.1));
-            color: #c864ff;
-        }
-
-        .stat-card .stat-icon.events {
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 150, 255, 0.1));
-            color: #00e5ff;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
+        .stat-card .stat-icon.revenue { background: rgba(0, 255, 136, 0.15); color: #00ff88; }
+        .stat-card .stat-icon.tickets { background: rgba(200, 100, 255, 0.15); color: #c864ff; }
+        .stat-card .stat-icon.events { background: rgba(0, 229, 255, 0.15); color: #00e5ff; }
 
         .stat-value {
             font-family: 'Unbounded', sans-serif;
             font-size: 2rem;
             font-weight: 700;
-            line-height: 1.1;
-        }
-
-        .stat-value.glow-green { color: #00ff88; text-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
-        .stat-value.glow-purple { color: #c864ff; text-shadow: 0 0 20px rgba(200, 100, 255, 0.3); }
-        .stat-value.glow-cyan { color: #00e5ff; text-shadow: 0 0 20px rgba(0, 229, 255, 0.3); }
-
-        /* === MANAGEMENT TABLE === */
-        .revenue-section {
-            margin-bottom: 4rem;
-        }
-
-        .revenue-section h2 {
-            font-size: 1.6rem;
-            margin-bottom: 1.5rem;
         }
 
         .revenue-table-wrapper {
@@ -129,58 +75,19 @@
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
             overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
-        .revenue-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
+        .revenue-table { width: 100%; border-collapse: collapse; }
         .revenue-table thead th {
             background: rgba(255, 255, 255, 0.03);
             padding: 1rem 1.5rem;
             text-align: left;
             font-size: 0.8rem;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
             border-bottom: 1px solid var(--border-subtle);
         }
 
-        .revenue-table tbody tr {
-            transition: background 0.3s;
-        }
-
-        .revenue-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .revenue-table tbody td {
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            vertical-align: middle;
-        }
-
-        .event-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .event-cell img {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .event-cell .event-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
+        .revenue-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
 
         .status-pill {
             display: inline-block;
@@ -189,88 +96,15 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
+        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+        .status-expired { background: rgba(255, 51, 102, 0.1); color: #ff3366; }
 
-        .status-pill.approved {
-            background: rgba(0, 255, 136, 0.1);
-            color: #00ff88;
-            border: 1px solid rgba(0, 255, 136, 0.2);
-        }
-
-        .status-pill.pending {
-            background: rgba(255, 170, 0, 0.1);
-            color: #ffaa00;
-            border: 1px solid rgba(255, 170, 0, 0.2);
-        }
-
-        .status-pill.rejected {
-            background: rgba(255, 51, 102, 0.1);
-            color: #ff3366;
-            border: 1px solid rgba(255, 51, 102, 0.2);
-        }
-
-        .revenue-amount {
-            font-family: 'Unbounded', sans-serif;
-            font-weight: 700;
-            color: #00ff88;
-        }
-
-        /* === EMPTY STATE === */
-        .empty-state {
-            text-align: center;
-            padding: 5rem 2rem;
-        }
-
-        .empty-state .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 1.3rem;
-            margin-bottom: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state p {
-            color: rgba(139, 139, 154, 0.6);
-            margin-bottom: 2rem;
-        }
-
-        /* === LOADING === */
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 4rem;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: var(--accent-secondary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* === CHART AREA === */
         .chart-section {
             background: var(--card-bg);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 3rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .chart-section h3 {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
         }
 
         .bar-chart {
@@ -278,107 +112,85 @@
             align-items: flex-end;
             gap: 12px;
             height: 200px;
-            padding-top: 1rem;
         }
 
-        .bar-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .bar {
             width: 100%;
             max-width: 60px;
             border-radius: 8px 8px 0 0;
             background: linear-gradient(180deg, var(--accent-secondary), rgba(0, 229, 255, 0.3));
-            min-height: 4px;
-            transition: height 1s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
+            transition: height 1s ease;
         }
+        
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
 
-        .bar:hover {
-            box-shadow: 0 0 15px var(--glow-cyan);
-        }
-
-        .bar-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 70px;
-        }
-
-        .bar-value {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--accent-secondary);
-        }
-
-        /* === RESPONSIVE === */
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .revenue-table-wrapper { overflow-x: auto; }
-            .revenue-table { min-width: 600px; }
-        }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="custom-cursor"></div>
-    <div class="bg-mesh primary-mesh"></div>
-    <div class="bg-mesh secondary-mesh"></div>
-
     <header class="navbar">
         <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <div class="nav-center">
+            <div class="search-bar">
+                <i class="fa fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm sự kiện..." id="searchInput">
+            </div>
+        </div>
         <div class="nav-links">
-            <a href="index.html" class="nav-btn"><i class="fa fa-home"></i> Trang Chủ</a>
-            <a href="profile.html" style="display:none;" id="myTicketsNav" class="nav-btn"><i class="fa fa-ticket-alt"></i> Vé của tôi</a>
-            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn"><i class="fa fa-shield-alt"></i> Duyệt Sự Kiện</a>
-            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn active"><i class="fa fa-chart-line"></i> Quản Lý Sự Kiện</a>
-            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn"><i class="fa fa-plus-circle"></i> Tạo Sự Kiện</a>
+            <a href="index.html" class="nav-btn">Trang Chủ</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn active">Quản Lý Sự Kiện</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
+            
+            <div class="account-dropdown" id="accountDropdown" style="display:none;">
+                <button class="btn btn-account">
+                    <i class="fa fa-user-circle"></i>
+                    <span id="userNameDropdown">Tài khoản</span>
+                    <i class="fa fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                </div>
+            </div>
             <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
     </header>
 
     <main class="container">
-        <!-- Dashboard Hero -->
         <section class="dashboard-hero fade-up">
             <h1>🎪 Quản Lý <span class="neon-text">Sự Kiện</span> & Doanh Thu</h1>
-            <p>Theo dõi trạng thái, chỉnh sửa thông tin và quản lý doanh thu từ tất cả sự kiện bạn đã tổ chức trên Ve'ryGood.</p>
+            <p>Theo dõi trạng thái và quản lý doanh thu từ tất cả sự kiện bạn đã tổ chức.</p>
         </section>
 
-        <!-- Stats Cards -->
         <div class="stats-grid">
-            <div class="stat-card fade-up stagger-1">
+            <div class="stat-card fade-up">
                 <div class="stat-icon revenue">💰</div>
                 <div class="stat-label">Tổng doanh thu</div>
-                <div class="stat-value glow-green" id="totalRevenue">---</div>
+                <div class="stat-value" id="totalRevenue">---</div>
             </div>
-            <div class="stat-card fade-up stagger-2">
+            <div class="stat-card fade-up">
                 <div class="stat-icon tickets">🎫</div>
-                <div class="stat-label">Tổng đơn mua</div>
-                <div class="stat-value glow-purple" id="totalTickets">---</div>
+                <div class="stat-label">Tổng vé bán</div>
+                <div class="stat-value" id="totalTickets">---</div>
             </div>
-            <div class="stat-card fade-up stagger-3">
+            <div class="stat-card fade-up">
                 <div class="stat-icon events">🎪</div>
                 <div class="stat-label">Số sự kiện</div>
-                <div class="stat-value glow-cyan" id="totalEvents">---</div>
+                <div class="stat-value" id="totalEvents">---</div>
             </div>
         </div>
 
-        <!-- Bar Chart -->
         <div class="chart-section fade-up">
-            <h3>Biểu Đồ Doanh Thu Theo Sự Kiện</h3>
+            <h3>Biểu Đồ Doanh Thu</h3>
             <div class="bar-chart" id="barChart">
-                <div class="loading-spinner"><div class="spinner"></div></div>
+                <div class="empty-state">Đang tải dữ liệu...</div>
             </div>
         </div>
 
-        <!-- Management Table -->
         <section class="revenue-section fade-up">
             <h2>Danh Sách Sự Kiện</h2>
             <div class="revenue-table-wrapper">
@@ -387,240 +199,121 @@
                         <tr>
                             <th>Sự kiện</th>
                             <th>Trạng thái</th>
-                            <th>Đơn mua</th>
+                            <th>Vé bán</th>
                             <th>Doanh thu</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="revenueTableBody">
-                        <tr>
-                            <td colspan="5">
-                                <div class="loading-spinner"><div class="spinner"></div></div>
-                            </td>
-                        </tr>
+                        <tr><td colspan="5" class="empty-state">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
     </main>
 
-    <footer>
-        <div class="copyright">© 2026 Ve'ryGood. All rights reserved.</div>
-    </footer>
+    <div class="mascot-companion" id="mascotCompanion">
+        <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
+        <img src="assets/mascot.png" alt="Stellar Mascot">
+    </div>
 
+    <script src="js/script.js"></script>
     <script>
-        // Custom cursor
-        const cursor = document.querySelector('.custom-cursor');
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
-
-        // Kiểm tra quyền truy cập & Đồng bộ Header
         document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('stellar_user');
-            const authBtn = document.getElementById('authBtn');
-            if(authBtn && currentUser) {
-                authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
-                authBtn.href = "profile.html";
-                authBtn.className = 'btn btn-account';
-            } else if(authBtn) {
-                authBtn.href = "auth.html";
-            }
-
-            // Role-based Access Control UI
-            const rolesStr = localStorage.getItem('stellar_roles');
-            if(rolesStr) {
-                try {
-                    const roles = JSON.parse(rolesStr);
-                    const createEventNav = document.getElementById('createEventNav');
-                    const revenueNav = document.getElementById('revenueNav');
-                    const adminNav = document.getElementById('adminNav');
-                    const myTicketsNav = document.getElementById('myTicketsNav');
-
-                    if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
-
-                    if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        createEventNav.style.display = 'inline-flex';
-                    }
-                    if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        revenueNav.style.display = 'inline-flex';
-                    }
-                    if(adminNav && roles.includes('ROLE_ADMIN')) {
-                        adminNav.style.display = 'inline-flex';
-                    }
-                } catch(e) {}
-            }
-
             const token = localStorage.getItem('stellar_token');
-
             if (!token) {
                 window.location.href = 'auth.html';
                 return;
             }
-
-            let roles = [];
-            try { roles = JSON.parse(rolesStr || '[]'); } catch (e) {}
-
-            if (!roles.includes('ROLE_ORGANIZER') && !roles.includes('ROLE_ADMIN')) {
-                alert('Bạn không có quyền truy cập trang này. Chỉ dành cho Nhà Tổ Chức.');
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Kích hoạt hiệu ứng fade-up cho các section
-            initScrollReveal();
-
             loadRevenue(token);
         });
-
-        function initScrollReveal() {
-            const revealEls = document.querySelectorAll('.fade-up');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
-            revealEls.forEach(el => observer.observe(el));
-        }
-
 
         async function loadRevenue(token) {
             try {
                 const res = await fetch('http://localhost:8081/api/organizer/revenue', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-
-                if (res.status === 403 || res.status === 401) {
-                    alert('Phiên đăng nhập đã hết hạn hoặc không đủ quyền.');
+                if (res.status === 401 || res.status === 403) {
                     window.location.href = 'auth.html';
                     return;
                 }
-
                 const data = await res.json();
                 renderDashboard(data);
             } catch (e) {
-                console.error('Lỗi tải dữ liệu:', e);
-                document.getElementById('revenueTableBody').innerHTML = `
-                    <tr><td colspan="5">
-                        <div class="empty-state">
-                            <div class="empty-icon">⚠️</div>
-                            <h3>Không thể kết nối Backend</h3>
-                            <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
-                        </div>
-                    </td></tr>`;
+                console.error(e);
+                document.getElementById('revenueTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Lỗi kết nối server.</td></tr>';
             }
         }
 
         function renderDashboard(data) {
-            // Stat cards
-            const formattedRevenue = data.tongDoanhThu 
-                ? Number(data.tongDoanhThu).toLocaleString('vi-VN') + 'đ' 
-                : '0đ';
-            document.getElementById('totalRevenue').textContent = formattedRevenue;
+            document.getElementById('totalRevenue').textContent = (data.tongDoanhThu || 0).toLocaleString('vi-VN') + 'đ';
             document.getElementById('totalTickets').textContent = data.tongSoVeBan || 0;
             document.getElementById('totalEvents').textContent = data.tongSoSuKien || 0;
 
-            // Bar chart
-            const barChart = document.getElementById('barChart');
+            const chart = document.getElementById('barChart');
+            const tbody = document.getElementById('revenueTableBody');
+            
             if (!data.chiTietSuKien || data.chiTietSuKien.length === 0) {
-                barChart.innerHTML = `
-                    <div class="empty-state" style="width:100%;">
-                        <div class="empty-icon">📭</div>
-                        <h3>Chưa có dữ liệu</h3>
-                        <p>Bạn chưa tạo sự kiện nào. Hãy bắt đầu tổ chức!</p>
-                        <a href="admin-create.html" class="btn btn-primary glow-btn">Tạo Sự Kiện Đầu Tiên</a>
-                    </div>`;
-                document.getElementById('revenueTableBody').innerHTML = `
-                    <tr><td colspan="5">
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <h3>Chưa có sự kiện nào</h3>
-                        </div>
-                    </td></tr>`;
+                chart.innerHTML = '<div class="empty-state">Chưa có dữ liệu sự kiện.</div>';
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Chưa có sự kiện nào.</td></tr>';
                 return;
             }
 
-            const maxRevenue = Math.max(...data.chiTietSuKien.map(e => Number(e.doanhThu) || 0), 1);
-
-            barChart.innerHTML = '';
-            data.chiTietSuKien.forEach((ev, idx) => {
-                const revenue = Number(ev.doanhThu) || 0;
-                const height = Math.max((revenue / maxRevenue) * 180, 4);
-                const barItem = document.createElement('div');
-                barItem.className = 'bar-item';
-                barItem.innerHTML = `
-                    <div class="bar-value">${revenue > 0 ? (revenue / 1000000).toFixed(1) + 'M' : '0'}</div>
-                    <div class="bar" style="height: 0px;" data-height="${height}px"></div>
-                    <div class="bar-label" title="${ev.tenSuKien}">${ev.tenSuKien.length > 10 ? ev.tenSuKien.substring(0, 10) + '...' : ev.tenSuKien}</div>
-                `;
-                barChart.appendChild(barItem);
-
-                setTimeout(() => {
-                    barItem.querySelector('.bar').style.height = height + 'px';
-                }, 100 + idx * 150);
-            });
-
-            // Revenue table
-            const tbody = document.getElementById('revenueTableBody');
+            const maxRev = Math.max(...data.chiTietSuKien.map(e => e.doanhThu || 0), 1);
+            chart.innerHTML = '';
             tbody.innerHTML = '';
-            data.chiTietSuKien.forEach(ev => {
-                const statusClass = ev.trangThai === 'Sắp diễn ra' ? 'approved' 
-                    : ev.trangThai === 'Chờ phê duyệt' ? 'pending' 
-                    : ev.trangThai === 'Bị từ chối' ? 'rejected' : 'approved';
 
-                const revenue = Number(ev.doanhThu) || 0;
-                const row = document.createElement('tr');
-                row.innerHTML = `
+            const roles = JSON.parse(localStorage.getItem('stellar_roles') || '[]');
+            const isAdmin = roles.includes('ROLE_ADMIN');
+
+            data.chiTietSuKien.forEach((ev, idx) => {
+                // Chart
+                const h = ((ev.doanhThu || 0) / maxRev) * 180;
+                const bar = document.createElement('div');
+                bar.className = 'bar-item';
+                bar.innerHTML = `
+                    <div class="bar-value">${ev.doanhThu > 1e6 ? (ev.doanhThu/1e6).toFixed(1)+'M' : ev.doanhThu}</div>
+                    <div class="bar" style="height:0px;"></div>
+                    <div class="bar-label">${ev.tenSuKien}</div>
+                `;
+                chart.appendChild(bar);
+                setTimeout(() => { bar.querySelector('.bar').style.height = h + 'px'; }, 100 + idx * 50);
+
+                // Table
+                const tr = document.createElement('tr');
+                const statusClass = ev.trangThai === 'DIEN_RA' ? 'status-active' : 'status-expired';
+                tr.innerHTML = `
                     <td>
-                        <div class="event-cell">
-                            <img src="${ev.anhBiaUrl || 'https://via.placeholder.com/48x48/1a1a2e/ffffff?text=SK'}" alt="" onerror="this.src='https://via.placeholder.com/48x48/1a1a2e/ffffff?text=SK'">
-                            <span class="event-name">${ev.tenSuKien}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="${ev.anhBiaUrl || 'assets/default-event.png'}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;">
+                            <span>${ev.tenSuKien}</span>
                         </div>
                     </td>
                     <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
-                    <td>${ev.soVeBan}</td>
-                    <td><span class="revenue-amount">${revenue.toLocaleString('vi-VN')}đ</span></td>
+                    <td>${ev.soVeBan || 0}</td>
+                    <td><span style="color:#00ff88; font-weight:700;">${(ev.doanhThu || 0).toLocaleString('vi-VN')}đ</span></td>
                     <td>
-                        <div style="display: flex; gap: 8px;">
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: var(--accent-secondary); color: var(--accent-secondary);">
-                                <i class="fa fa-edit"></i> Sửa
-                            </a>
-                            ${JSON.parse(localStorage.getItem('stellar_roles') || '[]').includes('ROLE_ADMIN') ? `
-                            <button onclick="deleteEvent(${ev.maSuKien})" class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff3366; color: #ff3366;">
-                                <i class="fa fa-trash"></i> Xóa
-                            </button>` : ''}
+                        <div style="display:flex; gap:8px;">
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="border-color:var(--accent-secondary); color:var(--accent-secondary);"><i class="fa fa-edit"></i> Sửa</a>
+                            ${isAdmin ? `<button onclick="deleteEvent(${ev.maSuKien})" class="btn btn-outline small" style="border-color:#ff3366; color:#ff3366;"><i class="fa fa-trash"></i> Xóa</button>` : ''}
                         </div>
                     </td>
                 `;
-                tbody.appendChild(row);
+                tbody.appendChild(tr);
             });
         }
 
         async function deleteEvent(id) {
-            if (!confirm("⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA VĨNH VIỄN SỰ KIỆN NÀY?\nHành động này không thể hoàn tác.")) {
-                return;
-            }
-
+            if (!confirm("⚠️ Bạn có chắc chắn muốn xóa sự kiện này?")) return;
             const token = localStorage.getItem('stellar_token');
             try {
                 const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await res.json();
-                if (res.ok) {
-                    alert(data.message || 'Đã xóa sự kiện thành công.');
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Lỗi khi xóa sự kiện.');
-                }
-            } catch (e) {
-                alert('Lỗi kết nối khi xóa sự kiện.');
-            }
+                if (res.ok) { window.location.reload(); }
+                else { alert('Lỗi khi xóa sự kiện.'); }
+            } catch (e) { alert('Lỗi kết nối.'); }
         }
     </script>
 </body>

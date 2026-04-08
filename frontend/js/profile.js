@@ -1,17 +1,4 @@
-// Custom cursor
-const cursor = document.querySelector('.custom-cursor');
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
-
-function logout() {
-    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-        localStorage.removeItem('stellar_token');
-        localStorage.removeItem('stellar_user');
-        window.location.href = 'index.html';
-    }
-}
+// profile.js - Chuyên xử lý dữ liệu cá nhân và vé
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
@@ -29,8 +16,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(profRes.ok) {
             const profile = await profRes.json();
             document.getElementById('userNameLabel').innerText = profile.fullName || profile.username;
-            document.getElementById('userEmailLabel').innerText = profile.email || 'Thành viên Ticket Portal';
+            document.getElementById('userEmailLabel').innerText = profile.email || 'Thành viên Ve\'ryGood';
             
+            // Cập nhật Role hiển thị trên Sidebar
+            const roleLabel = document.getElementById('userRoleDis');
+            if(roleLabel) {
+                const roles = localStorage.getItem('stellar_roles') || '[]';
+                roleLabel.textContent = roles.includes('ADMIN') ? 'Quản trị viên' : (roles.includes('ORGANIZER') ? 'Nhà tổ chức' : 'Khách hàng');
+            }
+
             if(profile.walletBalance !== undefined) {
                 document.getElementById('walletBalance').innerText = profile.walletBalance.toLocaleString('vi-VN') + " VNĐ";
             }
@@ -44,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if(tickRes.ok) {
             const tickets = await tickRes.json();
+            document.getElementById('ticketCount').innerText = tickets.length + " vé";
+            
             if(tickets.length === 0) {
                 ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa mua vé nào. Hãy khám phá các sự kiện đang diễn ra trên trang chủ nhé!</p>';
             } else {

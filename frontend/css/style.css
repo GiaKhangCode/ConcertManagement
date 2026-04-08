@@ -26,6 +26,8 @@ body {
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.5;
+    margin: 0;
+    padding-top: 85px; /* Chiều cao cố định của Navbar */
 }
 
 h1, h2, h3, h4, .logo {
@@ -53,6 +55,7 @@ h1, h2, h3, h4, .logo {
     opacity: 0.35;
     z-index: -2;
     animation: drift 25s infinite alternate ease-in-out;
+    transform: translateZ(0); /* Hardware acceleration */
 }
 
 .primary-mesh {
@@ -79,13 +82,15 @@ h1, h2, h3, h4, .logo {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 4%;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     z-index: 1000;
-    background: rgba(7, 7, 10, 0.7);
+    background: rgba(7, 7, 10, 0.85);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-subtle);
+    transition: all 0.3s ease;
 }
 
 .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
@@ -654,4 +659,86 @@ footer { border-top: 1px solid var(--border-subtle); padding: 4rem 4% 2rem; back
     background: rgba(0, 243, 255, 0.1);
     border-color: var(--primary-cyan);
     color: var(--primary-cyan) !important;
+}
+
+/* === ACCOUNT DROPDOWN STYLES === */
+.account-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.account-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    min-width: 200px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    border-radius: 16px;
+    padding: 10px 0;
+    z-index: 1100;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+/* Cầu nối vô hình giúp duy trì trạng thái hover khi di chuyển từ nút xuống menu */
+.account-dropdown .dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: transparent;
+}
+
+.account-dropdown:hover .dropdown-content {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.dropdown-content a {
+    color: #e0e0e0;
+    padding: 12px 20px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dropdown-content a i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--primary-cyan);
+}
+
+.dropdown-content a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-cyan);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 8px 0;
+}
+
+.dropdown-content a.logout-item:hover {
+    background: rgba(255, 51, 102, 0.1);
+    color: #ff3366;
+}
+
+.dropdown-content a.logout-item i {
+    color: #ff3366;
 }

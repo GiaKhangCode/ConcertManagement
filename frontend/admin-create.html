@@ -9,19 +9,40 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
 </head>
-<body style="min-height: 100vh; overflow-x: hidden; background: var(--bg-color); font-family: 'Be Vietnam Pro', sans-serif;">
+<body>
     <div class="custom-cursor"></div>
     <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
     
     <header class="navbar">
         <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <div class="nav-center">
+            <div class="search-bar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Tìm kiếm sự kiện, nghệ sĩ, địa điểm..." id="searchInput">
+            </div>
+        </div>
         <div class="nav-links">
-            <a href="index.html" class="nav-btn"><i class="fa fa-home"></i> Trang Chủ</a>
-            <a href="profile.html" style="display:none;" id="myTicketsNav" class="nav-btn"><i class="fa fa-ticket-alt"></i> Vé của tôi</a>
-            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn"><i class="fa fa-shield-alt"></i> Duyệt Sự Kiện</a>
-            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn"><i class="fa fa-chart-line"></i> Quản Lý Sự Kiện</a>
-            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn active"><i class="fa fa-plus-circle"></i> Tạo Sự Kiện</a>
+            <a href="index.html" class="nav-btn">Trang Chủ</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn active">Tạo Sự Kiện</a>
+            
+            <!-- Account Dropdown -->
+            <div class="account-dropdown" id="accountDropdown" style="display:none;">
+                <button class="btn btn-account">
+                    <i class="fa fa-user-circle"></i>
+                    <span id="userNameDropdown">Tài khoản</span>
+                    <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                </div>
+            </div>
             <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
     </header>
@@ -200,49 +221,14 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="js/script.js"></script>
     <script src="js/admin-create.js"></script>
-    <script>
-        // Kiểm tra quyền truy cập & Đồng bộ Header
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('stellar_user');
-            const authBtn = document.getElementById('authBtn');
-            if(authBtn && currentUser) {
-                authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
-                authBtn.href = "profile.html";
-                authBtn.className = 'btn btn-account';
-            } else if(authBtn) {
-                authBtn.href = "auth.html";
-            }
 
-            // Role-based Access Control UI
-            const rolesStr = localStorage.getItem('stellar_roles');
-            if(rolesStr) {
-                try {
-                    const roles = JSON.parse(rolesStr);
-                    const createEventNav = document.getElementById('createEventNav');
-                    const revenueNav = document.getElementById('revenueNav');
-                    const adminNav = document.getElementById('adminNav');
-                    const myTicketsNav = document.getElementById('myTicketsNav');
-
-                    if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
-
-                    if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        createEventNav.style.display = 'inline-flex';
-                    }
-                    if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        revenueNav.style.display = 'inline-flex';
-                    }
-                    if(adminNav && roles.includes('ROLE_ADMIN')) {
-                        adminNav.style.display = 'inline-flex';
-                    }
-                } catch(e) {}
-            }
-        });
-    </script>
+    <div class="custom-cursor"></div>
 
     <!-- Mascot Companion -->
     <div class="mascot-companion" id="mascotCompanion">
-        <div class="mascot-tooltip" id="mascotTooltip">Xin chào quản trị viên! Tôi ở đây để hỗ trợ bạn tạo sự kiện.</div>
+        <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
 </body>

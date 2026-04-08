@@ -2,12 +2,6 @@
 let lichDienCount = 0;
 let hangVeCount = 0;
 
-const cursor = document.querySelector('.custom-cursor');
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
-
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
     if(!token) {
@@ -50,26 +44,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initFlatpickr('.dt-picker');
 });
 
-function showMascotMessage(msg, isError = false) {
-    const tooltip = document.getElementById('mascotTooltip');
-    const mascot = document.getElementById('mascotCompanion');
-    if (tooltip) {
-        tooltip.innerText = msg;
-        tooltip.classList.add('show');
-        if (isError) {
-            tooltip.classList.add('error');
-            if(mascot) mascot.style.animation = 'shake 0.5s ease';
-        } else {
-            tooltip.classList.remove('error');
-            if(mascot) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
-        }
-        
-        setTimeout(() => {
-            tooltip.classList.remove('show');
-            if(mascot && isError) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
-        }, 5000);
-    }
-}
 
 function initFlatpickr(selector) {
     return flatpickr(selector, {

@@ -78,7 +78,7 @@ async function fetchEventsFromBackend(keyword = '') {
         
         const events = await response.json();
         if (events && events.length > 0) {
-            // Populate Trending (Carousel)
+            // Populate Trending (Carousel) - Only if element exists
             const grid = document.getElementById('eventGrid');
             if (grid) {
                 grid.innerHTML = ''; 
@@ -86,16 +86,17 @@ async function fetchEventsFromBackend(keyword = '') {
                     const card = createEventCard(ev, idx);
                     grid.appendChild(card);
                 });
-                // Clone for infinite carousel
                 const cards = grid.querySelectorAll('.event-card');
                 cards.forEach(card => grid.appendChild(card.cloneNode(true)));
             }
 
-            // Populate Category Grids
+            // Populate Category Grids - Only if elements exist
             const categories = ['music', 'theater', 'workshop', 'sport'];
+            let anyGridFound = false;
             categories.forEach(cat => {
                 const catGrid = document.getElementById(`${cat}Grid`);
                 if (catGrid) {
+                    anyGridFound = true;
                     catGrid.innerHTML = '';
                     const catEvents = events.filter(ev => ev.category === cat);
                     catEvents.forEach((ev, idx) => {
@@ -105,13 +106,16 @@ async function fetchEventsFromBackend(keyword = '') {
                 }
             });
             
-            // Render Sự kiện nổi bật (Featured Event)
-            const featured = events.find(ev => ev.isFeatured) || events[0];
-            updateFeaturedHero(featured);
+            // Render Sự kiện nổi bật (Featured Event) - Only if on Hero page
+            const heroVisual = document.getElementById('heroVisual');
+            if (heroVisual) {
+                const featured = events.find(ev => ev.isFeatured) || events[0];
+                updateFeaturedHero(featured);
+            }
 
-            // Re-attach events
+            // Re-attach events selectively
             attachCursorEvents(document.querySelectorAll('.event-card, .buy-btn'));
-            initFiltering(); 
+            if (anyGridFound) initFiltering(); 
             initScrollReveal(); 
         }
     } catch (e) {
@@ -219,7 +223,12 @@ function initScrollReveal() {
 
 // Bắt đầu khởi tạo dữ liệu khi Load trang xong
 document.addEventListener('DOMContentLoaded', () => {
-    fetchEventsFromBackend();
+    // Only fetch all events if we are on a page that displays event grids
+    const isMainDisplayPage = document.getElementById('eventGrid') || document.querySelector('.static-grid');
+    if (isMainDisplayPage) {
+        fetchEventsFromBackend();
+    }
+    
     initScrollReveal();
 
     // Thêm chức năng tìm kiếm
@@ -237,15 +246,24 @@ document.addEventListener('DOMContentLoaded', () => {
 // Update Header UI based on Auth JWT Token
 document.addEventListener('DOMContentLoaded', () => {
     const currentUser = localStorage.getItem('stellar_user');
-    const authBtn = document.getElementById('authBtn') || document.querySelector('.navbar .btn.btn-outline');
-    if(authBtn && currentUser) {
-        authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
-        authBtn.href = "profile.html";
-        authBtn.className = 'btn btn-account';
+    const authBtn = document.getElementById('authBtn');
+    const accountDropdown = document.getElementById('accountDropdown');
+    const userNameLabel = document.getElementById('userNameDropdown');
+
+    if (currentUser && accountDropdown) {
+        // Logged In state
+        if (authBtn) authBtn.style.display = 'none';
+        accountDropdown.style.display = 'inline-block';
+        if (userNameLabel) userNameLabel.innerText = currentUser;
         
-        attachCursorEvents([authBtn]);
-    } else if(authBtn) {
+        // Re-attach cursor events for the dropdown toggle
+        const toggle = accountDropdown.querySelector('.btn-account');
+        if (toggle) attachCursorEvents([toggle]);
+    } else if (authBtn) {
+        // Logged Out state
+        authBtn.style.display = 'inline-flex';
         authBtn.href = "auth.html";
+        if (accountDropdown) accountDropdown.style.display = 'none';
     }
 
     // Role-based Access Control UI
@@ -256,9 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const createEventNav = document.getElementById('createEventNav');
             const revenueNav = document.getElementById('revenueNav');
             const adminNav = document.getElementById('adminNav');
-            const myTicketsNav = document.getElementById('myTicketsNav');
 
-            if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
+            // "My Tickets" is now inside the dropdown, handled in HTML/CSS
 
             if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 createEventNav.style.display = 'inline-flex';
@@ -273,4 +290,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function logout() {
+    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+        localStorage.removeItem('stellar_token');
+        localStorage.removeItem('stellar_user');
+        localStorage.removeItem('stellar_roles');
+        window.location.href = 'index.html';
+    }
+}
+
+// Mascot Logic
+function showMascotMessage(msg, isError = false) {
+    const tooltip = document.getElementById('mascotTooltip');
+    const mascot = document.getElementById('mascotCompanion');
+    if (tooltip) {
+        tooltip.innerText = msg;
+        tooltip.classList.add('show');
+        if (isError) {
+            tooltip.classList.add('error');
+            if(mascot) mascot.style.animation = 'shake 0.5s ease';
+        } else {
+            tooltip.classList.remove('error');
+            if(mascot) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }
+        
+        setTimeout(() => {
+            tooltip.classList.remove('show');
+            if(mascot && isError) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }, 5000);
+    }
+}
+
+function initMascotGreeting() {
+    const currentUser = localStorage.getItem('stellar_user');
+    const roleStr = localStorage.getItem('stellar_roles');
+    let msg = "Chào mừng bạn đến với Ve'ryGood! Hãy khám phá thế giới sự kiện đầy màu sắc nhé.";
+    
+    if (currentUser && roleStr) {
+        try {
+            const roles = roleStr.includes('[') ? JSON.parse(roleStr) : [roleStr];
+            if (roles.includes('ROLE_ADMIN') || roles.includes('ADMIN')) {
+                msg = `Xin chào Quản trị viên ${currentUser}! Mọi hệ thống đều đang ổn định, mời bạn tiếp tục công việc.`;
+            } else if (roles.includes('ROLE_ORGANIZER') || roles.includes('ORGANIZER')) {
+                msg = `Chào nhà tổ chức ${currentUser}! Tôi luôn sẵn sàng hỗ trợ bạn quản lý những sự kiện bùng nổ.`;
+            } else {
+                msg = `Chào ${currentUser}! Chúc bạn tìm được những chiếc vé sự kiện ưng ý nhất tại Ve'ryGood!`;
+            }
+        } catch(e) {
+            msg = `Chào ${currentUser}! Chúc bạn có một ngày mới thật tuyệt vời cùng Ve'ryGood!`;
+        }
+    }
+    
+    // Đợi 1 giây sau khi load trang mới hiện lời chào
+    setTimeout(() => showMascotMessage(msg), 1500);
+}
+
+document.addEventListener('DOMContentLoaded', initMascotGreeting);
 

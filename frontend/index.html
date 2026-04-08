@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="/index.css">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
 </head>
 <body>
     <div class="custom-cursor"></div>
@@ -27,14 +27,28 @@
             </div>
         </div>
             <div class="nav-links">
-                <a href="#music">Âm Nhạc</a>
-                <a href="#theater">Sân Khấu</a>
-                <a href="profile.html" style="display:none;" id="myTicketsNav" class="nav-btn"><i class="fa fa-ticket-alt"></i> Vé của tôi</a>
-                <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn"><i class="fa fa-shield-alt"></i> Duyệt Sự Kiện</a>
-                <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn"><i class="fa fa-chart-line"></i> Quản Lý Sự Kiện</a>
-                <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn"><i class="fa fa-plus-circle"></i> Tạo Sự Kiện</a>
-                <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
+            <a href="index.html" class="nav-btn active">Trang Chủ</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
+            
+            <!-- Account Dropdown (Visible when logged in) -->
+            <div class="account-dropdown" id="accountDropdown" style="display:none;">
+                <button class="btn btn-account">
+                    <i class="fa fa-user-circle"></i>
+                    <span id="userNameDropdown">Tài khoản</span>
+                    <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                </div>
             </div>
+
+            <!-- Login Button (Visible when logged out) -->
+            <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
+        </div>
     </header>
  
     <main class="container">
@@ -348,7 +362,7 @@
  
     <!-- Mascot Companion -->
     <div class="mascot-companion" id="mascotCompanion">
-        <div class="mascot-tooltip" id="mascotTooltip">Xin chào quản trị viên! Tôi ở đây để hỗ trợ bạn tạo sự kiện.</div>
+        <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
  
