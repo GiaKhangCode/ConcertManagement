@@ -325,6 +325,7 @@ public class AdminController {
             "thoiGianBD", (Object) (sk.getThoiGianBD() != null ? sk.getThoiGianBD().toString() : ""),
             "diaDiem", (Object) (sk.getDiaDiem() != null ? sk.getDiaDiem().getTenDiaDiem() : "Chưa xác định"),
             "anhBiaUrl", (Object) (sk.getAnhBiaUrl() != null ? sk.getAnhBiaUrl() : ""),
+            "anhThumbnailUrl", (Object) (sk.getAnhThumbnailUrl() != null ? sk.getAnhThumbnailUrl() : ""),
             "laSuKienNoiBat", (Object) (sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1)
         )).collect(Collectors.toList()));
     }

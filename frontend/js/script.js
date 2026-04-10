@@ -254,7 +254,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logged In state
         if (authBtn) authBtn.style.display = 'none';
         accountDropdown.style.display = 'inline-block';
-        if (userNameLabel) userNameLabel.innerText = currentUser;
+        if (userNameLabel) {
+            try {
+                const userData = JSON.parse(currentUser);
+                const name = userData.hoTen || userData.name || currentUser;
+                // Chỉ cập nhật phần text, giữ nguyên các thẻ <i> hoặc SVG nếu có
+                userNameLabel.textContent = name;
+            } catch(e) {
+                userNameLabel.textContent = currentUser;
+            }
+        }
         
         // Re-attach cursor events for the dropdown toggle
         const toggle = accountDropdown.querySelector('.btn-account');

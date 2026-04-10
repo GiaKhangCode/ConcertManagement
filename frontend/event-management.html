@@ -8,29 +8,38 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/test.png">
     <style>
-        /* === EVENT MANAGEMENT STYLES === */
-        .dashboard-hero {
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1) 0%, rgba(138, 43, 226, 0.08) 100%);
+        .admin-page-header {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 3rem;
+            border-radius: 20px;
+            padding: 1.5rem 2.5rem;
+            backdrop-filter: blur(10px);
             margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
         }
 
-        .dashboard-hero h1 {
-            font-size: clamp(1.8rem, 3vw, 2.8rem);
-            margin-bottom: 0.5rem;
+        .section-title {
+            text-align: left;
+            margin-bottom: 2.5rem;
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            letter-spacing: 2px;
+            font-family: 'Unbounded';
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            text-transform: uppercase;
         }
 
-        .dashboard-hero p {
-            color: var(--text-muted);
-            font-size: 1.05rem;
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-subtle), transparent);
         }
 
         .stats-grid {
@@ -49,20 +58,7 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .stat-card .stat-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.2rem;
-            font-size: 1.4rem;
-        }
-
-        .stat-card .stat-icon.revenue { background: rgba(0, 255, 136, 0.15); color: #00ff88; }
-        .stat-card .stat-icon.tickets { background: rgba(200, 100, 255, 0.15); color: #c864ff; }
-        .stat-card .stat-icon.events { background: rgba(0, 229, 255, 0.15); color: #00e5ff; }
+        /* Loại bỏ CSS của stat-icon không còn sử dụng */
 
         .stat-value {
             font-family: 'Unbounded', sans-serif;
@@ -123,6 +119,48 @@
             transition: height 1s ease;
         }
         
+        /* === ACTION BUTTONS (Đồng bộ từ Admin) === */
+        .admin-btn {
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-edit:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-secondary);
+            color: var(--accent-secondary);
+        }
+
+        .btn-delete {
+            background: rgba(255, 51, 102, 0.05);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.1);
+        }
+
+        .btn-delete:hover:not(:disabled) {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+            border-color: transparent;
+        }
+        
         .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
 
         @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } }
@@ -150,10 +188,10 @@
                 <button class="btn btn-account">
                     <i class="fa fa-user-circle"></i>
                     <span id="userNameDropdown">Tài khoản</span>
-                    <i class="fa fa-chevron-down"></i>
+                    <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
                 </button>
                 <div class="dropdown-content">
-                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <a href="profile.html"><i class="fa fa-user"></i> Hồ sơ của tôi</a>
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
                 </div>
@@ -162,39 +200,44 @@
         </div>
     </header>
 
-    <main class="container">
-        <section class="dashboard-hero fade-up">
-            <h1>🎪 Quản Lý <span class="neon-text">Sự Kiện</span> & Doanh Thu</h1>
-            <p>Theo dõi trạng thái và quản lý doanh thu từ tất cả sự kiện bạn đã tổ chức.</p>
-        </section>
+    <main class="container" style="padding-top: 2rem;">
+        <!-- Tối giản hóa Header -->
+        <div class="admin-page-header fade-up" style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h1 class="neon-text" style="font-size: 1.8rem; font-family: 'Unbounded'; margin: 0;">QUẢN LÝ</h1>
+                <div style="background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600;">
+                    DASHBOARD NHÀ TỔ CHỨC
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm mới</button>
+            </div>
+        </div>
 
         <div class="stats-grid">
             <div class="stat-card fade-up">
-                <div class="stat-icon revenue">💰</div>
                 <div class="stat-label">Tổng doanh thu</div>
                 <div class="stat-value" id="totalRevenue">---</div>
             </div>
             <div class="stat-card fade-up">
-                <div class="stat-icon tickets">🎫</div>
                 <div class="stat-label">Tổng vé bán</div>
                 <div class="stat-value" id="totalTickets">---</div>
             </div>
             <div class="stat-card fade-up">
-                <div class="stat-icon events">🎪</div>
                 <div class="stat-label">Số sự kiện</div>
                 <div class="stat-value" id="totalEvents">---</div>
             </div>
         </div>
 
         <div class="chart-section fade-up">
-            <h3>Biểu Đồ Doanh Thu</h3>
+            <h3 class="section-title">Biểu Đồ Doanh Thu</h3>
             <div class="bar-chart" id="barChart">
                 <div class="empty-state">Đang tải dữ liệu...</div>
             </div>
         </div>
 
         <section class="revenue-section fade-up">
-            <h2>Danh Sách Sự Kiện</h2>
+            <h2 class="section-title">Danh Sách Sự Kiện</h2>
             <div class="revenue-table-wrapper">
                 <table class="revenue-table">
                     <thead>
@@ -295,9 +338,10 @@
                     <td>${ev.soVeBan || 0}</td>
                     <td><span style="color:#00ff88; font-weight:700;">${(ev.doanhThu || 0).toLocaleString('vi-VN')}đ</span></td>
                     <td>
-                        <div style="display:flex; gap:8px;">
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="btn btn-outline small" style="border-color:var(--accent-secondary); color:var(--accent-secondary);"><i class="fa fa-edit"></i> Sửa</a>
-                            ${isAdmin ? `<button onclick="deleteEvent(${ev.maSuKien})" class="btn btn-outline small" style="border-color:#ff3366; color:#ff3366;"><i class="fa fa-trash"></i> Xóa</button>` : ''}
+                        <div style="display:flex; gap:10px;">
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit">Chỉnh sửa</a>
+                            ${isAdmin ? `
+                            <button onclick="deleteEvent(${ev.maSuKien})" class="admin-btn btn-delete">Xóa</button>` : ''}
                         </div>
                     </td>
                 `;

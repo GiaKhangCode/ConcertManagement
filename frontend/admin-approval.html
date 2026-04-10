@@ -8,61 +8,45 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/test.png">
     <style>
         /* === ADMIN APPROVAL PAGE STYLES === */
-        .admin-hero {
-            background: linear-gradient(135deg, rgba(255, 51, 102, 0.1) 0%, rgba(138, 43, 226, 0.08) 100%);
+        .admin-page-header {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 3rem;
-            margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
+            border-radius: 20px;
+            padding: 1.5rem 2.5rem;
+            backdrop-filter: blur(10px);
         }
 
-        .admin-hero::before {
-            content: '';
-            position: absolute;
-            top: -40%;
-            right: -15%;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(255, 51, 102, 0.15), transparent 70%);
-            border-radius: 50%;
-            animation: drift 25s infinite alternate ease-in-out;
-        }
-
-        .admin-hero h1 {
-            font-size: clamp(1.8rem, 3vw, 2.8rem);
-            margin-bottom: 0.5rem;
-        }
-
-        .admin-hero p {
-            color: var(--text-muted);
-            font-size: 1.05rem;
-        }
-
-        .pending-count {
-            display: inline-flex;
+        .section-title {
+            text-align: left;
+            margin-bottom: 2.5rem;
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            letter-spacing: 2px;
+            font-family: 'Unbounded';
+            display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(255, 170, 0, 0.1);
-            border: 1px solid rgba(255, 170, 0, 0.3);
-            color: #ffaa00;
-            padding: 0.5rem 1.2rem;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-top: 1rem;
+            gap: 15px;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-subtle), transparent);
         }
 
         .pending-count .dot {
-            width: 8px;
-            height: 8px;
-            background: #ffaa00;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-secondary);
             border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-cyan);
             animation: pulse 2s ease-in-out infinite;
         }
 
@@ -74,271 +58,258 @@
         /* === EVENT APPROVAL CARDS === */
         .approval-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 5rem;
         }
 
-        .approval-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            animation: fadeUp 0.6s ease forwards;
-            opacity: 0;
+        /* Override/Enhance style.css event-card for Admin */
+        .event-card.admin-view {
+            height: auto;
+            border-color: rgba(255, 255, 255, 0.1);
         }
-
-        .approval-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .approval-card .card-banner {
-            width: 100%;
-            height: 160px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-
-        .approval-card .card-banner .overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(7, 7, 10, 0.9), transparent 60%);
-        }
-
-        .approval-card .card-banner .status-tag {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            padding: 0.3rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            background: rgba(255, 170, 0, 0.2);
-            color: #ffaa00;
-            border: 1px solid rgba(255, 170, 0, 0.3);
-            backdrop-filter: blur(4px);
-        }
-
-        .approval-card .card-content {
-            padding: 1.5rem;
-        }
-
-        .approval-card .card-content h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.8rem;
-            line-height: 1.3;
-        }
-
-        .card-meta {
+        
+        /* Giao diện Body Card Admin */
+        .admin-view .card-body {
+            padding: 2rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
-            margin-bottom: 1.2rem;
+            gap: 1.5rem;
         }
 
-        .card-meta span {
+        .admin-view .card-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .meta-value {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-description {
             font-size: 0.85rem;
             color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .organizer-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            margin-bottom: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .card-meta .icon {
-            color: var(--accent-secondary);
-            width: 16px;
-            text-align: center;
-        }
-
-        .organizer-tag {
-            display: inline-flex;
+        .organizer-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(138, 43, 226, 0.1);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            color: #c864ff;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            margin-bottom: 1.2rem;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .organizer-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
         }
 
         /* === ACTION BUTTONS === */
         .card-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 0.8rem;
-            padding-top: 1.2rem;
-            border-top: 1px solid var(--border-subtle);
+            margin-top: auto;
         }
 
-        .action-btn {
-            flex: 1;
-            padding: 0.7rem 1rem;
-            border-radius: 10px;
+        .admin-btn {
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
             font-family: 'Be Vietnam Pro', sans-serif;
             font-weight: 600;
             font-size: 0.85rem;
-            border: none;
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
         }
 
-        .action-btn.approve {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 200, 100, 0.1));
-            color: #00ff88;
-            border: 1px solid rgba(0, 255, 136, 0.3);
+        .btn-approve {
+            background: var(--status-live);
+            color: #000;
+            grid-column: span 1;
         }
 
-        .action-btn.approve:hover {
-            background: rgba(0, 255, 136, 0.25);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        .btn-approve:hover:not(:disabled) {
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
             transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
-        .action-btn.reject {
-            background: rgba(255, 51, 102, 0.08);
+        .btn-reject {
+            background: rgba(255, 51, 102, 0.1);
             color: #ff3366;
             border: 1px solid rgba(255, 51, 102, 0.2);
         }
 
-        .action-btn.reject:hover {
-            background: rgba(255, 51, 102, 0.2);
-            box-shadow: 0 0 20px rgba(255, 51, 102, 0.15);
+        .btn-reject:hover:not(:disabled) {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
             transform: translateY(-2px);
         }
 
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
+        .btn-feature {
+            grid-column: span 2;
+            background: linear-gradient(90deg, #00e5ff, #8a2be2);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
         }
 
-        /* === PROCESSED CARD STATE === */
-        .approval-card.processed {
-            opacity: 0.6;
+        .btn-feature:hover:not(:disabled) {
+            box-shadow: 0 6px 25px rgba(0, 229, 255, 0.4);
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
-        .approval-card.processed .card-actions {
-            display: none;
-        }
-
-        .processed-badge {
-            display: none;
-            text-align: center;
-            padding: 0.8rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .approval-card.processed .processed-badge {
-            display: block;
-        }
-
-        .processed-badge.approved-badge {
-            color: #00ff88;
-            background: rgba(0, 255, 136, 0.05);
-        }
-
-        .processed-badge.rejected-badge {
-            color: #ff3366;
-            background: rgba(255, 51, 102, 0.05);
-        }
-
-        /* === TOAST NOTIFICATION === */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: rgba(22, 22, 30, 0.95);
+        .btn-edit {
+            grid-column: span 1;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 1rem 1.5rem;
+        }
+
+        .btn-edit:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-delete {
+            grid-column: span 1;
+            background: rgba(255, 51, 102, 0.05);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.1);
+        }
+
+        .btn-delete:hover:not(:disabled) {
+            background: rgba(255, 51, 102, 0.15);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+
+        /* === PROCESSED STATE === */
+        .admin-view.processed {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+            pointer-events: none;
+        }
+
+        .status-overlay {
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
-            z-index: 9999;
-            backdrop-filter: blur(20px);
-            transform: translateY(100px);
+            justify-content: center;
+            background: rgba(7, 7, 10, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 10;
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            font-weight: 500;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: opacity 0.3s;
+            border-radius: 16px;
         }
 
-        .toast.show {
-            transform: translateY(0);
+        .processed .status-overlay {
             opacity: 1;
         }
 
-        .toast.success { border-color: rgba(0, 255, 136, 0.3); }
-        .toast.error { border-color: rgba(255, 51, 102, 0.3); }
-
-        /* === EMPTY STATE === */
-        .empty-state {
-            text-align: center;
-            padding: 5rem 2rem;
+        .status-msg {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-family: 'Unbounded';
+            font-size: 1rem;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .empty-state .empty-icon {
-            font-size: 5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.4;
+        .processed .status-msg {
+            transform: translateY(0);
         }
 
-        .empty-state h3 {
-            font-size: 1.4rem;
-            margin-bottom: 0.8rem;
+        .msg-approved { background: #00ff88; color: #000; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
+        .msg-rejected { background: #ff3366; color: #fff; box-shadow: 0 0 30px rgba(255, 51, 102, 0.4); }
+
+        /* === TOAST === */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-secondary);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .empty-state p {
-            color: var(--text-muted);
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
-        /* === LOADING === */
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 4rem;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: var(--accent-secondary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Animations */
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-5%, 10%) scale(1.1); }
         }
 
         @media (max-width: 768px) {
             .approval-grid { grid-template-columns: 1fr; }
+            .admin-hero { padding: 2rem; }
         }
     </style>
 </head>
@@ -351,8 +322,8 @@
         <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
         <div class="nav-center">
             <div class="search-bar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" placeholder="Tìm kiếm sự kiện, nghệ sĩ, địa điểm..." id="searchInput">
+                <i class="fa fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm sự kiện..." id="searchInput">
             </div>
         </div>
         <div class="nav-links">
@@ -361,7 +332,6 @@
             <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
             <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
             
-            <!-- Account Dropdown -->
             <div class="account-dropdown" id="accountDropdown" style="display:none;">
                 <button class="btn btn-account">
                     <i class="fa fa-user-circle"></i>
@@ -369,7 +339,7 @@
                     <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
                 </button>
                 <div class="dropdown-content">
-                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <a href="profile.html"><i class="fa fa-user"></i> Hồ sơ của tôi</a>
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
                 </div>
@@ -378,32 +348,41 @@
         </div>
     </header>
 
-    <main class="container">
-        <!-- Admin Hero -->
-        <section class="admin-hero fade-up">
-            <h1>🛡️ Trung Tâm <span style="color: var(--status-alert);">Kiểm Duyệt</span></h1>
-            <p>Xem xét và phê duyệt các sự kiện mới được gửi bởi Nhà Tổ Chức trên hệ thống.</p>
-            <div class="pending-count">
-                <span class="dot"></span>
-                <span id="pendingCountText">Đang tải...</span>
+
+    <main class="container" style="padding-top: 2rem;">
+        <!-- Tối giản hóa: Thay Banner lớn bằng tiêu đề và Badge tích hợp -->
+        <div class="admin-page-header fade-up" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h1 class="neon-text" style="font-size: 1.8rem; font-family: 'Unbounded'; margin: 0;">KIỂM DUYỆT</h1>
+                <div class="pending-count-badge" id="pendingCounter" style="display: flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary);">
+                    <span class="dot" style="width: 8px; height: 8px; background: var(--accent-secondary); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent-secondary); animation: pulse 2s infinite;"></span>
+                    <span id="pendingCountText">Đang quét...</span>
+                </div>
+            </div>
+            
+            <div class="header-actions" style="display: flex; gap: 10px;">
+                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm mới</button>
+            </div>
+        </div>
+
+        <!-- Approval Grid Section -->
+        <section class="events-section fade-up stagger-1">
+            <h2 class="section-title">CHỜ PHÊ DUYỆT</h2>
+            <div class="approval-grid" id="approvalGrid">
+                <div class="loading-spinner"><div class="spinner"></div></div>
             </div>
         </section>
 
-        <!-- Approval Grid -->
-        <div class="approval-grid" id="approvalGrid">
-            <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
+        <!-- Tối giản hóa: Banner nổi bật thay bằng tiêu đề Section sạch sẽ -->
+        <div style="margin-top: 5rem; border-top: 1px solid var(--border-subtle); padding-top: 3rem;"></div>
 
-        <!-- Featured Management Section -->
-        <section class="admin-hero fade-up" style="margin-top: 4rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 200, 100, 0.05) 100%);">
-            <h1>🌟 Đặt <span style="color: #00ff88;">Sự Kiện Nổi Bật</span> (Hero Banner)</h1>
-            <p>Chọn một sự kiện đã được phê duyệt để ưu tiên hiển thị ở vị trí trung tâm ngoài trang chủ.</p>
+        <!-- Feature Grid Section -->
+        <section class="events-section fade-up stagger-1">
+            <h2 class="section-title">SỰ KIỆN NỔI BẬT (HERO)</h2>
+            <div class="approval-grid" id="featureGrid">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
         </section>
-
-        <!-- Feature Grid -->
-        <div class="approval-grid" id="featureGrid">
-            <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
     </main>
 
     <!-- Toast Notification -->
@@ -445,20 +424,13 @@
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        // Kiểm tra quyền truy cập & Đồng bộ Header
+        // Kiểm tra quyền truy cập & Đồng bộ Header (Sử dụng logic chuẩn từ script.js)
         document.addEventListener('DOMContentLoaded', () => {
             const currentUser = localStorage.getItem('stellar_user');
-            const authBtn = document.getElementById('authBtn');
-            if(authBtn && currentUser) {
-                authBtn.innerHTML = `${currentUser}`;
-                authBtn.href = "profile.html";
-                authBtn.className = 'btn btn-account';
-            } else if(authBtn) {
-                authBtn.href = "auth.html";
-            }
+            const rolesStr = localStorage.getItem('stellar_roles');
+            const token = localStorage.getItem('stellar_token');
 
             // Role-based Access Control UI
-            const rolesStr = localStorage.getItem('stellar_roles');
             if(rolesStr) {
                 try {
                     const roles = JSON.parse(rolesStr);
@@ -481,7 +453,24 @@
                 } catch(e) {}
             }
 
-            const token = localStorage.getItem('stellar_token');
+            // Đồng bộ UI Header (Username & Dropdown)
+            const authBtn = document.getElementById('authBtn');
+            const accountDropdown = document.getElementById('accountDropdown');
+            const userNameLabel = document.getElementById('userNameDropdown');
+
+            if (currentUser && accountDropdown) {
+                if (authBtn) authBtn.style.display = 'none';
+                accountDropdown.style.display = 'inline-block';
+                if (userNameLabel) {
+                    try {
+                        const userData = JSON.parse(currentUser);
+                        userNameLabel.textContent = userData.hoTen || userData.name || currentUser;
+                    } catch(e) {
+                        userNameLabel.textContent = currentUser;
+                    }
+                }
+            }
+
 
             if (!token) {
                 window.location.href = 'auth.html';
@@ -579,7 +568,7 @@
 
             events.forEach((ev, idx) => {
                 const card = document.createElement('div');
-                card.className = 'approval-card';
+                card.className = 'event-card admin-view';
                 card.style.animationDelay = `${idx * 0.1}s`;
                 card.id = `event-card-${ev.maSuKien}`;
 
@@ -588,48 +577,57 @@
                     : 'Chưa xác định';
 
                 card.innerHTML = `
-                    <div class="card-banner" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}');">
-                        <div class="overlay"></div>
-                        <div class="status-tag">⏳ Chờ phê duyệt</div>
+                    <div class="status-overlay" id="overlay-${ev.maSuKien}">
+                        <div class="status-msg" id="msg-${ev.maSuKien}"></div>
                     </div>
-                    <div class="card-content">
+                    <div class="card-image" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}');">
+                        <div class="status-badge alert">CHỜ DUYỆT</div>
+                    </div>
+                    <div class="card-body">
                         <h3>${ev.tenSuKien}</h3>
                         
-                        <div style="display: flex; gap: 10px; margin-bottom: 1.2rem;">
-                            <div style="flex: 1; text-align: center;">
-                                <div style="font-size: 0.7rem; color: #a0a5b5; margin-bottom: 5px;">ẢNH CARD (THUMBNAIL)</div>
-                                <img src="${ev.anhThumbnailUrl || 'https://via.placeholder.com/100x60'}" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="card-meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Thời gian</span>
+                                <span class="meta-value">${dateStr}</span>
                             </div>
-                            <div style="flex: 1; text-align: center;">
-                                <div style="font-size: 0.7rem; color: #a0a5b5; margin-bottom: 5px;">ẢNH 3D (POSTER)</div>
-                                <img src="${ev.anhBiaUrl || 'https://via.placeholder.com/100x60'}" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="meta-item">
+                                <span class="meta-label">Địa điểm</span>
+                                <span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Phân loại</span>
+                                <span class="meta-value">${ev.phanLoai || 'Chưa phân loại'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">ID Sự kiện</span>
+                                <span class="meta-value">#${ev.maSuKien}</span>
                             </div>
                         </div>
 
-                        <div class="card-meta">
-                            <span><span class="icon">📅</span> ${dateStr}</span>
-                            <span><span class="icon">📍</span> ${ev.diaDiem || 'Chưa cập nhật'}</span>
-                            <span><span class="icon">🏷️</span> ${ev.phanLoai || 'Chưa phân loại'}</span>
+                        <div class="admin-description">
+                            ${ev.moTa ? ev.moTa : '<i>Không có mô tả chi tiết cho sự kiện này.</i>'}
                         </div>
-                        <div style="margin-bottom: 1.2rem; font-size: 0.85rem; color: #a0a5b5; line-height: 1.5; max-height: 80px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; white-space: pre-wrap;">
-                            ${ev.moTa ? ev.moTa : '<i style="opacity:0.5">Không có mô tả.</i>'}
+
+                        <div class="organizer-info">
+                            <div class="organizer-avatar">${(ev.nguoiTao || 'U').charAt(0).toUpperCase()}</div>
+                            <div class="organizer-name">${ev.nguoiTao || 'Người dùng ẩn danh'}</div>
                         </div>
-                        ${ev.nguoiTao ? `<div class="organizer-tag">👤 ${ev.nguoiTao}</div>` : ''}
+
                         <div class="card-actions">
-                            <button class="action-btn approve" onclick="approveEvent(${ev.maSuKien})">
-                                ✅ Phê Duyệt
+                            <button class="admin-btn btn-approve" onclick="approveEvent(${ev.maSuKien})">
+                                <i class="fa fa-check-circle"></i> Duyệt
                             </button>
-                            <button class="action-btn reject" onclick="rejectEvent(${ev.maSuKien})">
-                                ❌ Từ Chối
+                            <button class="admin-btn btn-reject" onclick="rejectEvent(${ev.maSuKien})">
+                                <i class="fa fa-times-circle"></i> Từ chối
                             </button>
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
-                                📝 Sửa
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;">
+                                <i class="fa fa-edit"></i> Sửa
                             </a>
-                            <button class="action-btn reject" onclick="deleteEvent(${ev.maSuKien})" style="background: rgba(255,0,0,0.1); color: #ff5555; border-color: rgba(255,0,0,0.2);">
-                                🗑️ Xóa
+                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})">
+                                <i class="fa fa-trash"></i> Xóa
                             </button>
                         </div>
-                        <div class="processed-badge" id="badge-${ev.maSuKien}"></div>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -719,17 +717,17 @@
             if (!card) return;
             card.classList.add('processed');
 
-            const badge = document.getElementById(`badge-${id}`);
+            const msg = document.getElementById(`msg-${id}`);
             if (action === 'approved') {
-                badge.className = 'processed-badge approved-badge';
-                badge.innerHTML = '✅ Đã phê duyệt';
+                msg.className = 'status-msg msg-approved';
+                msg.innerHTML = '<i class="fa fa-check-circle"></i> ĐÃ PHÊ DUYỆT';
             } else {
-                badge.className = 'processed-badge rejected-badge';
-                badge.innerHTML = '❌ Đã từ chối';
+                msg.className = 'status-msg msg-rejected';
+                msg.innerHTML = '<i class="fa fa-times-circle"></i> ĐÃ TỪ CHỐI';
             }
 
             // Cập nhật số lượng chờ duyệt
-            const remaining = document.querySelectorAll('.approval-card:not(.processed)').length;
+            const remaining = document.querySelectorAll('#approvalGrid .event-card:not(.processed)').length;
             document.getElementById('pendingCountText').textContent = `${remaining} sự kiện chờ duyệt`;
         }
 
@@ -786,37 +784,44 @@
             grid.innerHTML = '';
             events.forEach((ev, idx) => {
                 const card = document.createElement('div');
-                card.className = 'approval-card';
+                card.className = 'event-card admin-view';
                 card.style.animationDelay = `${idx * 0.1}s`;
 
                 // Nếu đang là sự kiện nổi bật, add một border đặc biệt
                 if (ev.laSuKienNoiBat) {
-                    card.style.borderColor = '#00ff88';
-                    card.style.boxShadow = '0 0 15px rgba(0,255,136,0.3)';
+                    card.style.borderColor = 'var(--accent-secondary)';
+                    card.style.boxShadow = '0 0 30px rgba(0, 229, 255, 0.2)';
                 }
 
                 const dateStr = ev.thoiGianBD ? new Date(ev.thoiGianBD).toLocaleDateString('vi-VN') : 'Chưa xác định';
                 
                 card.innerHTML = `
-                    <div class="card-banner" style="background-image: url('${ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
-                        <div class="overlay"></div>
-                        <div class="status-tag" style="background: rgba(0,255,136,0.2); color: #00ff88; border-color: rgba(0,255,136,0.3);">${ev.laSuKienNoiBat ? '⭐ HIỆN NỔI BẬT' : 'Sẵn sàng'}</div>
+                    <div class="card-image" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
+                        <div class="status-badge live" style="${ev.laSuKienNoiBat ? 'border-color: #fff; background: var(--accent-secondary); color: #000;' : ''}">
+                            ${ev.laSuKienNoiBat ? '⭐ HIỆN NỔI BẬT' : 'CHỜ DUYỆT'}
+                        </div>
                     </div>
-                    <div class="card-content">
+                    <div class="card-body">
                         <h3>${ev.tenSuKien}</h3>
-                        <div class="card-meta">
-                            <span><span class="icon">📅</span> ${dateStr}</span>
-                            <span><span class="icon">📍</span> ${ev.diaDiem || 'Chưa cập nhật'}</span>
+                        <div class="card-meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Thời gian</span>
+                                <span class="meta-value">${dateStr}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Địa điểm</span>
+                                <span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span>
+                            </div>
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn approve" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
-                                🌟 Hero
+                            <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
+                                <i class="fa fa-star"></i> ${ev.laSuKienNoiBat ? 'Đang Nổi Bật' : 'Đặt làm Nổi bật'}
                             </button>
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="action-btn" style="background: rgba(0, 229, 255, 0.1); color: var(--accent-secondary); border: 1px solid rgba(0, 229, 255, 0.3); text-decoration: none;">
-                                📝 Sửa
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;">
+                                <i class="fa fa-edit"></i> Chỉnh sửa
                             </a>
-                            <button class="action-btn reject" onclick="deleteEvent(${ev.maSuKien})" style="background: rgba(255,0,0,0.1); color: #ff5555; border-color: rgba(255,0,0,0.2);">
-                                🗑️ Xóa
+                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})">
+                                <i class="fa fa-trash"></i> Xóa bỏ
                             </button>
                         </div>
                     </div>

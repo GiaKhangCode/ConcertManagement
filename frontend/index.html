@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/test.png">
 </head>
@@ -19,20 +20,19 @@
     <div class="bg-mesh secondary-mesh"></div>
  
     <header class="navbar">
-        <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
+        <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
         <div class="nav-center">
             <div class="search-bar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" placeholder="Tìm kiếm sự kiện, nghệ sĩ, địa điểm..." id="searchInput">
+                <i class="fa fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm sự kiện..." id="searchInput">
             </div>
         </div>
-            <div class="nav-links">
+        <div class="nav-links">
             <a href="index.html" class="nav-btn active">Trang Chủ</a>
             <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
             <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
             <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
             
-            <!-- Account Dropdown (Visible when logged in) -->
             <div class="account-dropdown" id="accountDropdown" style="display:none;">
                 <button class="btn btn-account">
                     <i class="fa fa-user-circle"></i>
@@ -40,13 +40,11 @@
                     <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
                 </button>
                 <div class="dropdown-content">
-                    <a href="profile.html"><i class="fa fa-ticket"></i> Vé của tôi</a>
+                    <a href="profile.html"><i class="fa fa-user"></i> Hồ sơ của tôi</a>
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
                 </div>
             </div>
-
-            <!-- Login Button (Visible when logged out) -->
             <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
         </div>
     </header>
