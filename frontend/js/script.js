@@ -27,20 +27,52 @@ attachCursorEvents(interactables);
 // Category Filtering logic
 const catPills = document.querySelectorAll('.cat-pill');
 function initFiltering() {
-    const eventCards = document.querySelectorAll('.event-card');
+    const catPills = document.querySelectorAll('.cat-pill');
+    
     catPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-            catPills.forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const filter = pill.getAttribute('data-filter');
-            eventCards.forEach(card => {
-                if (filter === 'all' || card.getAttribute('data-category') === filter) {
+        // Gỡ bỏ event cũ để tránh trùng lặp nếu hàm được gọi lại
+        const newPill = pill.cloneNode(true);
+        pill.parentNode.replaceChild(newPill, pill);
+        
+        newPill.addEventListener('click', () => {
+            const allPills = document.querySelectorAll('.cat-pill');
+            allPills.forEach(p => p.classList.remove('active'));
+            newPill.classList.add('active');
+            
+            const filter = newPill.getAttribute('data-filter');
+            const allCards = document.querySelectorAll('.event-card');
+            
+            // Bước 1: Ẩn/Hiện card
+            allCards.forEach(card => {
+                const cardCat = card.getAttribute('data-category');
+                if (filter === 'all' || cardCat === filter) {
                     card.style.display = 'flex';
-                    card.style.animation = 'none';
-                    card.offsetHeight; /* trigger reflow */
-                    card.style.animation = null; 
                 } else {
                     card.style.display = 'none';
+                }
+            });
+
+            // Bước 2: Ẩn/Hiện Section (Label)
+            const allSections = document.querySelectorAll('.events-section');
+            allSections.forEach(section => {
+                const cardsInSection = section.querySelectorAll('.event-card');
+                
+                if (filter === 'all') {
+                    section.style.display = 'block';
+                } else if (cardsInSection.length === 0) {
+                    // Nếu section mặc định không có card nào (ví dụ carousel grid rỗng)
+                    section.style.display = 'none';
+                } else {
+                    // Kiểm tra xem có card nào TRONG section này đang hiển thị không
+                    const hasVisibleCard = Array.from(cardsInSection).some(card => 
+                        card.style.display === 'flex'
+                    );
+                    
+                    if (!hasVisibleCard) {
+                        section.style.display = 'none';
+                    } else {
+                        section.style.display = 'block';
+                    }
                 }
             });
         });

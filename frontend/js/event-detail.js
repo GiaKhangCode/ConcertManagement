@@ -166,13 +166,28 @@ function renderCalendar(month, year, schedules) {
 // Update Header UI based on Auth JWT Token
 document.addEventListener('DOMContentLoaded', () => {
     const currentUser = localStorage.getItem('stellar_user');
-    const authBtn = document.querySelector('.navbar .btn.btn-outline');
-    if(authBtn && currentUser) {
-        authBtn.innerHTML = `<i class="fa fa-user-astronaut"></i> ${currentUser}`;
-        authBtn.href = "profile.html";
-        authBtn.className = 'btn btn-account';
-    } else if(authBtn) {
+    const authBtn = document.getElementById('authBtn');
+    const accountDropdown = document.getElementById('accountDropdown');
+    const userNameLabel = document.getElementById('userNameDropdown');
+
+    if (currentUser && accountDropdown) {
+        // Logged In state
+        if (authBtn) authBtn.style.display = 'none';
+        accountDropdown.style.display = 'inline-block';
+        if (userNameLabel) {
+            try {
+                const userData = JSON.parse(currentUser);
+                const name = userData.hoTen || userData.name || currentUser;
+                userNameLabel.textContent = name;
+            } catch(e) {
+                userNameLabel.textContent = currentUser;
+            }
+        }
+    } else if (authBtn) {
+        // Logged Out state
+        authBtn.style.display = 'inline-flex';
         authBtn.href = "auth.html";
+        if (accountDropdown) accountDropdown.style.display = 'none';
     }
 
     // Role-based Access Control UI
@@ -183,9 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const createEventNav = document.getElementById('createEventNav');
             const revenueNav = document.getElementById('revenueNav');
             const adminNav = document.getElementById('adminNav');
-            const myTicketsNav = document.getElementById('myTicketsNav');
-
-            if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
 
             if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 createEventNav.style.display = 'inline-flex';
