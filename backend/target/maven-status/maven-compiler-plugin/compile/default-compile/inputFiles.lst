@@ -28,6 +28,7 @@ C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\HangVeDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\DiaDiem.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\TrangThaiGheTheoSuatRepository.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\DiaDiemRequestDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\DiaDiemRepository.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\Ve.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\security\JwtUtils.java

@@ -515,6 +515,7 @@
                     const createEventNav = document.getElementById('createEventNav');
                     const revenueNav = document.getElementById('revenueNav');
                     const adminNav = document.getElementById('adminNav');
+                    const locationNav = document.getElementById('locationNav');
                     const myTicketsNav = document.getElementById('myTicketsNav');
 
                     if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
@@ -527,6 +528,9 @@
                     }
                     if(adminNav && roles.includes('ROLE_ADMIN')) {
                         adminNav.style.display = 'inline-flex';
+                    }
+                    if(locationNav && roles.includes('ROLE_ADMIN')) {
+                        locationNav.style.display = 'inline-flex';
                     }
                 } catch(e) {}
             }

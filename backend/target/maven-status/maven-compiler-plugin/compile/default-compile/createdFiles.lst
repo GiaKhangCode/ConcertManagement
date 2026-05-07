@@ -40,6 +40,7 @@ com\stellar\backend\entity\DiaDiem.class
 com\stellar\backend\entity\TrangThaiGheTheoSuat.class
 com\stellar\backend\dto\KhuVucDto.class
 com\stellar\backend\dto\RevenueResponseDto$EventRevenueDetail.class
+com\stellar\backend\dto\DiaDiemRequestDto.class
 com\stellar\backend\controller\AdminController.class
 com\stellar\backend\repository\TrangThaiGheTheoSuatRepository.class
 com\stellar\backend\entity\ViCaNhan.class

@@ -315,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const createEventNav = document.getElementById('createEventNav');
             const revenueNav = document.getElementById('revenueNav');
             const adminNav = document.getElementById('adminNav');
+            const locationNav = document.getElementById('locationNav');
 
             // "My Tickets" is now inside the dropdown, handled in HTML/CSS
 

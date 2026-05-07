@@ -15,6 +15,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) { console.error("Lỗi tải địa điểm:", e); }
 
+    // Toggle Location Sections
+    const btnExisting = document.getElementById('btnExistingLoc');
+    const btnNew = document.getElementById('btnNewLoc');
+    const existingSection = document.getElementById('existingLocSection');
+    const newSection = document.getElementById('newLocSection');
+
+    btnExisting.onclick = () => {
+        btnExisting.classList.add('active');
+        btnNew.classList.remove('active');
+        existingSection.style.display = 'block';
+        newSection.style.display = 'none';
+        document.getElementById('maDiaDiem').required = true;
+    };
+
+    btnNew.onclick = () => {
+        btnNew.classList.add('active');
+        btnExisting.classList.remove('active');
+        newSection.style.display = 'block';
+        existingSection.style.display = 'none';
+        document.getElementById('maDiaDiem').required = false;
+        // Load provinces if not already loaded
+        if (document.getElementById('province').options.length <= 1) {
+            loadProvinces();
+        }
+    };
+
+    // Provinces API Integration
+    async function loadProvinces() {
+        const pSelect = document.getElementById('province');
+        const dSelect = document.getElementById('district');
+        const wSelect = document.getElementById('ward');
+
+        const provinces = await fetch('https://provinces.open-api.vn/api/v2/p/').then(r => r.json());
+        provinces.forEach(p => pSelect.add(new Option(p.name, p.code)));
+
+        pSelect.onchange = async () => {
+            dSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            dSelect.disabled = true; wSelect.disabled = true;
+            if (pSelect.value) {
+                const data = await fetch(`https://provinces.open-api.vn/api/v2/p/${pSelect.value}?depth=2`).then(r => r.json());
+                data.districts.forEach(d => dSelect.add(new Option(d.name, d.code)));
+                dSelect.disabled = false;
+            }
+        };
+
+        dSelect.onchange = async () => {
+            wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wSelect.disabled = true;
+            if (dSelect.value) {
+                const data = await fetch(`https://provinces.open-api.vn/api/v2/d/${dSelect.value}?depth=2`).then(r => r.json());
+                data.wards.forEach(w => wSelect.add(new Option(w.name, w.code)));
+                wSelect.disabled = false;
+            }
+        };
+    }
+
     const eventId = new URLSearchParams(window.location.search).get('id');
     if (eventId) {
         document.querySelector('h1').textContent = "CHỈNH SỬa SỰ KIỆN";
@@ -320,6 +377,52 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
     submitBtn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${isEdit ? 'ĐANG CẬP NHẬT...' : 'ĐANG LƯU...'}`;
 
     try {
+        let maDiaDiemFinal = document.getElementById('maDiaDiem').value;
+
+        // Nếu người dùng chọn "Thêm địa điểm mới"
+        if (document.getElementById('btnNewLoc').classList.contains('active')) {
+            const provinceName = document.getElementById('province').options[document.getElementById('province').selectedIndex].text;
+            const districtName = document.getElementById('district').options[document.getElementById('district').selectedIndex].text;
+            const wardName = document.getElementById('ward').options[document.getElementById('ward').selectedIndex].text;
+
+            const locPayload = {
+                tenDiaDiem: document.getElementById('newTenDiaDiem').value,
+                sucChua: parseInt(document.getElementById('newSucChua').value) || 0,
+                tinhThanh: provinceName,
+                phuongXa: `${wardName}, ${districtName}`,
+                soNhaTenDuong: document.getElementById('newSoNhaTenDuong').value
+            };
+
+            const locRes = await fetch('http://localhost:8081/api/admin/locations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(locPayload)
+            });
+
+            if (!locRes.ok) {
+                const errData = await locRes.json();
+                throw new Error("Lỗi tạo địa điểm: " + errData.message);
+            }
+
+            // Backend của chúng ta hiện tại chỉ trả về Map.of("message", "Thêm địa điểm thành công!")
+            // Chúng ta nên lấy ID từ danh sách mới hoặc backend nên trả về ID.
+            // Để đơn giản và chắc chắn, tôi sẽ fetch lại danh sách địa điểm và tìm địa điểm vừa tạo theo tên.
+            const listRes = await fetch('http://localhost:8081/api/admin/locations', { headers: { 'Authorization': 'Bearer ' + token } });
+            const list = await listRes.json();
+            const createdLoc = list.find(l => l.tenDiaDiem === locPayload.tenDiaDiem);
+            if (createdLoc) {
+                maDiaDiemFinal = createdLoc.maDiaDiem;
+            } else {
+                throw new Error("Không tìm thấy địa điểm vừa tạo.");
+            }
+        }
+
+        if (!maDiaDiemFinal) {
+            throw new Error("Vui lòng chọn hoặc thêm địa điểm.");
+        }
+
+        payload.maDiaDiem = parseInt(maDiaDiemFinal);
+
         const response = await fetch(
             isEdit ? `http://localhost:8081/api/admin/events/update/${existingId}` : 'http://localhost:8081/api/admin/events/create',
             { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload) }
@@ -328,10 +431,8 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
 
         if (response.ok) {
             const savedId = isEdit ? existingId : data.eventId;
-            // Hiển thị thông báo thực tế từ server trả về
             const successMsg = data.message || `${isEdit ? 'Cập nhật' : 'Tạo'} thành công!`;
             showMascotMessage(`✅ ${successMsg}`);
-            
             setTimeout(() => window.location.href = 'event-management.html', 3000);
         } else {
             showMascotMessage("❌ Lỗi: " + (data.message || 'Vui lòng thử lại'), true);

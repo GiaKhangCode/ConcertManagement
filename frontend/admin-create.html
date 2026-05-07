@@ -60,11 +60,60 @@
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Tên Sự Kiện</label>
                     <input type="text" id="tenSuKien" class="form-input" required placeholder="Nhập tên sự kiện...">
                 </div>
-                <div>
-                    <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Địa Điểm Tổ Chức</label>
-                    <select id="maDiaDiem" class="form-input" required>
-                        <option value="">-- Đang tải danh sách địa điểm... --</option>
-                    </select>
+                <div style="grid-column: span 2;">
+                    <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 12px; display: block;"><i class="fa fa-map-marker-alt"></i> ĐỊA CHỈ SỰ KIỆN</label>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button type="button" id="btnExistingLoc" class="btn btn-outline small active" style="flex: 1; padding: 10px;">Chọn địa điểm có sẵn</button>
+                        <button type="button" id="btnNewLoc" class="btn btn-outline small" style="flex: 1; padding: 10px;">Thêm địa điểm mới</button>
+                    </div>
+
+                    <!-- Khu vực chọn địa điểm có sẵn -->
+                    <div id="existingLocSection">
+                        <select id="maDiaDiem" class="form-input">
+                            <option value="">-- Đang tải danh sách địa điểm... --</option>
+                        </select>
+                    </div>
+
+                    <!-- Khu vực nhập địa điểm mới (Ticketbox style) -->
+                    <div id="newLocSection" style="display: none; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(0,243,255,0.2);">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; color: #a0a5b5;">Tên địa điểm</label>
+                                <input type="text" id="newTenDiaDiem" class="form-input" placeholder="VD: Nhà thi đấu Phú Thọ">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; color: #a0a5b5;">Sức chứa (người)</label>
+                                <input type="number" id="newSucChua" class="form-input" placeholder="VD: 5000">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; color: #a0a5b5;">Tỉnh / Thành</label>
+                                <select id="province" class="form-input">
+                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; color: #a0a5b5;">Quận / Huyện</label>
+                                <select id="district" class="form-input" disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; color: #a0a5b5;">Phường / Xã</label>
+                                <select id="ward" class="form-input" disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Số nhà, tên đường</label>
+                            <input type="text" id="newSoNhaTenDuong" class="form-input" placeholder="VD: 01 Lữ Gia">
+                        </div>
+                    </div>
                 </div>
             </div>
 

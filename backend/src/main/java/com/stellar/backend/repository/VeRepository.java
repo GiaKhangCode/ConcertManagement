@@ -10,4 +10,5 @@ public interface VeRepository extends JpaRepository<Ve, Long> {
     List<Ve> findByDonMua_MaDonMua(Long maDonMua);
     
     long countByHangVe_SuKien_MaSuKien(Long maSuKien);
+    long countByHangVe_MaHangVe(Long maHangVe);
 }

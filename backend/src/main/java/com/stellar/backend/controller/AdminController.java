@@ -1,6 +1,7 @@
 package com.stellar.backend.controller;
 
 import com.stellar.backend.dto.EventCreateRequestDto;
+import com.stellar.backend.dto.DiaDiemRequestDto;
 import com.stellar.backend.entity.*;
 import com.stellar.backend.repository.*;
 import com.stellar.backend.security.UserDetailsImpl;
@@ -339,7 +340,6 @@ public class AdminController {
                                         GheNgoi g = new GheNgoi();
                                         g.setKhuVuc(kv);
                                         g.setToaDo(r + i);
-                                        g.setLoaiGhe("Thường");
                                         gheNgoiRepository.save(g);
                                     }
                                 }
@@ -580,5 +580,25 @@ public class AdminController {
             }
         }
         return ResponseEntity.ok(result);
+    }
+    /**
+     * Thêm địa điểm mới
+     */
+    @PostMapping("/locations")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createLocation(@RequestBody DiaDiemRequestDto request) {
+        try {
+            DiaDiem dd = new DiaDiem();
+            dd.setTenDiaDiem(request.getTenDiaDiem());
+            dd.setSucChua(request.getSucChua());
+            dd.setTinhThanh(request.getTinhThanh());
+            dd.setPhuongXa(request.getPhuongXa());
+            dd.setSoNhaTenDuong(request.getSoNhaTenDuong());
+            
+            diaDiemRepository.save(dd);
+            return ResponseEntity.ok(Map.of("message", "Thêm địa điểm thành công!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi: " + e.getMessage()));
+        }
     }
 }
