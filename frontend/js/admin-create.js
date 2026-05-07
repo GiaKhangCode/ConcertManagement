@@ -227,15 +227,15 @@ function addKhuVuc(containerId, data = null) {
 
     // Gắn event listener cho ô sức chứa
     const capInput = document.querySelector(`#${id} .kv-capacity`);
-    capInput.addEventListener('input', () => buildSeatConfig(id));
-    capInput.addEventListener('change', () => buildSeatConfig(id));
+    capInput.addEventListener('input', () => buildSeatConfig(id, data));
+    capInput.addEventListener('change', () => buildSeatConfig(id, data));
 
     // Nếu đã có sức chứa (chế độ edit) → hiện config ngay
-    if (capacity > 0) buildSeatConfig(id);
+    if (capacity > 0) buildSeatConfig(id, data);
 }
 
 // Tạo block cấu hình ghế bên dưới khu vực
-function buildSeatConfig(kvId) {
+function buildSeatConfig(kvId, data = null) {
     const el = document.getElementById(kvId);
     if (!el) return;
     const capacity = parseInt(el.querySelector('.kv-capacity').value) || 0;
@@ -247,45 +247,95 @@ function buildSeatConfig(kvId) {
     // Đã có rồi thì cập nhật preview, không tạo lại
     if (wrapEl.querySelector('.kv-rows')) { updateKvPreview(kvId); return; }
 
-    const rows = autoRowLabels(capacity);
-    const spr = Math.max(1, Math.ceil(capacity / rows.length));
+    // Ưu tiên dùng data.rowConfigs nếu có (chế độ edit)
+    const rowConfigs = (data && data.rowConfigs && data.rowConfigs.length > 0) ? data.rowConfigs : null;
 
     wrapEl.innerHTML = `
         <div class="kv-seat-config">
             <div class="kv-seat-config-title"><i class="fa fa-chair"></i> CẤU HÌNH GHẾ NGỒI</div>
-            <div class="kv-seat-inputs">
-                <div>
-                    <label>Ký hiệu hàng <span style="color:rgba(255,255,255,.3);font-size:.7rem;">(phẩy phân cách)</span></label>
-                    <input type="text" class="form-input kv-rows" value="${rows.join(',')}" placeholder="A,B,C,D">
-                    <div class="kv-rows-preview" id="kv_preview_${kvId}"></div>
-                </div>
-                <div>
-                    <label>Số ghế/hàng</label>
-                    <input type="number" class="form-input kv-spr" value="${spr}" min="1" max="100">
-                    <div class="kv-total-label" id="kv_total_${kvId}"></div>
-                </div>
+            <div id="rows_container_${kvId}" class="kv-rows-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <!-- Rows will be added here -->
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-outline small" style="padding: 5px 15px; font-size: 0.75rem; border-color: #50fa7b; color: #50fa7b;" 
+                    onclick="addRowToKv('${kvId}')">
+                    <i class="fa fa-plus"></i> THÊM HÀNG
+                </button>
+                <div class="kv-total-label" id="kv_total_${kvId}" style="font-weight: bold;"></div>
+            </div>
+            <div class="kv-error-msg" id="kv_error_${kvId}" style="color: #ff5555; font-size: 0.8rem; margin-top: 10px; display: none;">
+                <i class="fa fa-exclamation-triangle"></i> Tổng số ghế không được vượt quá sức chứa khu vực!
             </div>
         </div>`;
 
-    // Gắn sự kiện cho inputs mới
-    wrapEl.querySelector('.kv-rows').addEventListener('input', () => updateKvPreview(kvId));
-    wrapEl.querySelector('.kv-spr').addEventListener('input', () => updateKvPreview(kvId));
+    if (rowConfigs) {
+        rowConfigs.forEach(rc => addRowToKv(kvId, rc.rowLabel, rc.seatCount));
+    } else {
+        // Mặc định tạo 1 hàng A nếu là khu vực mới
+        addRowToKv(kvId, 'A', 10);
+    }
+    updateKvPreview(kvId);
+}
+
+function addRowToKv(kvId, label = '', qty = 10) {
+    const container = document.getElementById(`rows_container_${kvId}`);
+    if (!container) return;
+    
+    const rowId = `row_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const rowHtml = `
+        <div class="kv-row-item" id="${rowId}" style="display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <div>
+                <input type="text" class="form-input row-label" value="${label}" placeholder="Tên hàng (A, B...)" style="padding: 8px;">
+            </div>
+            <div>
+                <input type="number" class="form-input row-qty" value="${qty}" min="1" placeholder="Số ghế" style="padding: 8px;">
+            </div>
+            <button type="button" onclick="removeRow('${rowId}', '${kvId}')" style="background: rgba(255,85,85,0.1); color: #ff5555; border: none; border-radius: 5px; cursor: pointer; height: 35px;">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>`;
+    
+    container.insertAdjacentHTML('beforeend', rowHtml);
+    
+    // Gắn sự kiện để update preview
+    const rowEl = document.getElementById(rowId);
+    rowEl.querySelector('.row-label').addEventListener('input', () => updateKvPreview(kvId));
+    rowEl.querySelector('.row-qty').addEventListener('input', () => updateKvPreview(kvId));
+    
+    updateKvPreview(kvId);
+}
+
+function removeRow(rowId, kvId) {
+    document.getElementById(rowId)?.remove();
     updateKvPreview(kvId);
 }
 
 function updateKvPreview(kvId) {
     const el = document.getElementById(kvId);
     if (!el) return;
-    const rowsEl = el.querySelector('.kv-rows');
-    const sprEl = el.querySelector('.kv-spr');
-    if (!rowsEl || !sprEl) return;
-    const rows = rowsEl.value.split(',').map(r => r.trim()).filter(r => r);
-    const spr = parseInt(sprEl.value) || 0;
-    const total = rows.length * spr;
-    const previewEl = document.getElementById(`kv_preview_${kvId}`);
+    const container = document.getElementById(`rows_container_${kvId}`);
+    const capacityInput = el.querySelector('.kv-capacity');
+    if (!container || !capacityInput) return;
+
+    const rowItems = container.querySelectorAll('.kv-row-item');
+    let total = 0;
+    rowItems.forEach(item => {
+        const qty = parseInt(item.querySelector('.row-qty').value) || 0;
+        total += qty;
+    });
+
+    const capacity = parseInt(capacityInput.value) || 0;
     const totalEl = document.getElementById(`kv_total_${kvId}`);
-    if (previewEl) previewEl.innerHTML = rows.map(r => `<span class="row-chip">${r}×${spr}</span>`).join('');
-    if (totalEl) totalEl.innerHTML = `Tổng: <strong style="color:${total > 500 ? '#ff8c69' : '#50fa7b'}">${total}</strong> ghế`;
+    const errorEl = document.getElementById(`kv_error_${kvId}`);
+    
+    if (totalEl) {
+        const isOver = total > capacity;
+        totalEl.innerHTML = `Tổng: <strong style="color:${isOver ? '#ff5555' : '#50fa7b'}">${total}</strong> / ${capacity} ghế`;
+        
+        if (errorEl) {
+            errorEl.style.display = isOver ? 'block' : 'none';
+        }
+    }
 }
 
 function autoRowLabels(capacity) {
@@ -324,15 +374,30 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
                 tenKhuVuc: kvEl.querySelector('.kv-name').value.trim(),
                 sucChuaKv: parseInt(kvEl.querySelector('.kv-capacity').value) || 0
             };
-            // Gửi luôn cấu hình ghế (rows + seatsPerRow) nếu có
-            const rowsEl = kvEl.querySelector('.kv-rows');
-            const sprEl = kvEl.querySelector('.kv-spr');
-            if (rowsEl && sprEl) {
-                const rows = rowsEl.value.split(',').map(r => r.trim()).filter(r => r);
-                const spr = parseInt(sprEl.value) || 0;
-                if (rows.length > 0 && spr > 0) {
-                    kvData.rows = rows;
-                    kvData.seatsPerRow = spr;
+            // Thu thập cấu hình hàng ghế (rowConfigs)
+            const rowItems = kvEl.querySelectorAll('.kv-row-item');
+            if (rowItems.length > 0) {
+                const rowConfigs = [];
+                let totalSeatsInRows = 0;
+                rowItems.forEach(item => {
+                    const label = item.querySelector('.row-label').value.trim();
+                    const qty = parseInt(item.querySelector('.row-qty').value) || 0;
+                    if (label && qty > 0) {
+                        rowConfigs.push({ rowLabel: label, seatCount: qty });
+                        totalSeatsInRows += qty;
+                    }
+                });
+
+                const capacity = parseInt(kvEl.querySelector('.kv-capacity').value) || 0;
+                if (totalSeatsInRows > capacity) {
+                    alert(`Khu vực "${kvData.tenKhuVuc}" có tổng số ghế (${totalSeatsInRows}) vượt quá sức chứa (${capacity})!`);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
+                    throw new Error("Validation failed");
+                }
+
+                if (rowConfigs.length > 0) {
+                    kvData.rowConfigs = rowConfigs;
                 }
             }
             khuVucList.push(kvData);

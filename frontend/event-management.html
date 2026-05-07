@@ -257,6 +257,24 @@
         </section>
     </main>
 
+    <!-- Settlement Modal -->
+    <div id="settlementModal" class="modal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px);">
+        <div class="modal-content" style="background:#141928; margin:5% auto; padding:40px; border:1px solid var(--accent-secondary); border-radius:24px; width:90%; max-width:600px; color:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h3 style="font-family:'Unbounded'; color:var(--accent-secondary); margin:0;">BÁO CÁO QUYẾT TOÁN</h3>
+                <button onclick="document.getElementById('settlementModal').style.display='none'" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div id="settlementData" style="display:flex; flex-direction:column; gap:20px;">
+                <!-- Data will be loaded here -->
+            </div>
+
+            <div style="margin-top:40px; text-align:center;">
+                <button class="btn btn-outline small" onclick="window.print()">XUẤT BÁO CÁO (PDF)</button>
+            </div>
+        </div>
+    </div>
+
     <div class="mascot-companion" id="mascotCompanion">
         <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
@@ -340,6 +358,7 @@
                     <td>
                         <div style="display:flex; gap:10px;">
                             <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit">Chỉnh sửa</a>
+                            <button onclick="showSettlement(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ffb86c; color: #ffb86c;">Quyết toán</button>
                             ${isAdmin ? `
                             <button onclick="deleteEvent(${ev.maSuKien})" class="admin-btn btn-delete">Xóa</button>` : ''}
                         </div>
@@ -360,6 +379,59 @@
                 if (res.ok) { window.location.reload(); }
                 else { alert('Lỗi khi xóa sự kiện.'); }
             } catch (e) { alert('Lỗi kết nối.'); }
+        }
+
+        async function showSettlement(eventId) {
+            const token = localStorage.getItem('stellar_token');
+            const modal = document.getElementById('settlementModal');
+            const container = document.getElementById('settlementData');
+            
+            modal.style.display = 'block';
+            container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa fa-spinner fa-spin"></i> Đang tính toán...</div>';
+            
+            try {
+                const res = await fetch(`http://localhost:8081/api/finance/settlement/${eventId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    container.innerHTML = `
+                        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px;">
+                            <h4 style="margin-top:0; color:var(--accent-secondary);">${data.eventName}</h4>
+                            <p style="font-size:0.85rem; color:var(--text-muted);">Mã quyết toán: SETTL-${eventId}-${Date.now()}</p>
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:15px;">
+                                <div style="font-size:0.8rem; color:var(--text-muted);">Tổng vé bán</div>
+                                <div style="font-size:1.2rem; font-weight:bold;">${data.totalTicketsSold}</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:15px;">
+                                <div style="font-size:0.8rem; color:var(--text-muted);">Doanh thu gộp</div>
+                                <div style="font-size:1.2rem; font-weight:bold; color:#fff;">${data.grossRevenue.toLocaleString('vi-VN')}đ</div>
+                            </div>
+                        </div>
+
+                        <div style="padding:10px 0; border-bottom:1px dashed rgba(255,255,255,0.1);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <span style="color:var(--text-muted);">Phí nền tảng (5%)</span>
+                                <span style="color:#ff5555;">-${data.platformFee.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Phí cổng thanh toán (2%)</span>
+                                <span style="color:#ff5555;">-${data.gatewayFee.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                        </div>
+
+                        <div style="background:linear-gradient(90deg, rgba(0,255,136,0.1), transparent); padding:20px; border-radius:15px; border-left:4px solid #00ff88;">
+                            <div style="font-size:0.9rem; color:#00ff88; margin-bottom:5px;">THỰC NHẬN (NET)</div>
+                            <div style="font-size:1.8rem; font-family:'Unbounded'; font-weight:bold;">${data.netRevenue.toLocaleString('vi-VN')}đ</div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                container.innerHTML = '<p style="color:red; text-align:center;">Lỗi khi tải dữ liệu quyết toán.</p>';
+            }
         }
     </script>
 </body>

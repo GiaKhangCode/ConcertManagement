@@ -1,6 +1,7 @@
 package com.stellar.backend.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,11 +34,16 @@ public class Ve {
     @Column(name = "ThoiGianDaBan", insertable = false, updatable = false)
     private LocalDateTime thoiGianDaBan;
 
-    @Column(name = "DaBanLai")
+    @Column(name = "DaBanLai", nullable = false)
     private Integer daBanLai = 0;
+
+    @Column(name = "GiaBanLai")
+    private BigDecimal giaBanLai;
 
     public Long getMaVe() { return maVe; }
     public void setMaVe(Long maVe) { this.maVe = maVe; }
+    public BigDecimal getGiaBanLai() { return giaBanLai; }
+    public void setGiaBanLai(BigDecimal giaBanLai) { this.giaBanLai = giaBanLai; }
     public DonMua getDonMua() { return donMua; }
     public void setDonMua(DonMua donMua) { this.donMua = donMua; }
     public HangVe getHangVe() { return hangVe; }

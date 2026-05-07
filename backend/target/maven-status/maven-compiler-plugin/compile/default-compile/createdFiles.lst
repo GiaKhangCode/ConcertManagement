@@ -1,4 +1,5 @@
 com\stellar\backend\entity\TaiKhoan.class
+com\stellar\backend\dto\ResaleTicketDto.class
 com\stellar\backend\dto\LichDienDto.class
 com\stellar\backend\controller\OrganizerController.class
 com\stellar\backend\controller\UserController.class
@@ -13,6 +14,7 @@ com\stellar\backend\entity\SuKien.class
 com\stellar\backend\dto\RevenueResponseDto.class
 com\stellar\backend\security\JwtUtils.class
 com\stellar\backend\entity\NguoiDung.class
+com\stellar\backend\service\TicketService.class
 com\stellar\backend\controller\BookingController.class
 com\stellar\backend\dto\EventCreateRequestDto$HangVeDto.class
 com\stellar\backend\dto\EventResponseDto.class
@@ -20,13 +22,18 @@ com\stellar\backend\repository\DonMuaRepository.class
 com\stellar\backend\dto\RegisterRequest.class
 com\stellar\backend\repository\KhuVucRepository.class
 com\stellar\backend\security\SecurityConfig.class
+com\stellar\backend\service\SettlementService.class
+com\stellar\backend\repository\YeuCauHoTroRepository.class
 com\stellar\backend\StellarPortalBackendApplication.class
 com\stellar\backend\entity\DonMua.class
 com\stellar\backend\entity\HangVe.class
 com\stellar\backend\entity\TrangThaiGheTheoSuatId.class
+com\stellar\backend\entity\GiaoDich.class
 com\stellar\backend\repository\TaiKhoanRepository.class
 com\stellar\backend\repository\DiaDiemRepository.class
+com\stellar\backend\repository\GiaoDichRepository.class
 com\stellar\backend\entity\LichDien.class
+com\stellar\backend\entity\LichSuBienDongVi.class
 com\stellar\backend\controller\SeatController.class
 com\stellar\backend\entity\KhuVuc.class
 com\stellar\backend\dto\MessageResponse.class
@@ -52,7 +59,12 @@ com\stellar\backend\service\SeatService.class
 com\stellar\backend\dto\JwtResponse.class
 com\stellar\backend\security\UserDetailsImpl.class
 com\stellar\backend\entity\GheNgoi.class
+com\stellar\backend\dto\EventCreateRequestDto$RowConfigDto.class
+com\stellar\backend\repository\LichSuBienDongViRepository.class
 com\stellar\backend\repository\HangVeRepository.class
+com\stellar\backend\controller\FinancialController.class
+com\stellar\backend\service\WalletService.class
+com\stellar\backend\entity\YeuCauHoTro.class
 com\stellar\backend\dto\HangVeDto.class
 com\stellar\backend\security\UserDetailsServiceImpl.class
 com\stellar\backend\dto\SeatGenerateRequestDto.class

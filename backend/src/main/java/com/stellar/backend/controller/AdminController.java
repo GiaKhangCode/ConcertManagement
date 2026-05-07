@@ -106,6 +106,23 @@ public class AdminController {
                         EventCreateRequestDto.KhuVucDto kvDto = new EventCreateRequestDto.KhuVucDto();
                         kvDto.setTenKhuVuc(kv.getTenKhuVuc());
                         kvDto.setSucChuaKv(kv.getSucChuaKv());
+                        
+                        // Lấy cấu hình hàng ghế thực tế từ danh sách ghế
+                        List<GheNgoi> ghes = gheNgoiRepository.findByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                        if (ghes != null && !ghes.isEmpty()) {
+                            Map<String, Integer> rowMap = new java.util.LinkedHashMap<>();
+                            for (GheNgoi g : ghes) {
+                                String label = g.getToaDo().replaceAll("\\d+$", ""); // Tách phần chữ (ví dụ: A1 -> A)
+                                rowMap.put(label, rowMap.getOrDefault(label, 0) + 1);
+                            }
+                            List<EventCreateRequestDto.RowConfigDto> rowConfigs = rowMap.entrySet().stream().map(entry -> {
+                                EventCreateRequestDto.RowConfigDto rDto = new EventCreateRequestDto.RowConfigDto();
+                                rDto.setRowLabel(entry.getKey());
+                                rDto.setSeatCount(entry.getValue());
+                                return rDto;
+                            }).collect(Collectors.toList());
+                            kvDto.setRowConfigs(rowConfigs);
+                        }
                         return kvDto;
                     }).collect(Collectors.toList()));
                 }
@@ -183,8 +200,19 @@ public class AdminController {
                             kv.setSucChuaKv(kvDto.getSucChuaKv() != null ? kvDto.getSucChuaKv() : 0);
                             kv = khuVucRepository.save(kv);
 
-                            // Tạo ghế ngay nếu có cấu hình rows + seatsPerRow
-                            if (kvDto.getRows() != null && !kvDto.getRows().isEmpty()
+                            // Tạo ghế từ rowConfigs (Ưu tiên mới)
+                            if (kvDto.getRowConfigs() != null && !kvDto.getRowConfigs().isEmpty()) {
+                                for (EventCreateRequestDto.RowConfigDto rc : kvDto.getRowConfigs()) {
+                                    for (int col = 1; col <= rc.getSeatCount(); col++) {
+                                        GheNgoi ghe = new GheNgoi();
+                                        ghe.setKhuVuc(kv);
+                                        ghe.setToaDo(rc.getRowLabel() + col);
+                                        gheNgoiRepository.save(ghe);
+                                    }
+                                }
+                            }
+                            // Fallback cho cấu hình cũ
+                            else if (kvDto.getRows() != null && !kvDto.getRows().isEmpty()
                                     && kvDto.getSeatsPerRow() != null && kvDto.getSeatsPerRow() > 0) {
                                 for (String row : kvDto.getRows()) {
                                     for (int col = 1; col <= kvDto.getSeatsPerRow(); col++) {
@@ -344,22 +372,25 @@ public class AdminController {
                             kv.setSucChuaKv(kvDto.getSucChuaKv());
                             kv = khuVucRepository.save(kv);
 
-                            if (kvDto.getMaKhuVuc() == null && kvDto.getRows() != null && kvDto.getSeatsPerRow() != null) {
-                                for (String r : kvDto.getRows()) {
-                                    for (int i = 1; i <= kvDto.getSeatsPerRow(); i++) {
-                                        GheNgoi g = new GheNgoi();
-                                        g.setKhuVuc(kv);
-                                        g.setToaDo(r + i);
-                                        g = gheNgoiRepository.save(g);
-
-                                        // Khởi tạo trạng thái ghế cho tất cả suất diễn hiện tại
-                                        List<LichDien> lds = lichDienRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
-                                        for (LichDien ld : lds) {
-                                            TrangThaiGheTheoSuat tt = new TrangThaiGheTheoSuat();
-                                            tt.setMaGhe(g.getMaGhe());
-                                            tt.setMaLichDien(ld.getMaLichDien());
-                                            tt.setTrangThai("Còn trống");
-                                            trangThaiGheTheoSuatRepository.save(tt);
+                            if (kvDto.getMaKhuVuc() == null) {
+                                if (kvDto.getRowConfigs() != null && !kvDto.getRowConfigs().isEmpty()) {
+                                    for (EventCreateRequestDto.RowConfigDto rc : kvDto.getRowConfigs()) {
+                                        for (int i = 1; i <= rc.getSeatCount(); i++) {
+                                            GheNgoi g = new GheNgoi();
+                                            g.setKhuVuc(kv);
+                                            g.setToaDo(rc.getRowLabel() + i);
+                                            g = gheNgoiRepository.save(g);
+                                            initSeatStatus(g, sk);
+                                        }
+                                    }
+                                } else if (kvDto.getRows() != null && kvDto.getSeatsPerRow() != null) {
+                                    for (String r : kvDto.getRows()) {
+                                        for (int i = 1; i <= kvDto.getSeatsPerRow(); i++) {
+                                            GheNgoi g = new GheNgoi();
+                                            g.setKhuVuc(kv);
+                                            g.setToaDo(r + i);
+                                            g = gheNgoiRepository.save(g);
+                                            initSeatStatus(g, sk);
                                         }
                                     }
                                 }
@@ -368,11 +399,21 @@ public class AdminController {
                     }
                 }
             }
-
             return ResponseEntity.ok(Map.of("message", "Cập nhật thành công (Upsert)!"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi cập nhật: " + e.getMessage()));
+        }
+    }
+
+    private void initSeatStatus(GheNgoi g, SuKien sk) {
+        List<LichDien> lds = lichDienRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
+        for (LichDien ld : lds) {
+            TrangThaiGheTheoSuat tt = new TrangThaiGheTheoSuat();
+            tt.setMaGhe(g.getMaGhe());
+            tt.setMaLichDien(ld.getMaLichDien());
+            tt.setTrangThai("Còn trống");
+            trangThaiGheTheoSuatRepository.save(tt);
         }
     }
 

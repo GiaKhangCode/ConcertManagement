@@ -1,3 +1,4 @@
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\LichSuBienDongViRepository.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\TrangThaiGheTheoSuatId.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\service\SeatService.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\GheNgoi.java
@@ -17,6 +18,7 @@ C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\SeatGenerateRequestDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\ViCaNhanRepository.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\security\AuthTokenFilter.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\GiaoDich.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\UserTicketResponseDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\SuKienRepository.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\security\UserDetailsServiceImpl.java
@@ -24,7 +26,11 @@ C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\security\UserDetailsImpl.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\DonMua.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\KhuVucDto.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\service\SettlementService.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\service\WalletService.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\LichSuBienDongVi.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\DonMuaRepository.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\service\TicketService.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\HangVeDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\DiaDiem.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\TrangThaiGheTheoSuatRepository.java
@@ -48,11 +54,16 @@ C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\controller\EventController.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\LichDien.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\KhuVucRepository.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\YeuCauHoTro.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\TrangThaiGheTheoSuat.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\service\EventService.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\NhomQuyen.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\dto\ResaleTicketDto.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\entity\NguoiDung.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\VeRepository.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\YeuCauHoTroRepository.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\security\SecurityConfig.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\controller\FinancialController.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\controller\AdminController.java
 C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\controller\OrganizerController.java
+C:\Users\FAKK\Downloads\ConcertManagement-main\backend\src\main\java\com\stellar\backend\repository\GiaoDichRepository.java

@@ -25,56 +25,47 @@ function attachCursorEvents(els) {
 attachCursorEvents(interactables);
 
 // Category Filtering logic
-const catPills = document.querySelectorAll('.cat-pill');
 function initFiltering() {
     const catPills = document.querySelectorAll('.cat-pill');
     
     catPills.forEach(pill => {
-        // Gỡ bỏ event cũ để tránh trùng lặp nếu hàm được gọi lại
-        const newPill = pill.cloneNode(true);
-        pill.parentNode.replaceChild(newPill, pill);
-        
-        newPill.addEventListener('click', () => {
+        pill.addEventListener('click', () => {
             const allPills = document.querySelectorAll('.cat-pill');
             allPills.forEach(p => p.classList.remove('active'));
-            newPill.classList.add('active');
+            pill.classList.add('active');
             
-            const filter = newPill.getAttribute('data-filter');
-            const allCards = document.querySelectorAll('.event-card');
+            const filter = pill.getAttribute('data-filter');
+            const resaleSection = document.getElementById('resaleSection');
             
-            // Bước 1: Ẩn/Hiện card
-            allCards.forEach(card => {
-                const cardCat = card.getAttribute('data-category');
-                if (filter === 'all' || cardCat === filter) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
+            if (filter === 'resale') {
+                // Ẩn tất cả section sự kiện thường
+                document.querySelectorAll('.events-section').forEach(s => {
+                    if (s.id !== 'resaleSection') s.style.display = 'none';
+                });
+                // Hiện resale section
+                if (resaleSection) {
+                    resaleSection.style.display = 'block';
+                    resaleSection.scrollIntoView({ behavior: 'smooth' });
+                    loadResaleTickets();
                 }
-            });
-
-            // Bước 2: Ẩn/Hiện Section (Label)
-            const allSections = document.querySelectorAll('.events-section');
-            allSections.forEach(section => {
-                const cardsInSection = section.querySelectorAll('.event-card');
+            } else {
+                // Hiện lại các section sự kiện
+                document.querySelectorAll('.events-section').forEach(s => {
+                    if (s.id !== 'resaleSection') s.style.display = 'block';
+                });
+                if (resaleSection) resaleSection.style.display = 'none';
                 
-                if (filter === 'all') {
-                    section.style.display = 'block';
-                } else if (cardsInSection.length === 0) {
-                    // Nếu section mặc định không có card nào (ví dụ carousel grid rỗng)
-                    section.style.display = 'none';
-                } else {
-                    // Kiểm tra xem có card nào TRONG section này đang hiển thị không
-                    const hasVisibleCard = Array.from(cardsInSection).some(card => 
-                        card.style.display === 'flex'
-                    );
-                    
-                    if (!hasVisibleCard) {
-                        section.style.display = 'none';
+                // Lọc card bên trong
+                const allCards = document.querySelectorAll('.event-card');
+                allCards.forEach(card => {
+                    const cat = card.getAttribute('data-category');
+                    if (filter === 'all' || cat === filter) {
+                        card.style.display = 'block';
                     } else {
-                        section.style.display = 'block';
+                        card.style.display = 'none';
                     }
-                }
-            });
+                });
+            }
         });
     });
 }
@@ -388,4 +379,68 @@ function initMascotGreeting() {
 }
 
 document.addEventListener('DOMContentLoaded', initMascotGreeting);
+
+async function loadResaleTickets() {
+    const container = document.getElementById('resaleGrid');
+    if (!container) return;
+    
+    try {
+        const res = await fetch('http://localhost:8081/api/finance/resale');
+        if (res.ok) {
+            const listings = await res.json();
+            if (listings.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">Hiện chưa có vé nào được niêm yết bán lại.</p>';
+                return;
+            }
+            
+            container.innerHTML = listings.map(l => `
+                <article class="event-card">
+                    <div class="card-image" style="background: linear-gradient(135deg, #6272a4, #8be9fd); height: 160px; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa fa-sync-alt" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <div class="status-badge live">VÉ SANG NHƯỢNG</div>
+                    </div>
+                    <div class="card-body">
+                        <h3 style="font-size: 1rem; min-height: 2.4rem;">${l.tenSuKien}</h3>
+                        <div class="event-info">
+                            <span class="location"><i class="fa fa-chair"></i> Hàng ${l.viTri} - ${l.hangGhe}</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                            Người bán: <span style="color: var(--accent-secondary)">${l.nguoiBan}</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price"><span>${l.giaBanLai.toLocaleString('vi-VN')}đ</span></div>
+                            <button class="buy-btn" onclick="buyResale(${l.maVe})">Mua Lại</button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+            if (typeof attachCursorEvents === 'function') attachCursorEvents(container.querySelectorAll('.event-card, .buy-btn'));
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function buyResale(resaleId) {
+    const token = localStorage.getItem('stellar_token');
+    if (!token) {
+        alert("Vui lòng đăng nhập để mua vé!");
+        window.location.href = 'auth.html';
+        return;
+    }
+
+    if (!confirm("Xác nhận mua lại vé này? Số tiền sẽ được trừ trực tiếp từ ví của bạn.")) return;
+
+    try {
+        const res = await fetch(`http://localhost:8081/api/finance/resale/${resaleId}/buy`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            alert("✅ Mua vé thành công! Vui lòng kiểm tra trong trang cá nhân.");
+            loadResaleTickets();
+        } else {
+            const data = await res.json();
+            alert("❌ Lỗi: " + data.message);
+        }
+    } catch (e) { alert("Lỗi kết nối"); }
+}
 
