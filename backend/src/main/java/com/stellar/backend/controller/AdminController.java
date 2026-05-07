@@ -292,7 +292,12 @@ public class AdminController {
                     if (ticketsForHV == 0) {
                         List<KhuVuc> kvs = khuVucRepository.findByHangVe_MaHangVe(hv.getMaHangVe());
                         for (KhuVuc kv : kvs) {
-                            gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                            List<GheNgoi> ghes = gheNgoiRepository.findByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                            if (!ghes.isEmpty()) {
+                                List<Long> maGhes = ghes.stream().map(GheNgoi::getMaGhe).collect(Collectors.toList());
+                                trangThaiGheTheoSuatRepository.deleteByMaGheIn(maGhes);
+                                gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                            }
                         }
                         khuVucRepository.deleteByHangVe_MaHangVe(hv.getMaHangVe());
                         hangVeRepository.delete(hv);
@@ -319,7 +324,12 @@ public class AdminController {
                         if (!incomingKvIds.contains(kv.getMaKhuVuc())) {
                             long ticketsInKv = veRepository.countByHangVe_MaHangVe(hv.getMaHangVe());
                             if (ticketsInKv == 0) {
-                                gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                                List<GheNgoi> ghes = gheNgoiRepository.findByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                                if (!ghes.isEmpty()) {
+                                    List<Long> maGhes = ghes.stream().map(GheNgoi::getMaGhe).collect(Collectors.toList());
+                                    trangThaiGheTheoSuatRepository.deleteByMaGheIn(maGhes);
+                                    gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                                }
                                 khuVucRepository.delete(kv);
                             }
                         }
@@ -340,7 +350,17 @@ public class AdminController {
                                         GheNgoi g = new GheNgoi();
                                         g.setKhuVuc(kv);
                                         g.setToaDo(r + i);
-                                        gheNgoiRepository.save(g);
+                                        g = gheNgoiRepository.save(g);
+
+                                        // Khởi tạo trạng thái ghế cho tất cả suất diễn hiện tại
+                                        List<LichDien> lds = lichDienRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
+                                        for (LichDien ld : lds) {
+                                            TrangThaiGheTheoSuat tt = new TrangThaiGheTheoSuat();
+                                            tt.setMaGhe(g.getMaGhe());
+                                            tt.setMaLichDien(ld.getMaLichDien());
+                                            tt.setTrangThai("Còn trống");
+                                            trangThaiGheTheoSuatRepository.save(tt);
+                                        }
                                     }
                                 }
                             }

@@ -44,30 +44,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Provinces API Integration
     async function loadProvinces() {
         const pSelect = document.getElementById('province');
-        const dSelect = document.getElementById('district');
         const wSelect = document.getElementById('ward');
 
         const provinces = await fetch('https://provinces.open-api.vn/api/v2/p/').then(r => r.json());
         provinces.forEach(p => pSelect.add(new Option(p.name, p.code)));
 
         pSelect.onchange = async () => {
-            dSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-            wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            dSelect.disabled = true; wSelect.disabled = true;
-            if (pSelect.value) {
-                const data = await fetch(`https://provinces.open-api.vn/api/v2/p/${pSelect.value}?depth=2`).then(r => r.json());
-                data.districts.forEach(d => dSelect.add(new Option(d.name, d.code)));
-                dSelect.disabled = false;
-            }
-        };
-
-        dSelect.onchange = async () => {
             wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
             wSelect.disabled = true;
-            if (dSelect.value) {
-                const data = await fetch(`https://provinces.open-api.vn/api/v2/d/${dSelect.value}?depth=2`).then(r => r.json());
-                data.wards.forEach(w => wSelect.add(new Option(w.name, w.code)));
-                wSelect.disabled = false;
+            if (pSelect.value) {
+                const data = await fetch(`https://provinces.open-api.vn/api/v2/p/${pSelect.value}?depth=2`).then(r => r.json());
+                if (data.wards) {
+                    data.wards.forEach(w => wSelect.add(new Option(w.name, w.code)));
+                    wSelect.disabled = false;
+                }
             }
         };
     }
@@ -382,14 +372,13 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         // Nếu người dùng chọn "Thêm địa điểm mới"
         if (document.getElementById('btnNewLoc').classList.contains('active')) {
             const provinceName = document.getElementById('province').options[document.getElementById('province').selectedIndex].text;
-            const districtName = document.getElementById('district').options[document.getElementById('district').selectedIndex].text;
             const wardName = document.getElementById('ward').options[document.getElementById('ward').selectedIndex].text;
 
             const locPayload = {
                 tenDiaDiem: document.getElementById('newTenDiaDiem').value,
                 sucChua: parseInt(document.getElementById('newSucChua').value) || 0,
                 tinhThanh: provinceName,
-                phuongXa: `${wardName}, ${districtName}`,
+                phuongXa: wardName,
                 soNhaTenDuong: document.getElementById('newSoNhaTenDuong').value
             };
 
