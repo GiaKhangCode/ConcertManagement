@@ -44,10 +44,13 @@ public class EventCreateRequestDto {
     public void setHangVeList(List<HangVeDto> hangVeList) { this.hangVeList = hangVeList; }
 
     public static class LichDienDto {
+        private Long maLichDien;
         private String tenLichDien;
         private LocalDateTime thoiGianBatDau;
         private LocalDateTime thoiGianKetThuc;
 
+        public Long getMaLichDien() { return maLichDien; }
+        public void setMaLichDien(Long maLichDien) { this.maLichDien = maLichDien; }
         public String getTenLichDien() { return tenLichDien; }
         public void setTenLichDien(String tenLichDien) { this.tenLichDien = tenLichDien; }
         public LocalDateTime getThoiGianBatDau() { return thoiGianBatDau; }
@@ -57,11 +60,14 @@ public class EventCreateRequestDto {
     }
 
     public static class HangVeDto {
+        private Long maHangVe;
         private String tenHangVe;
         private BigDecimal giaNiemYet;
         private Integer tongSoLuong;
         private List<KhuVucDto> khuVucList;
 
+        public Long getMaHangVe() { return maHangVe; }
+        public void setMaHangVe(Long maHangVe) { this.maHangVe = maHangVe; }
         public String getTenHangVe() { return tenHangVe; }
         public void setTenHangVe(String tenHangVe) { this.tenHangVe = tenHangVe; }
         public BigDecimal getGiaNiemYet() { return giaNiemYet; }
@@ -73,12 +79,23 @@ public class EventCreateRequestDto {
     }
 
     public static class KhuVucDto {
+        private Long maKhuVuc;
         private String tenKhuVuc;
         private Integer sucChuaKv;
+        /** Danh sách ký hiệu hàng ghế, VD: ["A","B","C"] — nếu null thì không tạo ghế */
+        private java.util.List<String> rows;
+        /** Số ghế mỗi hàng — nếu null thì không tạo ghế */
+        private Integer seatsPerRow;
 
+        public Long getMaKhuVuc() { return maKhuVuc; }
+        public void setMaKhuVuc(Long maKhuVuc) { this.maKhuVuc = maKhuVuc; }
         public String getTenKhuVuc() { return tenKhuVuc; }
         public void setTenKhuVuc(String tenKhuVuc) { this.tenKhuVuc = tenKhuVuc; }
         public Integer getSucChuaKv() { return sucChuaKv; }
         public void setSucChuaKv(Integer sucChuaKv) { this.sucChuaKv = sucChuaKv; }
+        public java.util.List<String> getRows() { return rows; }
+        public void setRows(java.util.List<String> rows) { this.rows = rows; }
+        public Integer getSeatsPerRow() { return seatsPerRow; }
+        public void setSeatsPerRow(Integer seatsPerRow) { this.seatsPerRow = seatsPerRow; }
     }
 }

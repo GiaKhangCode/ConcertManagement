@@ -49,6 +49,9 @@ public class BookingController {
     @Autowired
     private ViCaNhanRepository viCaNhanRepository;
 
+    @Autowired
+    private com.stellar.backend.repository.TrangThaiGheTheoSuatRepository trangThaiGheTheoSuatRepository;
+
     @Transactional
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(@RequestBody BookingRequestDto request) {
@@ -76,6 +79,34 @@ public class BookingController {
             return ResponseEntity.badRequest().body(error);
         }
 
+        // --- BẮT ĐẦU KIỂM TRA KHÓA GHẾ ---
+        List<String> dsGheStr = request.getDsGhe();
+        if (dsGheStr == null || dsGheStr.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Danh sách ghế trống."));
+        }
+        
+        Long validMaLichDien = request.getMaLichDien();
+        
+        // Tự động fallback: Lấy LichDien đầu tiên của sự kiện nếu request không có
+        if (validMaLichDien == null && suKien.getDanhSachLichDien() != null && !suKien.getDanhSachLichDien().isEmpty()) {
+            validMaLichDien = suKien.getDanhSachLichDien().get(0).getMaLichDien();
+        } else if (validMaLichDien != null && suKien.getDanhSachLichDien() != null) {
+            // Đảm bảo maLichDien truyền lên thực sự thuộc về SuKien này (chống lỗi truyền nhầm eventId)
+            boolean isValid = suKien.getDanhSachLichDien().stream().anyMatch(ld -> ld.getMaLichDien().equals(request.getMaLichDien()));
+            if (!isValid) {
+                validMaLichDien = suKien.getDanhSachLichDien().isEmpty() ? request.getMaLichDien() : suKien.getDanhSachLichDien().get(0).getMaLichDien();
+            }
+        }
+
+        // Để kiểm tra chính xác, ta lấy danh sách các ghế User đang giữ trong SUẤT DIỄN này
+        List<com.stellar.backend.entity.TrangThaiGheTheoSuat> userLocks = 
+            trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, taiKhoan.getMaTaiKhoan(), "Đang giữ chỗ");
+        
+        if (userLocks.size() < request.getSoLuong()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Bạn chưa khóa đủ số lượng ghế trên hệ thống."));
+        }
+        // --- KẾT THÚC KIỂM TRA KHÓA GHẾ ---
+
         // Trừ tiền
         vi.setSoDu(vi.getSoDu().subtract(tongTien));
         viCaNhanRepository.save(vi);
@@ -98,6 +129,19 @@ public class BookingController {
             ve.setHangVe(hangVe);
             ve.setDaBanLai(0);
             ve.setTrangThaiVe("Hiệu lực");
+            
+            // Lấy ghế từ userLocks gán vào vé
+            if (i < userLocks.size()) {
+                com.stellar.backend.entity.TrangThaiGheTheoSuat lock = userLocks.get(i);
+                ve.setGheNgoi(lock.getGheNgoi());
+                ve.setLichDien(lock.getLichDien());
+                
+                // Đổi trạng thái thành Đã đặt
+                lock.setTrangThai("Đã đặt");
+                lock.setThoiGianHetHan(null);
+                trangThaiGheTheoSuatRepository.save(lock);
+            }
+            
             veList.add(ve);
         }
         veRepository.saveAll(veList);

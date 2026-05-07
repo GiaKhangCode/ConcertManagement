@@ -108,12 +108,15 @@ public class EventService {
                 hDto.setName(hv.getTenHangVe());
                 hDto.setPrice(hv.getGiaNiemYet());
                 
-                // Map từng khu vực của hạng vé này
-                if (hv.getKhuVucList() != null) {
-                    List<com.stellar.backend.dto.KhuVucDto> kvList = hv.getKhuVucList().stream()
-                        .map(kv -> new com.stellar.backend.dto.KhuVucDto(kv.getTenKhuVuc(), kv.getSucChuaKv()))
+                // Force-load khuVucList (lazy) bằng cách truy cập trực tiếp
+                java.util.List<com.stellar.backend.entity.KhuVuc> rawList = hv.getKhuVucList();
+                if (rawList != null && !rawList.isEmpty()) {
+                    List<com.stellar.backend.dto.KhuVucDto> kvList = rawList.stream()
+                        .map(kv -> new com.stellar.backend.dto.KhuVucDto(kv.getMaKhuVuc(), kv.getTenKhuVuc(), kv.getSucChuaKv()))
                         .collect(Collectors.toList());
                     hDto.setKhuVucList(kvList);
+                } else {
+                    hDto.setKhuVucList(new java.util.ArrayList<>());
                 }
                 return hDto;
             }).collect(Collectors.toList());

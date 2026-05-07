@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         document.getElementById('loading').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
+        window.eventSchedules = ev.schedules; // Lưu lại để dùng cho handleBooking
         
         // Map DOM elements
         document.getElementById('eventTitle').innerText = ev.title;
@@ -221,7 +222,15 @@ window.handleBooking = function(eventId, ticketTierId, tierName) {
         return;
     }
     
-    // Thu thập tham số đơn giá từ DOM hiện tại nếu cần hoặc lấy theo tierId.
-    // Tạm thời truyền qua URL để lấy dữ liệu.
-    window.location.href = `booking.html?eventId=${eventId}&tierId=${ticketTierId}&tierName=${encodeURIComponent(tierName)}`;
+    // Lấy maLichDien từ schedule đầu tiên (hoặc có thể mở rộng chọn suất diễn sau)
+    // Ở đây ta tìm maLichDien từ dữ liệu đã load hoặc gọi lại API nếu cần.
+    // Tuy nhiên, để đơn giản và chính xác, ta sẽ lấy từ danh sách schedules đã có trong app.
+    
+    // Tìm schedule đầu tiên của sự kiện này
+    // Lưu ý: schedules được trả về trong object ev ở trên. Ta nên lưu nó vào biến global hoặc tìm cách lấy.
+    // Giả sử ta lấy schedule đầu tiên có sẵn:
+    const schedules = window.eventSchedules || [];
+    const maLichDien = (schedules.length > 0 && schedules[0].id) ? schedules[0].id : eventId;
+
+    window.location.href = `booking.html?eventId=${eventId}&tierId=${ticketTierId}&tierName=${encodeURIComponent(tierName)}&scheduleId=${maLichDien}`;
 }

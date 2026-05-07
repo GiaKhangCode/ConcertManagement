@@ -40,6 +40,9 @@ public class SuKien {
     @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
     private List<HangVe> danhSachHangVe;
 
+    @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
+    private List<LichDien> danhSachLichDien;
+
     @Column(name = "AnhBiaURL")
     private String anhBiaUrl; // Sẽ dùng làm ảnh Poster (Thẻ 3D)
 
@@ -100,4 +103,7 @@ public class SuKien {
 
     public Integer getLaSuKienNoiBat() { return laSuKienNoiBat; }
     public void setLaSuKienNoiBat(Integer laSuKienNoiBat) { this.laSuKienNoiBat = laSuKienNoiBat; }
+
+    public List<LichDien> getDanhSachLichDien() { return danhSachLichDien; }
+    public void setDanhSachLichDien(List<LichDien> danhSachLichDien) { this.danhSachLichDien = danhSachLichDien; }
 }

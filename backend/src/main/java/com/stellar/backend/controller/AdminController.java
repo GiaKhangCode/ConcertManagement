@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -40,6 +42,12 @@ public class AdminController {
 
     @Autowired
     private TaiKhoanRepository taiKhoanRepository;
+
+    @Autowired
+    private GheNgoiRepository gheNgoiRepository;
+
+    @Autowired
+    private TrangThaiGheTheoSuatRepository trangThaiGheTheoSuatRepository;
 
     /**
      * Lấy thông tin chi tiết sự kiện để chỉnh sửa (trả về dạng DTO đầy đủ)
@@ -172,7 +180,20 @@ public class AdminController {
                             kv.setHangVe(hv);
                             kv.setTenKhuVuc(kvDto.getTenKhuVuc());
                             kv.setSucChuaKv(kvDto.getSucChuaKv() != null ? kvDto.getSucChuaKv() : 0);
-                            khuVucRepository.save(kv);
+                            kv = khuVucRepository.save(kv);
+
+                            // Tạo ghế ngay nếu có cấu hình rows + seatsPerRow
+                            if (kvDto.getRows() != null && !kvDto.getRows().isEmpty()
+                                    && kvDto.getSeatsPerRow() != null && kvDto.getSeatsPerRow() > 0) {
+                                for (String row : kvDto.getRows()) {
+                                    for (int col = 1; col <= kvDto.getSeatsPerRow(); col++) {
+                                        GheNgoi ghe = new GheNgoi();
+                                        ghe.setKhuVuc(kv);
+                                        ghe.setToaDo(row + col);
+                                        gheNgoiRepository.save(ghe);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -203,7 +224,6 @@ public class AdminController {
             // Kiểm tra quyền
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
                     .getContext().getAuthentication().getPrincipal();
-            
             boolean isAdmin = userDetails.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             
@@ -211,15 +231,11 @@ public class AdminController {
                 if (sk.getNguoiTao() == null || !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId())) {
                     return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền sửa sự kiện này!"));
                 }
-                // Nếu Organizer sửa thì đưa về trạng thái chờ duyệt
                 sk.setTrangThai("Chờ phê duyệt");
             }
 
             // Cập nhật thông tin cơ bản
-            DiaDiem diaDiem = null;
-            if (request.getMaDiaDiem() != null) {
-                diaDiem = diaDiemRepository.findById(request.getMaDiaDiem()).orElse(null);
-            }
+            DiaDiem diaDiem = (request.getMaDiaDiem() != null) ? diaDiemRepository.findById(request.getMaDiaDiem()).orElse(null) : null;
             sk.setTenSuKien(request.getTenSuKien());
             sk.setDiaDiem(diaDiem);
             sk.setThoiGianBD(request.getThoiGianBD());
@@ -230,64 +246,112 @@ public class AdminController {
             sk.setAnhThumbnailUrl(request.getAnhThumbnailUrl());
             sk.setPhanLoai(request.getPhanLoai());
             sk.setMoTa(request.getMoTa());
-            
-            suKienRepository.save(sk);
+            sk = suKienRepository.saveAndFlush(sk);
 
-            // Kiểm tra xem đã có vé nào được phát hành/đặt cho sự kiện này chưa
-            long ticketCount = veRepository.countByHangVe_SuKien_MaSuKien(id);
-            if (ticketCount > 0) {
-                // Nếu đã có vé, chỉ cập nhật thông tin cơ bản và bỏ qua việc xóa/tạo lại cấu trúc hạng vé/lịch diễn
-                return ResponseEntity.ok(Map.of("message", "Thông tin cơ bản của sự kiện đã được cập nhật thành công! " + 
-                    "Cấu trúc hạng vé và lịch diễn được giữ nguyên do đã có dữ liệu vé liên quan. " +
-                    (!isAdmin ? "Đang chờ Admin phê duyệt lại." : "")));
+            // 1. XỬ LÝ LỊCH DIỄN (UPSERT)
+            List<LichDien> currentLichDiens = lichDienRepository.findBySuKien_MaSuKien(id);
+            List<Long> incomingLichDienIds = request.getLichDienList() != null ? 
+                request.getLichDienList().stream().map(EventCreateRequestDto.LichDienDto::getMaLichDien).filter(Objects::nonNull).collect(Collectors.toList()) : List.of();
+
+            // Xóa Lịch diễn không còn trong request (chỉ khi chưa có vé)
+            for (LichDien ld : currentLichDiens) {
+                if (!incomingLichDienIds.contains(ld.getMaLichDien())) {
+                    long ticketsForLD = veRepository.countByHangVe_SuKien_MaSuKien(id);
+                    if (ticketsForLD == 0) {
+                        trangThaiGheTheoSuatRepository.deleteByMaLichDien(ld.getMaLichDien());
+                        lichDienRepository.delete(ld);
+                    }
+                }
             }
 
-            // Xóa dữ liệu cũ của các bảng liên quan (Chỉ khi chưa có vé)
-            lichDienRepository.deleteBySuKien_MaSuKien(id);
-            // JPA: Xóa HangVe sẽ kéo theo xóa KhuVuc (nếu cascade đúng) 
-            // Nhưng để chắc chắn chúng ta xóa KhuVuc trước thông qua fetch HangVe cũ
-            List<HangVe> oldTiers = hangVeRepository.findBySuKien_MaSuKien(id);
-            for(HangVe hv : oldTiers) {
-                khuVucRepository.deleteAll(hv.getKhuVucList());
-            }
-            hangVeRepository.deleteBySuKien_MaSuKien(id);
-
-            // Tạo mới các bản ghi theo dữ liệu request
             if (request.getLichDienList() != null) {
                 for (EventCreateRequestDto.LichDienDto ldDto : request.getLichDienList()) {
-                    LichDien ld = new LichDien();
+                    LichDien ld = (ldDto.getMaLichDien() != null) ? 
+                        lichDienRepository.findById(ldDto.getMaLichDien()).orElse(new LichDien()) : new LichDien();
                     ld.setSuKien(sk);
                     ld.setTenLichDien(ldDto.getTenLichDien());
                     ld.setThoiGianBatDau(ldDto.getThoiGianBatDau());
                     ld.setThoiGianKetThuc(ldDto.getThoiGianKetThuc());
+                    if (ld.getMaLichDien() == null) {
+                        ld.setTrangThaiLichDien("Chưa diễn ra");
+                        ld.setTrangThaiBanVe("Còn vé");
+                    }
                     lichDienRepository.save(ld);
+                }
+            }
+
+            // 2. XỬ LÝ HẠNG VÉ & KHU VỰC (UPSERT)
+            List<HangVe> currentHangVes = hangVeRepository.findBySuKien_MaSuKien(id);
+            List<Long> incomingHangVeIds = request.getHangVeList() != null ?
+                request.getHangVeList().stream().map(EventCreateRequestDto.HangVeDto::getMaHangVe).filter(Objects::nonNull).collect(Collectors.toList()) : List.of();
+
+            for (HangVe hv : currentHangVes) {
+                if (!incomingHangVeIds.contains(hv.getMaHangVe())) {
+                    long ticketsForHV = veRepository.countByHangVe_MaHangVe(hv.getMaHangVe());
+                    if (ticketsForHV == 0) {
+                        List<KhuVuc> kvs = khuVucRepository.findByHangVe_MaHangVe(hv.getMaHangVe());
+                        for (KhuVuc kv : kvs) {
+                            gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                        }
+                        khuVucRepository.deleteByHangVe_MaHangVe(hv.getMaHangVe());
+                        hangVeRepository.delete(hv);
+                    }
                 }
             }
 
             if (request.getHangVeList() != null) {
                 for (EventCreateRequestDto.HangVeDto hvDto : request.getHangVeList()) {
-                    HangVe hv = new HangVe();
+                    HangVe hv = (hvDto.getMaHangVe() != null) ?
+                        hangVeRepository.findById(hvDto.getMaHangVe()).orElse(new HangVe()) : new HangVe();
                     hv.setSuKien(sk);
                     hv.setTenHangVe(hvDto.getTenHangVe());
                     hv.setGiaNiemYet(hvDto.getGiaNiemYet());
-                    hv.setTongSoLuong(hvDto.getTongSoLuong() != null ? hvDto.getTongSoLuong() : 100);
+                    hv.setTongSoLuong(hvDto.getTongSoLuong());
                     hv = hangVeRepository.save(hv);
+
+                    List<KhuVuc> currentKvs = (hv.getMaHangVe() != null) ? 
+                        khuVucRepository.findByHangVe_MaHangVe(hv.getMaHangVe()) : List.of();
+                    List<Long> incomingKvIds = hvDto.getKhuVucList() != null ?
+                        hvDto.getKhuVucList().stream().map(EventCreateRequestDto.KhuVucDto::getMaKhuVuc).filter(Objects::nonNull).collect(Collectors.toList()) : List.of();
+
+                    for (KhuVuc kv : currentKvs) {
+                        if (!incomingKvIds.contains(kv.getMaKhuVuc())) {
+                            long ticketsInKv = veRepository.countByHangVe_MaHangVe(hv.getMaHangVe());
+                            if (ticketsInKv == 0) {
+                                gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                                khuVucRepository.delete(kv);
+                            }
+                        }
+                    }
 
                     if (hvDto.getKhuVucList() != null) {
                         for (EventCreateRequestDto.KhuVucDto kvDto : hvDto.getKhuVucList()) {
-                            KhuVuc kv = new KhuVuc();
+                            KhuVuc kv = (kvDto.getMaKhuVuc() != null) ?
+                                khuVucRepository.findById(kvDto.getMaKhuVuc()).orElse(new KhuVuc()) : new KhuVuc();
                             kv.setHangVe(hv);
                             kv.setTenKhuVuc(kvDto.getTenKhuVuc());
-                            kv.setSucChuaKv(kvDto.getSucChuaKv() != null ? kvDto.getSucChuaKv() : 0);
-                            khuVucRepository.save(kv);
+                            kv.setSucChuaKv(kvDto.getSucChuaKv());
+                            kv = khuVucRepository.save(kv);
+
+                            if (kvDto.getMaKhuVuc() == null && kvDto.getRows() != null && kvDto.getSeatsPerRow() != null) {
+                                for (String r : kvDto.getRows()) {
+                                    for (int i = 1; i <= kvDto.getSeatsPerRow(); i++) {
+                                        GheNgoi g = new GheNgoi();
+                                        g.setKhuVuc(kv);
+                                        g.setToaDo(r + i);
+                                        g.setLoaiGhe("Thường");
+                                        gheNgoiRepository.save(g);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            return ResponseEntity.ok(Map.of("message", "Cập nhật toàn bộ thông tin sự kiện thành công! " + 
-                (!isAdmin ? "Đang chờ Admin phê duyệt lại." : "")));
+            return ResponseEntity.ok(Map.of("message", "Cập nhật thành công (Upsert)!"));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi cập nhật: " + e.getMessage()));
         }
     }
@@ -318,17 +382,21 @@ public class AdminController {
     @GetMapping("/approved-events")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getApprovedEvents() {
-        List<SuKien> list = suKienRepository.findByTrangThaiIn(List.of("Sắp diễn ra", "Đang diễn ra", "Đã kết thúc"));
-        return ResponseEntity.ok(list.stream().map(sk -> Map.of(
-            "maSuKien", (Object) sk.getMaSuKien(),
-            "tenSuKien", (Object) sk.getTenSuKien(),
-            "thoiGianBD", (Object) (sk.getThoiGianBD() != null ? sk.getThoiGianBD().toString() : ""),
-            "diaDiem", (Object) (sk.getDiaDiem() != null ? sk.getDiaDiem().getTenDiaDiem() : "Chưa xác định"),
-            "anhBiaUrl", (Object) (sk.getAnhBiaUrl() != null ? sk.getAnhBiaUrl() : ""),
-            "anhThumbnailUrl", (Object) (sk.getAnhThumbnailUrl() != null ? sk.getAnhThumbnailUrl() : ""),
-            "laSuKienNoiBat", (Object) (sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1)
-        )).collect(Collectors.toList()));
+        List<SuKien> list = suKienRepository.findByTrangThaiIn(List.of("Sắp diễn ra", "Đang diễn ra", "Đã kết thúc", "Đã hủy"));
+        return ResponseEntity.ok(list.stream().map(sk -> {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("maSuKien", sk.getMaSuKien());
+            m.put("tenSuKien", sk.getTenSuKien());
+            m.put("trangThai", sk.getTrangThai() != null ? sk.getTrangThai() : "Sắp diễn ra");
+            m.put("thoiGianBD", sk.getThoiGianBD() != null ? sk.getThoiGianBD().toString() : "");
+            m.put("diaDiem", sk.getDiaDiem() != null ? sk.getDiaDiem().getTenDiaDiem() : "Chưa xác định");
+            m.put("anhBiaUrl", sk.getAnhBiaUrl() != null ? sk.getAnhBiaUrl() : "");
+            m.put("anhThumbnailUrl", sk.getAnhThumbnailUrl() != null ? sk.getAnhThumbnailUrl() : "");
+            m.put("laSuKienNoiBat", sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1);
+            return m;
+        }).collect(Collectors.toList()));
     }
+
 
     /**
      * Phê duyệt sự kiện
@@ -374,6 +442,70 @@ public class AdminController {
     }
 
     /**
+     * Cập nhật trạng thái sự kiện thủ công (Admin only)
+     * Hỗ trợ đầy đủ vòng đời: Sắp diễn ra → Đang diễn ra → Đã kết thúc / Đã hủy
+     * Các Oracle triggers sẽ tự động validate và ném lỗi nếu vi phạm ràng buộc
+     */
+    @Transactional
+    @PutMapping("/events/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateEventStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        try {
+            String newStatus = body.get("trangThai");
+
+            // Danh sách trạng thái hợp lệ theo CHECK constraint trong Oracle DB
+            List<String> validStatuses = List.of("Chờ phê duyệt", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc", "Đã hủy");
+            if (newStatus == null || !validStatuses.contains(newStatus)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Trạng thái không hợp lệ! Chỉ chấp nhận: " + String.join(", ", validStatuses)
+                ));
+            }
+
+            SuKien sk = suKienRepository.findById(id).orElse(null);
+            if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy sự kiện!"));
+
+            String oldStatus = sk.getTrangThai();
+
+            // Không cho phép đổi ngược từ trạng thái đã kết thúc/hủy
+            if (("Đã kết thúc".equals(oldStatus) || "Đã hủy".equals(oldStatus))
+                    && !newStatus.equals(oldStatus)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Không thể thay đổi trạng thái của sự kiện đã kết thúc hoặc đã hủy!"
+                ));
+            }
+
+            sk.setTrangThai(newStatus);
+            suKienRepository.save(sk);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Đã cập nhật trạng thái sự kiện từ [" + oldStatus + "] → [" + newStatus + "] thành công!",
+                "trangThaiMoi", newStatus
+            ));
+
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Bắt lỗi từ Oracle trigger (ví dụ: không cho kết thúc trước giờ KT)
+            String msg = e.getMostSpecificCause().getMessage();
+            // Trích xuất thông điệp từ Oracle ORA-20xxx
+            if (msg != null && msg.contains("ORA-20")) {
+                int start = msg.indexOf("ORA-20");
+                String oraMsg = msg.substring(start);
+                // Lấy phần sau mã lỗi ORA-20xxx:
+                int colon = oraMsg.indexOf(": ");
+                if (colon != -1) {
+                    oraMsg = oraMsg.substring(colon + 2);
+                    // Cắt bỏ phần "\nORA-06512..." nếu có
+                    int newline = oraMsg.indexOf("\n");
+                    if (newline != -1) oraMsg = oraMsg.substring(0, newline);
+                }
+                return ResponseEntity.badRequest().body(Map.of("message", oraMsg.trim()));
+            }
+            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi ràng buộc dữ liệu: " + e.getMostSpecificCause().getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi hệ thống: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Xóa sự kiện hoàn toàn
      */
     @Transactional
@@ -385,10 +517,18 @@ public class AdminController {
             if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
 
             // Xóa cascade thủ công (để tránh lỗi FK constraint phức tạp trong Oracle/H2)
+            List<LichDien> oldLichDiens = lichDienRepository.findBySuKien_MaSuKien(id);
+            for(LichDien ld : oldLichDiens) {
+                trangThaiGheTheoSuatRepository.deleteByMaLichDien(ld.getMaLichDien());
+            }
             lichDienRepository.deleteBySuKien_MaSuKien(id);
+            
             List<HangVe> tiers = hangVeRepository.findBySuKien_MaSuKien(id);
             for(HangVe hv : tiers) {
-                khuVucRepository.deleteAll(hv.getKhuVucList());
+                for(KhuVuc kv : hv.getKhuVucList()) {
+                    gheNgoiRepository.deleteByKhuVucMaKhuVuc(kv.getMaKhuVuc());
+                }
+                khuVucRepository.deleteByHangVe_MaHangVe(hv.getMaHangVe());
             }
             hangVeRepository.deleteBySuKien_MaSuKien(id);
             suKienRepository.deleteById(id);
@@ -405,5 +545,40 @@ public class AdminController {
     @GetMapping("/locations")
     public ResponseEntity<?> getAllLocations() {
         return ResponseEntity.ok(diaDiemRepository.findAll());
+    }
+
+    /**
+     * Lấy danh sách tất cả khu vực (zones) của một sự kiện để phục vụ bước generate ghế ngồi
+     */
+    @GetMapping("/events/{id}/zones")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getZonesByEvent(@PathVariable Long id) {
+        SuKien sk = suKienRepository.findById(id).orElse(null);
+        if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && (sk.getNguoiTao() == null || !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId()))) {
+            return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền xem sự kiện này!"));
+        }
+
+        List<HangVe> hangVes = hangVeRepository.findBySuKien_MaSuKien(id);
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (HangVe hv : hangVes) {
+            if (hv.getKhuVucList() != null) {
+                for (KhuVuc kv : hv.getKhuVucList()) {
+                    Map<String, Object> zone = new java.util.LinkedHashMap<>();
+                    zone.put("maKhuVuc", kv.getMaKhuVuc());
+                    zone.put("tenKhuVuc", kv.getTenKhuVuc());
+                    zone.put("sucChuaKv", kv.getSucChuaKv());
+                    zone.put("tenHangVe", hv.getTenHangVe());
+                    result.add(zone);
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 }

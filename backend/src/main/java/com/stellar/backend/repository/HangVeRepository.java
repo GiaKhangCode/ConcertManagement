@@ -8,5 +8,7 @@ import java.util.List;
 @Repository
 public interface HangVeRepository extends JpaRepository<HangVe, Long> {
     List<HangVe> findBySuKien_MaSuKien(Long maSuKien);
-    void deleteBySuKien_MaSuKien(Long maSuKien);
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("DELETE FROM HangVe h WHERE h.suKien.maSuKien = :maSuKien")
+    void deleteBySuKien_MaSuKien(@org.springframework.data.repository.query.Param("maSuKien") Long maSuKien);
 }

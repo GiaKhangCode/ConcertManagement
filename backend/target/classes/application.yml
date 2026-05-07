@@ -16,6 +16,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # Cấu hình Jackson: serialize LocalDateTime thành ISO 8601 string (bắt buộc cho frontend parse)
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
 
 server:
   port: 8081
+

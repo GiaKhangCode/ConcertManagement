@@ -235,6 +235,84 @@
             border-color: rgba(255, 51, 102, 0.3);
         }
 
+        /* === STATUS UPDATE WIDGET === */
+        .status-update-widget {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            margin-top: 0.5rem;
+        }
+
+        .status-update-widget label {
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .status-select {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: #fff;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .status-select:focus {
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+
+        .status-select option {
+            background: #0d0d14;
+            color: #fff;
+        }
+
+        .btn-update-status {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(138, 43, 226, 0.15));
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--accent-secondary);
+            border-radius: 8px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-update-status:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(138, 43, 226, 0.3));
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .btn-update-status:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Status badge colors */
+        .status-badge.sapdiendra { background: rgba(255, 200, 0, 0.15); color: #ffc800; border: 1px solid rgba(255, 200, 0, 0.3); }
+        .status-badge.dangdiendra { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+        .status-badge.daketthuc { background: rgba(150, 150, 150, 0.15); color: #aaa; border: 1px solid rgba(150, 150, 150, 0.3); }
+        .status-badge.dahuy { background: rgba(255, 51, 102, 0.15); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.3); }
+
         /* === PROCESSED STATE === */
         .admin-view.processed {
             opacity: 0.5;
@@ -771,6 +849,18 @@
             }
         }
 
+        // Hàm lấy class CSS tương ứng với trạng thái
+        function getStatusClass(status) {
+            const map = {
+                'Sắp diễn ra': 'sapdiendra',
+                'Đang diễn ra': 'dangdiendra',
+                'Đã kết thúc': 'daketthuc',
+                'Đã hủy': 'dahuy',
+                'Chờ phê duyệt': 'alert'
+            };
+            return map[status] || 'live';
+        }
+
         function renderApprovedEvents(events) {
             const grid = document.getElementById('featureGrid');
             if (!events || events.length === 0) {
@@ -785,6 +875,7 @@
             events.forEach((ev, idx) => {
                 const card = document.createElement('div');
                 card.className = 'event-card admin-view';
+                card.id = `feature-card-${ev.maSuKien}`;
                 card.style.animationDelay = `${idx * 0.1}s`;
 
                 // Nếu đang là sự kiện nổi bật, add một border đặc biệt
@@ -794,11 +885,16 @@
                 }
 
                 const dateStr = ev.thoiGianBD ? new Date(ev.thoiGianBD).toLocaleDateString('vi-VN') : 'Chưa xác định';
-                
+                const statusClass = getStatusClass(ev.trangThai || 'Sắp diễn ra');
+                const currentStatus = ev.trangThai || 'Sắp diễn ra';
+
+                // Các trạng thái đã kết thúc/hủy thì không cho đổi
+                const isFinalStatus = ['Đã kết thúc', 'Đã hủy'].includes(currentStatus);
+
                 card.innerHTML = `
                     <div class="card-image" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
-                        <div class="status-badge live" style="${ev.laSuKienNoiBat ? 'border-color: #fff; background: var(--accent-secondary); color: #000;' : ''}">
-                            ${ev.laSuKienNoiBat ? '⭐ HIỆN NỔI BẬT' : 'CHỜ DUYỆT'}
+                        <div class="status-badge ${statusClass}" id="status-badge-${ev.maSuKien}">
+                            ${ev.laSuKienNoiBat ? '⭐ ' : ''}${currentStatus}
                         </div>
                     </div>
                     <div class="card-body">
@@ -813,6 +909,22 @@
                                 <span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span>
                             </div>
                         </div>
+
+                        <!-- Widget cập nhật trạng thái -->
+                        <div class="status-update-widget">
+                            <label><i class="fa fa-sync-alt" style="margin-right:4px;"></i>Trạng thái</label>
+                            <select class="status-select" id="status-select-${ev.maSuKien}" ${isFinalStatus ? 'disabled' : ''}>
+                                <option value="Sắp diễn ra" ${currentStatus === 'Sắp diễn ra' ? 'selected' : ''}>📅 Sắp diễn ra</option>
+                                <option value="Đang diễn ra" ${currentStatus === 'Đang diễn ra' ? 'selected' : ''}>🔴 Đang diễn ra</option>
+                                <option value="Đã kết thúc" ${currentStatus === 'Đã kết thúc' ? 'selected' : ''}>✅ Đã kết thúc</option>
+                                <option value="Đã hủy" ${currentStatus === 'Đã hủy' ? 'selected' : ''}>❌ Đã hủy</option>
+                            </select>
+                            <button class="btn-update-status" id="btn-status-${ev.maSuKien}"
+                                onclick="updateEventStatus(${ev.maSuKien})" ${isFinalStatus ? 'disabled title="Sự kiện đã kết thúc/hủy"' : ''}>
+                                <i class="fa fa-save"></i> Lưu
+                            </button>
+                        </div>
+
                         <div class="card-actions">
                             <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
                                 <i class="fa fa-star"></i> ${ev.laSuKienNoiBat ? 'Đang Nổi Bật' : 'Đặt làm Nổi bật'}
@@ -829,6 +941,60 @@
                 grid.appendChild(card);
             });
             attachCursorEvents(grid.querySelectorAll('.action-btn'));
+        }
+
+        // Cập nhật trạng thái sự kiện - gọi Oracle trigger-aware endpoint
+        async function updateEventStatus(id) {
+            const token = localStorage.getItem('stellar_token');
+            const select = document.getElementById(`status-select-${id}`);
+            const btn = document.getElementById(`btn-status-${id}`);
+            if (!select) return;
+
+            const newStatus = select.value;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang lưu...';
+
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ trangThai: newStatus })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'Cập nhật trạng thái thành công!', 'success');
+
+                    // Cập nhật badge trực tiếp trên UI mà không cần reload
+                    const badge = document.getElementById(`status-badge-${id}`);
+                    if (badge) {
+                        badge.className = `status-badge ${getStatusClass(newStatus)}`;
+                        badge.textContent = newStatus;
+                    }
+
+                    // Nếu là trạng thái cuối thì disable widget
+                    const isFinal = ['Đã kết thúc', 'Đã hủy'].includes(newStatus);
+                    if (isFinal) {
+                        select.disabled = true;
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa fa-lock"></i> Đã khóa';
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
+                    }
+                } else {
+                    showToast('⚠️ ' + (data.message || 'Có lỗi xảy ra khi cập nhật.'), 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
+            }
         }
 
         async function setFeatured(id) {

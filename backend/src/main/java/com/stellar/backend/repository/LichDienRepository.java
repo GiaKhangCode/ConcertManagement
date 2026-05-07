@@ -10,5 +10,7 @@ import java.util.List;
 public interface LichDienRepository extends JpaRepository<LichDien, Long> {
     List<LichDien> findBySuKien_MaSuKien(Long maSuKien);
 
-    void deleteBySuKien_MaSuKien(Long maSuKien);
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("DELETE FROM LichDien l WHERE l.suKien.maSuKien = :maSuKien")
+    void deleteBySuKien_MaSuKien(@org.springframework.data.repository.query.Param("maSuKien") Long maSuKien);
 }

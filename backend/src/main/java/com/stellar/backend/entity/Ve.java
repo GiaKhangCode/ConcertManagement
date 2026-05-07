@@ -19,6 +19,14 @@ public class Ve {
     @JoinColumn(name = "MaHangVe")
     private HangVe hangVe;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaGhe")
+    private GheNgoi gheNgoi;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaLichDien")
+    private LichDien lichDien;
+
     @Column(name = "TrangThaiVe", nullable = false)
     private String trangThaiVe = "Hiệu lực";
 
@@ -34,6 +42,10 @@ public class Ve {
     public void setDonMua(DonMua donMua) { this.donMua = donMua; }
     public HangVe getHangVe() { return hangVe; }
     public void setHangVe(HangVe hangVe) { this.hangVe = hangVe; }
+    public GheNgoi getGheNgoi() { return gheNgoi; }
+    public void setGheNgoi(GheNgoi gheNgoi) { this.gheNgoi = gheNgoi; }
+    public LichDien getLichDien() { return lichDien; }
+    public void setLichDien(LichDien lichDien) { this.lichDien = lichDien; }
     public String getTrangThaiVe() { return trangThaiVe; }
     public void setTrangThaiVe(String trangThaiVe) { this.trangThaiVe = trangThaiVe; }
     public LocalDateTime getThoiGianDaBan() { return thoiGianDaBan; }
