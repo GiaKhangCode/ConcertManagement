@@ -97,5 +97,19 @@ public class EventCreateRequestDto {
         public void setRows(java.util.List<String> rows) { this.rows = rows; }
         public Integer getSeatsPerRow() { return seatsPerRow; }
         public void setSeatsPerRow(Integer seatsPerRow) { this.seatsPerRow = seatsPerRow; }
+
+        private List<RowConfigDto> rowConfigs;
+        public List<RowConfigDto> getRowConfigs() { return rowConfigs; }
+        public void setRowConfigs(List<RowConfigDto> rowConfigs) { this.rowConfigs = rowConfigs; }
+    }
+
+    public static class RowConfigDto {
+        private String rowLabel;
+        private Integer seatCount;
+
+        public String getRowLabel() { return rowLabel; }
+        public void setRowLabel(String rowLabel) { this.rowLabel = rowLabel; }
+        public Integer getSeatCount() { return seatCount; }
+        public void setSeatCount(Integer seatCount) { this.seatCount = seatCount; }
     }
 }

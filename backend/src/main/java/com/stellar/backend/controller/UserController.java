@@ -90,22 +90,20 @@ public class UserController {
         
         List<UserTicketResponseDto> result = new ArrayList<>();
         for(DonMua don : orders) {
-            UserTicketResponseDto dto = new UserTicketResponseDto();
-            dto.setTransactionId(don.getMaDonMua());
-            dto.setEventName(don.getSuKien().getTenSuKien());
-            dto.setTotalPrice(don.getTongTien());
-            dto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
-            
             List<Ve> veList = veRepository.findByDonMua_MaDonMua(don.getMaDonMua());
-            dto.setTicketCount(veList.size());
-            if(!veList.isEmpty()) {
-                dto.setTierName(veList.get(0).getHangVe().getTenHangVe());
-            } else {
-                dto.setTierName("N/A");
+            for(Ve ve : veList) {
+                UserTicketResponseDto dto = new UserTicketResponseDto();
+                dto.setTicketId(ve.getMaVe());
+                dto.setTransactionId(don.getMaDonMua());
+                dto.setEventName(don.getSuKien().getTenSuKien());
+                dto.setTotalPrice(don.getTongTien().divide(new java.math.BigDecimal(veList.size()), java.math.RoundingMode.HALF_UP));
+                dto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
+                dto.setTicketCount(1);
+                dto.setTierName(ve.getHangVe().getTenHangVe());
+                result.add(dto);
             }
-            result.add(dto);
         }
-        
+        System.out.println("DEBUG: Trả về " + result.size() + " vé. Vé đầu tiên ID: " + (result.isEmpty() ? "N/A" : result.get(0).getTicketId()));
         return ResponseEntity.ok(result);
     }
 }

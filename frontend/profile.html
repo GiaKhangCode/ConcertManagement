@@ -149,6 +149,39 @@
             50% { transform: scale(1.05); opacity: 0.8; }
             100% { transform: scale(1); opacity: 0.5; }
         }
+
+        /* New Styles for Finance UI */
+        .tab-btn {
+            background: none; border: none; color: var(--text-muted);
+            font-family: 'Unbounded', sans-serif; font-size: 0.9rem;
+            padding: 15px 25px; cursor: pointer; transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active { color: var(--accent-secondary); border-bottom-color: var(--accent-secondary); }
+        
+        .history-item {
+            display: grid; grid-template-columns: auto 1fr auto; gap: 20px;
+            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+        }
+        .history-icon {
+            width: 45px; height: 45px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+        .history-amount { font-family: 'Space Mono', monospace; font-weight: bold; font-size: 1.1rem; }
+        
+        /* Modal Basic */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #141928; margin: 10% auto; padding: 30px;
+            border: 1px solid var(--accent-secondary); border-radius: 20px;
+            width: 90%; color: #fff;
+        }
     </style>
 </head>
 <body style="margin: 0; min-height: 100vh; overflow-x: hidden; background: var(--bg-dark); font-family: 'Be Vietnam Pro', sans-serif;">
@@ -206,18 +239,64 @@
 
         <!-- Main Content -->
         <main class="profile-main fade-up" style="animation-delay: 0.15s;">
-            <div class="section-title">
-                <h2>LỊCH SỬ ĐẶT VÉ</h2>
-                <span style="font-size: 0.9rem; color: var(--accent-secondary); font-family: 'Be Vietnam Pro', sans-serif; font-weight: 500;" id="ticketCount">0 vé</span>
+            <!-- Tabs -->
+            <div style="display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <button class="tab-btn active" onclick="switchTab('tickets')" id="tab-tickets">VÉ CỦA TÔI</button>
+                <button class="tab-btn" onclick="switchTab('history')" id="tab-history">LỊCH SỬ GIAO DỊCH</button>
             </div>
-            <div class="ticket-list" id="ticketListCont">
-                <!-- Data from profile.js -->
-                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fa fa-spinner fa-spin fa-2x" style="margin-bottom: 20px; color: var(--accent-secondary);"></i>
-                    <p>Đang tải danh sách vé từ hệ thống...</p>
+
+            <!-- Ticket List Tab -->
+            <div id="tickets-tab-content">
+                <div class="section-title">
+                    <h2>VÉ ĐÃ SỞ HỮU</h2>
+                    <span style="font-size: 0.9rem; color: var(--accent-secondary);" id="ticketCount">0 vé</span>
+                </div>
+                <div class="ticket-list" id="ticketListCont">
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa fa-spinner fa-spin fa-2x"></i>
+                        <p>Đang tải danh sách vé...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History Tab -->
+            <div id="history-tab-content" style="display: none;">
+                <div class="section-title">
+                    <h2>BIẾN ĐỘNG SỐ DƯ</h2>
+                </div>
+                <div id="historyListCont" class="history-list">
+                    <!-- Data from profile.js -->
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="resaleModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3>NIÊM YẾT BÁN LẠI VÉ</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Nhập giá bạn muốn bán lại cho người khác.</p>
+            <input type="number" id="resalePrice" class="form-input" placeholder="Nhập giá bán (VNĐ)" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline small" onclick="closeModal('resaleModal')">HỦY</button>
+                <button class="btn btn-primary small" id="confirmResaleBtn">XÁC NHẬN NIÊM YẾT</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="refundModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h3>YÊU CẦU HOÀN TIỀN</h3>
+            <div id="refundInfo" style="background: rgba(0,229,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <!-- Info about refund % -->
+            </div>
+            <textarea id="refundReason" class="form-input" placeholder="Lý do hoàn vé..." style="height: 100px; margin-bottom: 20px;"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline small" onclick="closeModal('refundModal')">HỦY</button>
+                <button class="btn btn-primary small" id="confirmRefundBtn" style="background: #ff5555; border-color: #ff5555;">GỬI YÊU CẦU HOÀN TIỀN</button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <div class="mascot-companion" id="mascotCompanion">

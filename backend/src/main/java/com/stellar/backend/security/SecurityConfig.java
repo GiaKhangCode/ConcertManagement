@@ -53,13 +53,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configure(http))
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/events/**").permitAll()
                     .requestMatchers("/api/admin/locations").permitAll()
+                    .requestMatchers("/api/finance/resale").permitAll()
                     // Các route phân quyền chi tiết được xử lý bởi @PreAuthorize trong Controller
                     .anyRequest().authenticated()
             );

@@ -461,6 +461,14 @@
                 <div class="loading-spinner"><div class="spinner"></div></div>
             </div>
         </section>
+
+        <!-- Refund Requests Section -->
+        <section class="events-section fade-up stagger-1" style="margin-top: 5rem;">
+            <h2 class="section-title">YÊU CẦU HOÀN TIỀN (REFUNDS)</h2>
+            <div class="approval-grid" id="refundGrid">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </section>
     </main>
 
     <!-- Toast Notification -->
@@ -573,6 +581,7 @@
 
             loadPendingEvents(token);
             loadApprovedEvents(token);
+            loadRefundRequests(token);
         });
 
         // Scroll Reveal Animation — cần thiết vì trang này không import script.js

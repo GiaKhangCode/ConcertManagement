@@ -11,4 +11,7 @@ public interface VeRepository extends JpaRepository<Ve, Long> {
     
     long countByHangVe_SuKien_MaSuKien(Long maSuKien);
     long countByHangVe_MaHangVe(Long maHangVe);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT v FROM Ve v WHERE v.daBanLai = 1 AND v.giaBanLai IS NOT NULL")
+    List<Ve> findActiveResales();
 }

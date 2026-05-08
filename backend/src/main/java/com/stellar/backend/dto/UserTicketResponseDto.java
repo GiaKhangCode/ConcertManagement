@@ -3,6 +3,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class UserTicketResponseDto {
+    private Long ticketId;
     private Long transactionId;
     private String eventName;
     private String tierName;
@@ -10,6 +11,8 @@ public class UserTicketResponseDto {
     private LocalDateTime bookingTime;
     private int ticketCount;
     
+    public Long getTicketId() { return ticketId; }
+    public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
     public Long getTransactionId() { return transactionId; }
     public void setTransactionId(Long transactionId) { this.transactionId = transactionId; }
     public String getEventName() { return eventName; }

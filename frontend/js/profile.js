@@ -1,115 +1,210 @@
-// profile.js - Chuyên xử lý dữ liệu cá nhân và vé
+// profile.js - Chuyên xử lý dữ liệu cá nhân, vé và tài chính
+let selectedTicketId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
     if(!token) {
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để xem trang cá nhân.");
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         window.location.href = 'auth.html';
         return;
     }
 
+    initProfile();
+});
+
+async function initProfile() {
+    const token = localStorage.getItem('stellar_token');
+    console.log("Khởi tạo Profile với token:", token ? "Đã có" : "Chưa có");
     try {
-        // Fetch Profile
+        // 1. Fetch Full Profile
+        console.log("Đang gọi API profile...");
         const profRes = await fetch('http://localhost:8081/api/user/profile', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
+        console.log("Kết quả API profile:", profRes.status);
         if(profRes.ok) {
             const profile = await profRes.json();
-            document.getElementById('userNameLabel').innerText = profile.fullName || profile.username;
+            console.log("Dữ liệu profile nhận được:", profile);
+            document.getElementById('userNameLabel').innerText = profile.fullName || profile.username || "Người dùng";
             document.getElementById('userEmailLabel').innerText = profile.email || 'Thành viên Ve\'ryGood';
-            
-            // Cập nhật Role hiển thị trên Sidebar
-            const roleLabel = document.getElementById('userRoleDis');
-            if(roleLabel) {
-                const roles = localStorage.getItem('stellar_roles') || '[]';
-                roleLabel.textContent = roles.includes('ADMIN') ? 'Quản trị viên' : (roles.includes('ORGANIZER') ? 'Nhà tổ chức' : 'Khách hàng');
-            }
-
-            if(profile.walletBalance !== undefined) {
-                document.getElementById('walletBalance').innerText = profile.walletBalance.toLocaleString('vi-VN') + " VNĐ";
-            }
+            document.getElementById('walletBalance').innerText = (profile.walletBalance || 0).toLocaleString('vi-VN') + " VNĐ";
+        } else {
+            console.error("Lỗi API Profile:", await profRes.text());
         }
 
-        // Fetch Tickets
-        const tickRes = await fetch('http://localhost:8081/api/user/tickets', {
+        // 2. Fetch Tickets
+        loadTickets();
+        // 3. Fetch History
+        loadHistory();
+
+    } catch(err) {
+        console.error("Lỗi khi tải thông tin hồ sơ:", err);
+    }
+}
+
+async function loadTickets() {
+    const token = localStorage.getItem('stellar_token');
+    const ticketListCont = document.getElementById('ticketListCont');
+    try {
+        const res = await fetch('http://localhost:8081/api/user/tickets', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
-        const ticketListCont = document.getElementById('ticketListCont');
-        
-        if(tickRes.ok) {
-            const tickets = await tickRes.json();
+        if(res.ok) {
+            const tickets = await res.json();
+            console.log("DEBUG: Dữ liệu vé từ server:", tickets);
             document.getElementById('ticketCount').innerText = tickets.length + " vé";
-            
             if(tickets.length === 0) {
-                ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa mua vé nào. Hãy khám phá các sự kiện đang diễn ra trên trang chủ nhé!</p>';
-            } else {
-                let html = '';
-                tickets.forEach(tk => {
-                    const d = new Date(tk.bookingTime).toLocaleString('vi-VN');
-                    html += `
-                        <div class="ticket-item">
-                            <div>
-                                <h4>SỰ KIỆN: ${tk.eventName}</h4>
-                                <div class="ticket-meta">
-                                    <span><i class="fa fa-qrcode"></i> INV-${tk.transactionId}</span>
-                                    <span><i class="fa fa-ticket"></i> ${tk.ticketCount} vé (Hạng: ${tk.tierName})</span>
-                                    <span><i class="fa fa-clock"></i> Khởi tạo: ${d}</span>
-                                </div>
-                            </div>
-                            <div class="ticket-status">
-                                Khả dụng
-                            </div>
-                        </div>
-                    `;
-                });
-                ticketListCont.innerHTML = html;
-            }
-        }
-    } catch(err) {
-        document.getElementById('ticketListCont').innerHTML = '<p style="color:red; text-align:center;">Lỗi kết nối máy chủ không ổn định. Xin vui lòng F5 lại trang web.</p>';
-        document.getElementById('userNameLabel').innerText = "LỖI KẾT NỐI API";
-    }
-
-    // Logic Nạp Tiền
-    const topUpBtn = document.getElementById('topUpBtn');
-    if (topUpBtn) {
-        topUpBtn.addEventListener('click', async () => {
-            const amountInput = prompt("Nhập số tiền bạn muốn nạp (VNĐ):", "500000");
-            if (amountInput === null) return; // Người dùng nhấn Hủy
-
-            const amount = parseFloat(amountInput);
-            if (isNaN(amount) || amount <= 0) {
-                alert("Số tiền không hợp lệ!");
+                ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa sở hữu vé nào.</p>';
                 return;
             }
+            
+            ticketListCont.innerHTML = tickets.map(tk => {
+                const d = new Date(tk.bookingTime).toLocaleString('vi-VN');
+                return `
+                    <div class="ticket-item">
+                        <div style="flex: 1;">
+                            <h4>SỰ KIỆN: ${tk.eventName}</h4>
+                            <div class="ticket-meta">
+                                <span><i class="fa fa-qrcode"></i> TIC-${tk.ticketId} (Đơn: ${tk.transactionId})</span>
+                                <span><i class="fa fa-ticket"></i> ${tk.ticketCount} vé (${tk.tierName})</span>
+                                <span><i class="fa fa-clock"></i> ${d}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem;" onclick="openResaleModal(${tk.ticketId})">BÁN LẠI</button>
+                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff5555; color: #ff5555;" onclick="openRefundModal(${tk.ticketId})">HOÀN VÉ</button>
+                            <div class="ticket-status">Khả dụng</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch(e) { console.error("Lỗi khi tải danh sách vé:", e); }
+}
 
-            try {
-                topUpBtn.disabled = true;
-                topUpBtn.innerText = "ĐANG XỬ LÝ...";
-
-                const response = await fetch('http://localhost:8081/api/user/wallet/topup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ amount: amount })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    alert("✅ " + data.message);
-                    // Cập nhật lại số dư trên UI
-                    document.getElementById('walletBalance').innerText = data.newBalance.toLocaleString('vi-VN') + " VNĐ";
-                } else {
-                    alert("❌ Lỗi: " + (data.message || "Không thể nạp tiền."));
-                }
-            } catch (err) {
-                alert("⚠️ Lỗi kết nối server.");
-            } finally {
-                topUpBtn.disabled = false;
-                topUpBtn.innerHTML = '<i class="fa fa-plus"></i> NẠP TIỀN';
-            }
+async function loadHistory() {
+    const token = localStorage.getItem('stellar_token');
+    const container = document.getElementById('historyListCont');
+    try {
+        const res = await fetch('http://localhost:8081/api/finance/wallet/history', {
+            headers: { 'Authorization': 'Bearer ' + token }
         });
+        if(res.ok) {
+            const history = await res.json();
+            if(history.length === 0) {
+                container.innerHTML = '<p style="color:#a0a5b5; text-align:center; padding: 20px;">Chưa có giao dịch nào.</p>';
+                return;
+            }
+            container.innerHTML = history.map(h => {
+                const isPlus = h.loaiBienDong === 'Tăng';
+                const color = isPlus ? '#50fa7b' : '#ff5555';
+                const icon = isPlus ? 'fa-arrow-down' : 'fa-arrow-up';
+                const bg = isPlus ? 'rgba(80, 250, 123, 0.1)' : 'rgba(255, 85, 85, 0.1)';
+                
+                return `
+                    <div class="history-item">
+                        <div class="history-icon" style="background: ${bg}; color: ${color};">
+                            <i class="fa ${icon}"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${h.noiDung || h.loaiGiaoDich}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${new Date(h.thoiGian).toLocaleString('vi-VN')}</div>
+                        </div>
+                        <div class="history-amount" style="color: ${color};">
+                            ${isPlus ? '+' : '-'}${h.soTien.toLocaleString('vi-VN')} đ
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch(e) { console.error("Lỗi khi tải lịch sử:", e); }
+}
+
+// Logic nạp tiền
+document.getElementById('topUpBtn')?.addEventListener('click', async () => {
+    const amount = prompt("Nhập số tiền nạp (VNĐ):", "500000");
+    if(!amount) return;
+    
+    const token = localStorage.getItem('stellar_token');
+    try {
+        const res = await fetch('http://localhost:8081/api/finance/wallet/deposit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ amount: parseFloat(amount) })
+        });
+        if(res.ok) {
+            alert("Nạp tiền thành công!");
+            initProfile();
+        }
+    } catch(e) { alert("Lỗi kết nối"); }
+});
+
+// Tab Switching
+function switchTab(tab) {
+    document.getElementById('tab-tickets').classList.toggle('active', tab === 'tickets');
+    document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+    document.getElementById('tickets-tab-content').style.display = tab === 'tickets' ? 'block' : 'none';
+    document.getElementById('history-tab-content').style.display = tab === 'history' ? 'block' : 'none';
+}
+
+// Modal Helpers
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function openResaleModal(ticketId) {
+    selectedTicketId = ticketId;
+    openModal('resaleModal');
+}
+
+function openRefundModal(ticketId) {
+    selectedTicketId = ticketId;
+    openModal('refundModal');
+}
+
+document.getElementById('confirmResaleBtn')?.addEventListener('click', async () => {
+    const price = document.getElementById('resalePrice').value;
+    if(!price) return alert("Vui lòng nhập giá bán");
+    if(!selectedTicketId || selectedTicketId === 'undefined') {
+        return alert("Lỗi: Không xác định được mã vé. Vui lòng tải lại trang.");
     }
+    
+    const token = localStorage.getItem('stellar_token');
+    try {
+        const res = await fetch(`http://localhost:8081/api/finance/tickets/${selectedTicketId}/resale`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ price: parseFloat(price) })
+        });
+        if(res.ok) {
+            alert("Niêm yết bán lại thành công!");
+            closeModal('resaleModal');
+            loadTickets();
+        } else {
+            const data = await res.json();
+            alert("Lỗi: " + data.message);
+        }
+    } catch(e) { alert("Lỗi kết nối"); }
+});
+
+document.getElementById('confirmRefundBtn')?.addEventListener('click', async () => {
+    const reason = document.getElementById('refundReason').value;
+    if(!selectedTicketId || selectedTicketId === 'undefined') {
+        return alert("Lỗi: Không xác định được mã vé. Vui lòng tải lại trang.");
+    }
+    const token = localStorage.getItem('stellar_token');
+    try {
+        const res = await fetch(`http://localhost:8081/api/finance/tickets/${selectedTicketId}/refund`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ reason: reason })
+        });
+        if(res.ok) {
+            alert("Yêu cầu hoàn tiền đã được gửi.");
+            closeModal('refundModal');
+            loadTickets();
+        } else {
+            const data = await res.json();
+            alert("Lỗi: " + data.message);
+        }
+    } catch(e) { alert("Lỗi kết nối"); }
 });

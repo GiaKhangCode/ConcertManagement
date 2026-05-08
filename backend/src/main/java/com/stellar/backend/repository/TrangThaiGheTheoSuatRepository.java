@@ -24,4 +24,8 @@ public interface TrangThaiGheTheoSuatRepository extends JpaRepository<TrangThaiG
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
     @org.springframework.data.jpa.repository.Query("DELETE FROM TrangThaiGheTheoSuat t WHERE t.maLichDien = :maLichDien")
     void deleteByMaLichDien(@org.springframework.data.repository.query.Param("maLichDien") Long maLichDien);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("DELETE FROM TrangThaiGheTheoSuat t WHERE t.maGhe IN :maGheIds")
+    void deleteByMaGheIn(@org.springframework.data.repository.query.Param("maGheIds") List<Long> maGheIds);
 }
