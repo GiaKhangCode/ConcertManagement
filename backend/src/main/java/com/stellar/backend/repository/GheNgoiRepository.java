@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface GheNgoiRepository extends JpaRepository<GheNgoi, Long> {
     List<GheNgoi> findByKhuVucMaKhuVuc(Long maKhuVuc);
+    boolean existsByKhuVucMaKhuVuc(Long maKhuVuc);
     boolean existsByKhuVucMaKhuVucAndToaDo(Long maKhuVuc, String toaDo);
     
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)

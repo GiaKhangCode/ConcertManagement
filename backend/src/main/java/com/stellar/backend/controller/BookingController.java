@@ -11,7 +11,8 @@ import com.stellar.backend.repository.HangVeRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.TaiKhoanRepository;
 import com.stellar.backend.repository.VeRepository;
-import com.stellar.backend.repository.ViCaNhanRepository;
+import com.stellar.backend.repository.SoDoSuKienRepository;
+import com.stellar.backend.repository.GheNgoiRepository;
 import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import com.stellar.backend.entity.ViCaNhan;
+import com.stellar.backend.service.WalletService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -35,6 +37,9 @@ public class BookingController {
     private DonMuaRepository donMuaRepository;
 
     @Autowired
+    private WalletService walletService;
+
+    @Autowired
     private VeRepository veRepository;
 
     @Autowired
@@ -47,10 +52,13 @@ public class BookingController {
     private TaiKhoanRepository taiKhoanRepository;
 
     @Autowired
-    private ViCaNhanRepository viCaNhanRepository;
+    private com.stellar.backend.repository.TrangThaiGheTheoSuatRepository trangThaiGheTheoSuatRepository;
 
     @Autowired
-    private com.stellar.backend.repository.TrangThaiGheTheoSuatRepository trangThaiGheTheoSuatRepository;
+    private SoDoSuKienRepository soDoSuKienRepository;
+
+    @Autowired
+    private GheNgoiRepository gheNgoiRepository;
 
     @Transactional
     @PostMapping("/create")
@@ -77,39 +85,36 @@ public class BookingController {
             }
         }
 
-        List<com.stellar.backend.entity.TrangThaiGheTheoSuat> userLocks = 
-            trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, taiKhoan.getMaTaiKhoan(), "Đang giữ chỗ");
-        
-        if (userLocks.size() < request.getSoLuong()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Bạn chưa khóa đủ số lượng ghế trên hệ thống."));
+        // 2. Kiểm tra nếu dsGhe trống (vé đứng hoặc sự kiện không sơ đồ) -> cho phép đặt trực tiếp
+        boolean skipSeatCheck = false;
+        if (request.getDsGhe() == null || request.getDsGhe().isEmpty()) {
+            skipSeatCheck = true;
         }
 
-        // Tính tổng tiền dựa theo giá của từng ghế đang giữ (ghế thuộc khu vực nào thì lấy giá hạng vé của khu vực đó)
+        List<com.stellar.backend.entity.TrangThaiGheTheoSuat> userLocks = new ArrayList<>();
+        if (!skipSeatCheck) {
+            userLocks = trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, taiKhoan.getMaTaiKhoan(), "Đang giữ chỗ");
+            if (userLocks.size() < request.getSoLuong()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Bạn chưa khóa đủ số lượng ghế trên hệ thống."));
+            }
+        }
+
+        // Tính tổng tiền
         BigDecimal tongTien = BigDecimal.ZERO;
-        for (com.stellar.backend.entity.TrangThaiGheTheoSuat lock : userLocks) {
-            if (lock.getGheNgoi() != null && lock.getGheNgoi().getKhuVuc() != null && lock.getGheNgoi().getKhuVuc().getHangVe() != null) {
-                tongTien = tongTien.add(lock.getGheNgoi().getKhuVuc().getHangVe().getGiaNiemYet());
-            } else {
-                tongTien = tongTien.add(hangVe.getGiaNiemYet());
+        if (skipSeatCheck) {
+            tongTien = hangVe.getGiaNiemYet().multiply(new BigDecimal(request.getSoLuong()));
+        } else {
+            for (com.stellar.backend.entity.TrangThaiGheTheoSuat lock : userLocks) {
+                if (lock.getGheNgoi() != null && lock.getGheNgoi().getKhuVuc() != null && lock.getGheNgoi().getKhuVuc().getHangVe() != null) {
+                    tongTien = tongTien.add(lock.getGheNgoi().getKhuVuc().getHangVe().getGiaNiemYet());
+                } else {
+                    tongTien = tongTien.add(hangVe.getGiaNiemYet());
+                }
             }
         }
 
         // --- BẮT ĐẦU THANH TOÁN QUA VÍ ---
-        ViCaNhan vi = viCaNhanRepository.findByTaiKhoan_MaTaiKhoan(taiKhoan.getMaTaiKhoan())
-            .orElseThrow(() -> new RuntimeException("Người dùng chưa có ví cá nhân!"));
-
-        if (vi.getSoDu().compareTo(tongTien) < 0) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Số dư ví không đủ để thanh toán (" + tongTien + " VNĐ). Vui lòng nạp thêm!");
-            return ResponseEntity.badRequest().body(error);
-        }
-
-        // --- KẾT THÚC KIỂM TRA KHÓA GHẾ ---
-
-        // Trừ tiền
-        vi.setSoDu(vi.getSoDu().subtract(tongTien));
-        viCaNhanRepository.save(vi);
-        // --- KẾT THÚC THANH TOÁN ---
+        walletService.pay(taiKhoan.getMaTaiKhoan(), tongTien, "Thanh toán đặt vé cho sự kiện: " + suKien.getTenSuKien());
 
         // Khởi tạo một Đơn Mua
         DonMua donMua = new DonMua();
@@ -120,7 +125,7 @@ public class BookingController {
         donMua.setPhuongThucThanhToan("Ví cá nhân (Ve'ryGood Pay)");
         donMua = donMuaRepository.save(donMua);
 
-        // Khởi tạo hàng loạt các dòng dữ liệu VÉ thật phụ thuộc vào số lượng
+        // Khởi tạo hàng loạt các dòng dữ liệu VÉ thật
         List<Ve> veList = new ArrayList<>();
         for (int i = 0; i < request.getSoLuong(); i++) {
             Ve ve = new Ve();
@@ -129,18 +134,20 @@ public class BookingController {
             ve.setDaBanLai(0);
             ve.setTrangThaiVe("Hiệu lực");
             
-            // Lấy ghế từ userLocks gán vào vé
-            if (i < userLocks.size()) {
+            if (!skipSeatCheck && i < userLocks.size()) {
                 com.stellar.backend.entity.TrangThaiGheTheoSuat lock = userLocks.get(i);
                 ve.setGheNgoi(lock.getGheNgoi());
                 ve.setLichDien(lock.getLichDien());
                 
-                // Đổi trạng thái thành Đã đặt
                 lock.setTrangThai("Đã đặt");
                 lock.setThoiGianHetHan(null);
                 trangThaiGheTheoSuatRepository.save(lock);
+            } else {
+                // Trường hợp không có sơ đồ
+                ve.setLichDien(suKien.getDanhSachLichDien().stream()
+                    .filter(ld -> ld.getMaLichDien().equals(request.getMaLichDien()))
+                    .findFirst().orElse(suKien.getDanhSachLichDien().isEmpty() ? null : suKien.getDanhSachLichDien().get(0)));
             }
-            
             veList.add(ve);
         }
         veRepository.saveAll(veList);

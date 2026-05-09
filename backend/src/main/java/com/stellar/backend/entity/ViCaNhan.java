@@ -13,6 +13,7 @@ public class ViCaNhan {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaTaiKhoan")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private TaiKhoan taiKhoan;
 
     @Column(name = "SoDu", nullable = false)

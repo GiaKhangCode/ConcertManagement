@@ -14,10 +14,12 @@ public class LichSuBienDongVi {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaVi")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private ViCaNhan viCaNhan;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaGiaoDichLienQuan")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private GiaoDich giaoDichLienQuan;
 
     @Column(name = "LoaiBienDong", nullable = false)
