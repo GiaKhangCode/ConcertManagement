@@ -171,6 +171,26 @@
         }
         .history-amount { font-family: 'Space Mono', monospace; font-weight: bold; font-size: 1.1rem; }
         
+        .history-list {
+            max-height: 380px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-secondary) transparent;
+            padding-right: 10px;
+        }
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--accent-secondary);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--accent-secondary);
+        }
+
         /* Modal Basic */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0;
