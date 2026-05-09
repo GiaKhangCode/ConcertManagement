@@ -139,6 +139,24 @@ async function loadEventData(id, token) {
             }
         }
 
+        // Load Stage Builder (SeatMap)
+        try {
+            const seatmapRes = await fetch(`http://localhost:8081/api/admin/events/${id}/seatmap`, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (seatmapRes.ok) {
+                const seatmapData = await seatmapRes.json();
+                if (seatmapData && seatmapData.duLieuCanvas && typeof canvas !== 'undefined') {
+                    document.getElementById('enableStageBuilder').checked = true;
+                    toggleStageBuilder();
+                    canvas.loadFromJSON(seatmapData.duLieuCanvas, function() {
+                        canvas.getObjects().forEach(obj => {
+                            if (obj.stroke === '#ffffff11') canvas.sendToBack(obj);
+                        });
+                        canvas.renderAll();
+                    });
+                }
+            }
+        } catch (e) { console.log('Sự kiện chưa có sơ đồ.'); }
+
     } catch (e) { alert("Lỗi: " + e.message); window.location.href = "event-management.html"; }
 }
 
@@ -232,6 +250,10 @@ function addKhuVuc(containerId, data = null) {
                 <div style="flex:1;">
                     <label style="font-size:.8rem;color:#a0a5b5;margin-bottom:5px;display:block;">Sức Chứa</label>
                     <input type="number" class="form-input kv-capacity" required min="1" value="${capacity || ''}" placeholder="50">
+                </div>
+                <div style="flex:0; min-width: 50px;">
+                    <label style="font-size:.8rem;color:#a0a5b5;margin-bottom:5px;display:block;">Màu</label>
+                    <input type="color" class="kv-color" value="${data?.mauSac || '#3B82F6'}" style="width: 100%; height: 38px; border: none; cursor: pointer; background: transparent;" onchange="if(window.updateTicketTypeDropdown) updateTicketTypeDropdown()">
                 </div>
                 <button class="remove-btn" style="position:static;color:#ff5555;padding:15px;flex:0;background:rgba(255,0,0,0.1);border-radius:10px;" type="button" onclick="removeEl('${id}')">
                     <i class="fa fa-trash-alt"></i>
@@ -564,6 +586,21 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
 
         if (response.ok) {
             const savedId = isEdit ? existingId : data.eventId;
+            
+            // LƯU SƠ ĐỒ SÂN KHẤU NẾU CÓ BẬT VÀ CÓ DỮ LIỆU
+            const stageData = typeof getStageBuilderData === 'function' ? getStageBuilderData() : null;
+            if (stageData) {
+                try {
+                    await fetch(`http://localhost:8081/api/admin/events/${savedId}/seatmap`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                        body: JSON.stringify(stageData)
+                    });
+                } catch (err) {
+                    console.error("Lỗi khi lưu sơ đồ:", err);
+                }
+            }
+
             const successMsg = data.message || `${isEdit ? 'Cập nhật' : 'Tạo'} thành công!`;
             showMascotMessage(`✅ ${successMsg}`);
             setTimeout(() => window.location.href = 'event-management.html', 3000);

@@ -207,6 +207,80 @@
             </h3>
             <div id="hangVeContainer" style="margin-bottom: 50px;"></div>
 
+            <h3 style="color: #00f3ff; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; font-family: 'Unbounded', sans-serif; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
+                <span><i class="fa fa-map"></i> 4. THIẾT KẾ SƠ ĐỒ SÂN KHẤU (STAGE BUILDER)</span>
+                <label class="switch">
+                    <input type="checkbox" id="enableStageBuilder" onchange="toggleStageBuilder()">
+                    <span class="slider round"></span>
+                </label>
+            </h3>
+            
+            <div id="stageBuilderContainer" style="display: none; animation: fadeIn 0.3s ease-out; margin-bottom: 50px;">
+                <div class="stage-builder-layout" style="display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
+                    <div class="canvas-wrapper" style="background: rgba(0,0,0,0.5); border: 1px solid var(--primary-cyan); border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column;">
+                        <!-- Toolbar -->
+                        <div class="canvas-toolbar" style="padding: 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline small sb-tool active" data-tool="select"><i class="fa fa-mouse-pointer"></i> Chọn</button>
+                            <button type="button" class="btn btn-outline small sb-tool" data-tool="rect"><i class="fa fa-square"></i> Vuông</button>
+                            <button type="button" class="btn btn-outline small sb-tool" data-tool="circle"><i class="fa fa-circle"></i> Tròn</button>
+                            <button type="button" class="btn btn-outline small sb-tool" data-tool="polygon"><i class="fa fa-draw-polygon"></i> Đa Giác</button>
+                            <button type="button" class="btn btn-outline small sb-tool" data-tool="text"><i class="fa fa-font"></i> Chữ</button>
+                            <button type="button" class="btn btn-outline small sb-tool" data-tool="seat" style="border-color: #ffb86c; color: #ffb86c;"><i class="fa fa-chair"></i> Đặt Ghế</button>
+                            <div style="flex: 1;"></div>
+                            <button type="button" class="btn btn-outline small" style="border-color: #ff5555; color: #ff5555;" onclick="sbDeleteSelected()"><i class="fa fa-trash"></i> Xóa (Del)</button>
+                        </div>
+                        <!-- Canvas -->
+                        <div style="width: 100%; height: 500px; overflow: auto; position: relative;" id="canvasScrollArea">
+                            <canvas id="stageCanvas" width="1000" height="800"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="properties-panel" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="color: var(--primary-cyan); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Thuộc tính đối tượng</h4>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Tên hiển thị:</label>
+                            <input type="text" id="sbObjLabel" class="form-input" style="padding: 8px 12px;" disabled oninput="sbUpdateLabel(this.value)">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Khu vực áp dụng:</label>
+                            <select id="sbObjTicketType" class="form-input" style="padding: 8px 12px;" disabled onchange="sbUpdateTicketType(this.value)">
+                                <option value="">-- Chọn Hạng Vé --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Cỡ chữ (Text):</label>
+                            <input type="number" id="sbObjFontSize" class="form-input" style="padding: 8px 12px;" value="20" disabled oninput="sbUpdateFontSize(this.value)">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Màu sắc:</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="color" id="sbObjColor" value="#3B82F6" style="width: 40px; height: 35px; border: none; cursor: pointer; background: transparent;" disabled oninput="sbUpdateColor(this.value)">
+                                <span id="sbObjColorHex" style="font-family: 'Space Mono', monospace; font-size: 0.9rem;">#3B82F6</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px; display: flex; gap: 10px;">
+                            <button type="button" class="btn btn-outline small" id="btnFlipH" style="flex: 1; padding: 8px; font-size: 0.8rem;" disabled onclick="sbFlipHorizontal()"><i class="fa fa-arrows-alt-h"></i> Lật ngang</button>
+                            <button type="button" class="btn btn-outline small" id="btnFlipV" style="flex: 1; padding: 8px; font-size: 0.8rem;" disabled onclick="sbFlipVertical()"><i class="fa fa-arrows-alt-v"></i> Lật dọc</button>
+                        </div>
+                        
+                        <div style="margin-top: 30px; font-size: 0.8rem; color: #a0a5b5; line-height: 1.6; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                            <strong style="color: white;">Phím tắt:</strong><br>
+                            - <kbd>Ctrl</kbd> + <kbd>C</kbd>: Copy<br>
+                            - <kbd>Ctrl</kbd> + <kbd>V</kbd>: Paste<br>
+                            - <kbd>Ctrl</kbd> + <kbd>Z</kbd>: Undo/Redo (tùy cài đặt)<br>
+                            - <kbd>Del</kbd> / <kbd>Backspace</kbd>: Xóa đối tượng<br>
+                            - Lăn chuột: Phóng to/Thu nhỏ<br>
+                            - Đa giác: Click để tạo điểm, Double-click để hoàn thành.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Kết quả tạo ghế (ẩn, hiện sau khi submit) -->
             <div id="seatGenResult" style="display:none; margin-top: 30px;"></div>
 
@@ -298,11 +372,22 @@
         .switch input:checked + .slider:before { transform: translateX(20px); background-color: #000; }
         .switch .slider.round { border-radius: 24px; }
         .switch .slider.round:before { border-radius: 50%; }
+
+        /* Toolbar Stage Builder Active Style */
+        .sb-tool.active {
+            background: #00f3ff !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            border-color: #00f3ff !important;
+            font-weight: bold;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="js/script.js"></script>
     <script src="js/admin-create.js"></script>
+    <script src="js/stage-builder.js"></script>
 
     <div class="custom-cursor"></div>
 

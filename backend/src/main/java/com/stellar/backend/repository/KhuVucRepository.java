@@ -10,4 +10,5 @@ public interface KhuVucRepository extends JpaRepository<KhuVuc, Long> {
     void deleteByHangVe_MaHangVe(@org.springframework.data.repository.query.Param("maHangVe") Long maHangVe);
 
     java.util.List<KhuVuc> findByHangVe_MaHangVe(Long maHangVe);
+    java.util.List<KhuVuc> findByHangVe_SuKien_MaSuKien(Long maSuKien);
 }

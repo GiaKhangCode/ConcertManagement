@@ -32,7 +32,6 @@ com\stellar\backend\entity\HangVe.class
 com\stellar\backend\entity\TrangThaiGheTheoSuatId.class
 com\stellar\backend\dto\EventCreateRequestDto$RefundPolicyDto$RuleDto.class
 com\stellar\backend\entity\GiaoDich.class
-com\stellar\backend\dto\WalletHistoryDto.class
 com\stellar\backend\repository\TaiKhoanRepository.class
 com\stellar\backend\repository\DiaDiemRepository.class
 com\stellar\backend\repository\GiaoDichRepository.class

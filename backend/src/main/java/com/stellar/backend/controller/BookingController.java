@@ -66,8 +66,33 @@ public class BookingController {
         HangVe hangVe = hangVeRepository.findById(request.getMaHangVe())
             .orElseThrow(() -> new RuntimeException("Hạng vé không tồn tại!"));
 
-        // Tính tiền dựa theo giá DB
-        BigDecimal tongTien = hangVe.getGiaNiemYet().multiply(BigDecimal.valueOf(request.getSoLuong()));
+        // Để kiểm tra chính xác, ta lấy danh sách các ghế User đang giữ trong SUẤT DIỄN này
+        Long validMaLichDien = request.getMaLichDien();
+        if (validMaLichDien == null && suKien.getDanhSachLichDien() != null && !suKien.getDanhSachLichDien().isEmpty()) {
+            validMaLichDien = suKien.getDanhSachLichDien().get(0).getMaLichDien();
+        } else if (validMaLichDien != null && suKien.getDanhSachLichDien() != null) {
+            boolean isValid = suKien.getDanhSachLichDien().stream().anyMatch(ld -> ld.getMaLichDien().equals(request.getMaLichDien()));
+            if (!isValid) {
+                validMaLichDien = suKien.getDanhSachLichDien().isEmpty() ? request.getMaLichDien() : suKien.getDanhSachLichDien().get(0).getMaLichDien();
+            }
+        }
+
+        List<com.stellar.backend.entity.TrangThaiGheTheoSuat> userLocks = 
+            trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, taiKhoan.getMaTaiKhoan(), "Đang giữ chỗ");
+        
+        if (userLocks.size() < request.getSoLuong()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Bạn chưa khóa đủ số lượng ghế trên hệ thống."));
+        }
+
+        // Tính tổng tiền dựa theo giá của từng ghế đang giữ (ghế thuộc khu vực nào thì lấy giá hạng vé của khu vực đó)
+        BigDecimal tongTien = BigDecimal.ZERO;
+        for (com.stellar.backend.entity.TrangThaiGheTheoSuat lock : userLocks) {
+            if (lock.getGheNgoi() != null && lock.getGheNgoi().getKhuVuc() != null && lock.getGheNgoi().getKhuVuc().getHangVe() != null) {
+                tongTien = tongTien.add(lock.getGheNgoi().getKhuVuc().getHangVe().getGiaNiemYet());
+            } else {
+                tongTien = tongTien.add(hangVe.getGiaNiemYet());
+            }
+        }
 
         // --- BẮT ĐẦU THANH TOÁN QUA VÍ ---
         ViCaNhan vi = viCaNhanRepository.findByTaiKhoan_MaTaiKhoan(taiKhoan.getMaTaiKhoan())
@@ -79,32 +104,6 @@ public class BookingController {
             return ResponseEntity.badRequest().body(error);
         }
 
-        // --- BẮT ĐẦU KIỂM TRA KHÓA GHẾ ---
-        List<String> dsGheStr = request.getDsGhe();
-        if (dsGheStr == null || dsGheStr.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Danh sách ghế trống."));
-        }
-        
-        Long validMaLichDien = request.getMaLichDien();
-        
-        // Tự động fallback: Lấy LichDien đầu tiên của sự kiện nếu request không có
-        if (validMaLichDien == null && suKien.getDanhSachLichDien() != null && !suKien.getDanhSachLichDien().isEmpty()) {
-            validMaLichDien = suKien.getDanhSachLichDien().get(0).getMaLichDien();
-        } else if (validMaLichDien != null && suKien.getDanhSachLichDien() != null) {
-            // Đảm bảo maLichDien truyền lên thực sự thuộc về SuKien này (chống lỗi truyền nhầm eventId)
-            boolean isValid = suKien.getDanhSachLichDien().stream().anyMatch(ld -> ld.getMaLichDien().equals(request.getMaLichDien()));
-            if (!isValid) {
-                validMaLichDien = suKien.getDanhSachLichDien().isEmpty() ? request.getMaLichDien() : suKien.getDanhSachLichDien().get(0).getMaLichDien();
-            }
-        }
-
-        // Để kiểm tra chính xác, ta lấy danh sách các ghế User đang giữ trong SUẤT DIỄN này
-        List<com.stellar.backend.entity.TrangThaiGheTheoSuat> userLocks = 
-            trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, taiKhoan.getMaTaiKhoan(), "Đang giữ chỗ");
-        
-        if (userLocks.size() < request.getSoLuong()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Bạn chưa khóa đủ số lượng ghế trên hệ thống."));
-        }
         // --- KẾT THÚC KIỂM TRA KHÓA GHẾ ---
 
         // Trừ tiền

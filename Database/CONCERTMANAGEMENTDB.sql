@@ -2185,18 +2185,6 @@ END;
 
 INSERT INTO DIA_DIEM (TenDiaDiem, SucChua, TinhThanh, PhuongXa, SoNhaTenDuong)
 VALUES ('Sân vận động Quốc gia Mỹ Đình', 40000, 'Hà Nội', 'Mỹ Đình 1', 'Đường Lê Đức Thọ, Nam Từ Liêm');
---
--- INSERT INTO SU_KIEN (MaDiaDiem, TenSuKien, ThoiGianBD, ThoiGianKT, ThoiGianMoBanVe, ThoiGianNgungBanVe, TrangThai)
--- VALUES (1, 'CONCERT PHAM DUY - ĐƯỜNG MÂY QUA...', TIMESTAMP '2026-11-15 20:00:00', TIMESTAMP '2026-11-15 23:00:00', TIMESTAMP '2026-10-01 12:00:00', TIMESTAMP '2026-11-15 19:00:00', 'Đang diễn ra');
---
--- INSERT INTO SU_KIEN (MaDiaDiem, TenSuKien, ThoiGianBD, ThoiGianKT, ThoiGianMoBanVe, ThoiGianNgungBanVe, TrangThai)
--- VALUES (1, 'LIVESHOW HÀ ANH TUẤN - CHÂN TRỜI RỰC RỠ', TIMESTAMP '2026-12-24 19:30:00', TIMESTAMP '2026-12-24 22:30:00', TIMESTAMP '2026-11-01 12:00:00', TIMESTAMP '2026-12-24 19:00:00', 'Sắp diễn ra');
---
--- INSERT INTO HANG_VE (MaSuKien, TenHangVe, GiaNiemYet, TongSoLuong) VALUES (1, 'GA Standing', 500000, 2000);
--- INSERT INTO HANG_VE (MaSuKien, TenHangVe, GiaNiemYet, TongSoLuong) VALUES (1, 'VIP Lounge', 1500000, 200);
---
--- INSERT INTO HANG_VE (MaSuKien, TenHangVe, GiaNiemYet, TongSoLuong) VALUES (2, 'VÉ THƯỜNG', 1200000, 5000);
--- INSERT INTO HANG_VE (MaSuKien, TenHangVe, GiaNiemYet, TongSoLuong) VALUES (2, 'VVIP SEATING', 5000000, 500);
 
 INSERT INTO NHOM_QUYEN (TenNhomQuyen, MoTa)
 SELECT 'ROLE_CUSTOMER', 'Khách hàng - Quyền mua vé và xem sự kiện' FROM DUAL
@@ -2211,31 +2199,3 @@ SELECT 'ROLE_ADMIN', 'Quản trị viên - Quyền duyệt sự kiện và quả
 WHERE NOT EXISTS (SELECT 1 FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN');
 COMMIT;
 
--- -- Cập nhật hình ảnh động cho Concert Phạm Duy
--- UPDATE SU_KIEN
--- SET AnhBiaURL = 'https://images.tkbcdn.com/2/614/350/ts/ds/f9/4b/b5/e1a68f8ebcd5aefdfe871a2a68f40f28.png',
---     PhanLoai = 'music'
--- WHERE TenSuKien LIKE '%PHAM DUY%';
---
--- -- Cập nhật hình ảnh độc quyền cho Hà Anh Tuấn
--- UPDATE SU_KIEN
--- SET AnhBiaURL = 'https://ticketbox.vn/_next/image?url=https%3A%2F%2Fimages.tkbcdn.com%2F2%2F360%2F479%2Fts%2Fds%2Fb7%2F30%2F1d%2F3f7701e1975850532979f17c0640e056.jpg&w=640&q=75',
---     PhanLoai = 'music'
--- WHERE TenSuKien LIKE '%HÀ ANH TUẤN%';
---
--- INSERT INTO PHAN_QUYEN_NHOM (MaTaiKhoan, MaNhomQuyen)
--- VALUES (1, (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'));
--- commit;
--- BEGIN
---     FOR i IN 1..6 LOOP
---         FOR j IN 1..10 LOOP
---             INSERT INTO GHE_NGOI (MaKhuVuc, ToaDo)
---             VALUES (1, SUBSTR('ABCDEF', i, 1) || j);
---         END LOOP;
---     END LOOP;
--- END;
--- /
-
-select * from GHE_NGOI;
-
-select * from DON_MUA;
