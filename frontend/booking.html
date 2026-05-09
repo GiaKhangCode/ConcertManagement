@@ -555,6 +555,11 @@
                             hasCanvas = true;
                             isMapAvailable = true;
                             
+                            // Ẩn sơ đồ mặc định khi đã có sơ đồ vẽ tay
+                            document.getElementById('stageZoneList').style.display = 'none';
+                            document.getElementById('seatGrid').style.display = 'none';
+                            document.getElementById('nonMapBookingUI').style.display = 'none';
+
                             const cw = document.getElementById('canvasWrapper');
                             cw.style.display = 'block';
 
@@ -582,15 +587,18 @@
                                         alert('Ghế này đã được đặt hoặc đang được người khác giữ.');
                                         return;
                                     }
+                                    if (target.zoneId !== undefined && target.zoneId !== null) {
+                                        selectZone(target.zoneId); // Đồng bộ khu vực khi chọn ghế
+                                    }
                                     toggleSeatCanvas(target);
                                     return;
                                 }
-                                if (target.zoneId) {
+                                if (target.zoneId !== undefined && target.zoneId !== null && target.zoneId !== '') {
                                     selectZone(target.zoneId);
                                     canvas.getObjects().forEach(o => {
                                         if (o.zoneId && o.shapeType !== 'SEAT') {
-                                            o.set('strokeWidth', o.zoneId === target.zoneId ? 4 : 2);
-                                            o.set('stroke', o.zoneId === target.zoneId ? '#00f3ff' : '#ffffff');
+                                            o.set('strokeWidth', String(o.zoneId) === String(target.zoneId) ? 4 : 2);
+                                            o.set('stroke', String(o.zoneId) === String(target.zoneId) ? '#00f3ff' : '#ffffff');
                                         }
                                     });
                                     canvas.renderAll();
@@ -627,13 +635,19 @@
                     }
                     
                     if (!hasCanvas) {
-                        // Hiển thị giao diện mua vé không sơ đồ
-                        document.getElementById('stageZoneList').style.display = 'none';
+                        // Nếu không có sơ đồ vẽ tay, hiển thị sơ đồ mặc định (danh sách khu vực)
+                        document.getElementById('stageZoneList').style.display = 'grid';
                         document.getElementById('canvasWrapper').style.display = 'none';
-                        document.getElementById('seatGrid').style.display = 'none';
-                        document.getElementById('nonMapBookingUI').style.display = 'flex';
+                        document.getElementById('seatGrid').style.display = 'grid';
+                        document.getElementById('nonMapBookingUI').style.display = 'none';
                         isMapAvailable = false;
-                        renderNonMapTiers(ev ? ev.ticketTiers : []);
+                        
+                        // Kiểm tra nếu không có bất kỳ khu vực nào, hiển thị UI mua vé đơn giản
+                        if (!eventZones || eventZones.length === 0) {
+                            document.getElementById('stageZoneList').style.display = 'none';
+                            document.getElementById('nonMapBookingUI').style.display = 'flex';
+                            renderNonMapTiers(ev ? ev.ticketTiers : []);
+                        }
                     }
 
                 } catch(e) { 
@@ -736,10 +750,29 @@
         }
 
         function selectZone(zoneId) {
+            if (!zoneId) return;
+            console.log("Selecting Zone ID:", zoneId);
+            
             currentSelectedZoneId = zoneId;
-            const zoneData = eventZones.find(z => z.id == zoneId);
+            // So sánh dưới dạng chuỗi để đảm bảo khớp (đề phòng kiểu dữ liệu khác nhau)
+            const zoneData = eventZones.find(z => String(z.id) === String(zoneId));
             const nameEl = document.getElementById('selectedZoneName');
-            if (nameEl) nameEl.innerText = zoneData ? zoneData.name : "Chưa chọn";
+            
+            if (zoneData) {
+                console.log("Zone found:", zoneData.name);
+                if (nameEl) nameEl.innerText = zoneData.name;
+                
+                // Cập nhật nhãn hạng vé dựa trên khu vực đang chọn
+                const tier = eventTiers.find(t => String(t.id) === String(zoneData.tierId));
+                if (tier) {
+                    console.log("Tier found:", tier.name);
+                    document.getElementById('lblTierName').innerText = `Hạng: ${tier.name}`;
+                    unitPrice = tier.price; // Cập nhật giá đơn vị để tính toán chính xác
+                }
+            } else {
+                console.warn("Zone not found for ID:", zoneId);
+                if (nameEl) nameEl.innerText = "Chưa chọn";
+            }
 
             // Cập nhật UI card
             document.querySelectorAll('.zone-card').forEach(card => {
