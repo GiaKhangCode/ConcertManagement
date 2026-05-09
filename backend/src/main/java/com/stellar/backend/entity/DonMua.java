@@ -1,11 +1,13 @@
 package com.stellar.backend.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "DON_MUA")
+@DynamicUpdate
 public class DonMua {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -57,6 +57,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
         
+        // Hiển thị chính sách hoàn tiền
+        const policyCont = document.getElementById('refundPolicyContainer');
+        if (ev.refundPolicy && ev.refundPolicy.rules && ev.refundPolicy.rules.length > 0) {
+            policyCont.style.display = 'block';
+            document.getElementById('refundPolicyName').innerText = ev.refundPolicy.name || 'Tiêu chuẩn';
+            
+            // Sắp xếp rules theo số giờ trước sự kiện giảm dần
+            const sortedRules = ev.refundPolicy.rules.sort((a, b) => b.hoursBefore - a.hoursBefore);
+            
+            const rulesHtml = sortedRules.map(r => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 10px; border-left: 3px solid #50fa7b;">
+                    <span style="color: #fff;">Hủy trước <strong>${r.hoursBefore} giờ</strong></span>
+                    <span style="color: #50fa7b; font-weight: bold; font-family: 'Unbounded', sans-serif;">Hoàn ${r.percentage}%</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('refundRulesList').innerHTML = rulesHtml;
+        } else {
+            policyCont.style.display = 'block';
+            policyCont.innerHTML = `
+                <h3 style="font-family: 'Unbounded', sans-serif; color: #ff5555; margin-bottom: 10px; font-size: 1.3rem;">
+                    <i class="fa fa-ban"></i> KHÔNG HỖ TRỢ HOÀN VÉ
+                </h3>
+                <div style="color: #a0a5b5; font-size: 1rem;">Sự kiện này không áp dụng chính sách hoàn tiền. Vui lòng cân nhắc kỹ trước khi mua vé.</div>
+            `;
+        }
+        
         const tiersContainer = document.getElementById('ticketTiersContainer');
         if(ev.ticketTiers && ev.ticketTiers.length > 0) {
             ev.ticketTiers.forEach(t => {

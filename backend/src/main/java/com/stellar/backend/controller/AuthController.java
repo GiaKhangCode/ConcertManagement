@@ -7,6 +7,8 @@ import com.stellar.backend.repository.NguoiDungRepository;
 import com.stellar.backend.repository.TaiKhoanRepository;
 import com.stellar.backend.entity.NhomQuyen;
 import com.stellar.backend.repository.NhomQuyenRepository;
+import com.stellar.backend.entity.ViCaNhan;
+import com.stellar.backend.repository.ViCaNhanRepository;
 import com.stellar.backend.security.JwtUtils;
 import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,9 @@ public class AuthController {
 
     @Autowired
     NhomQuyenRepository nhomQuyenRepository;
+
+    @Autowired
+    ViCaNhanRepository viCaNhanRepository;
 
     @Autowired
     PasswordEncoder encoder;
@@ -122,6 +127,11 @@ public class AuthController {
         taiKhoan.getNhomQuyens().add(quyenDuocCap);
 
         taiKhoanRepository.save(taiKhoan);
+
+        // Tạo Ví Cá Nhân cho Tài Khoản mới
+        ViCaNhan viCaNhan = new ViCaNhan();
+        viCaNhan.setTaiKhoan(taiKhoan);
+        viCaNhanRepository.save(viCaNhan);
 
         return ResponseEntity.ok(new MessageResponse("Đăng ký tài khoản thành công! Phân quyển được cập nhật tự động."));
     }

@@ -8,6 +8,8 @@ import com.stellar.backend.dto.HangVeDto;
 import com.stellar.backend.dto.LichDienDto;
 import com.stellar.backend.repository.LichDienRepository;
 import com.stellar.backend.repository.SuKienRepository;
+import com.stellar.backend.repository.QuyTacHoanTienRepository;
+import com.stellar.backend.entity.QuyTacHoanTien;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,11 +30,13 @@ public class EventService {
 
     private final SuKienRepository suKienRepository;
     private final LichDienRepository lichDienRepository;
+    private final QuyTacHoanTienRepository quyTacHoanTienRepository;
 
     // Constructor Injection instead of @RequiredArgsConstructor
-    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository) {
+    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository, QuyTacHoanTienRepository quyTacHoanTienRepository) {
         this.suKienRepository = suKienRepository;
         this.lichDienRepository = lichDienRepository;
+        this.quyTacHoanTienRepository = quyTacHoanTienRepository;
     }
 
     @Transactional(readOnly = true)
@@ -132,6 +136,23 @@ public class EventService {
                 ld.getThoiGianKetThuc(),
                 ld.getTrangThaiLichDien()
             )).collect(Collectors.toList()));
+            
+        // Map Refund Policy
+        if (sk.getMauChinhSachHoanTien() != null) {
+            EventDetailDto.RefundPolicyDto policyDto = new EventDetailDto.RefundPolicyDto();
+            policyDto.setName(sk.getMauChinhSachHoanTien().getTenChinhSach());
+            List<QuyTacHoanTien> rules = quyTacHoanTienRepository.findByMauChinhSachHoanTien_MaChinhSachHT(sk.getMauChinhSachHoanTien().getMaChinhSachHT());
+            if (rules != null && !rules.isEmpty()) {
+                List<EventDetailDto.RefundPolicyDto.RuleDto> ruleDtos = rules.stream().map(r -> {
+                    EventDetailDto.RefundPolicyDto.RuleDto rd = new EventDetailDto.RefundPolicyDto.RuleDto();
+                    rd.setHoursBefore(r.getSoGioTruocSuKien());
+                    rd.setPercentage(r.getTyLeHoanTien());
+                    return rd;
+                }).collect(Collectors.toList());
+                policyDto.setRules(ruleDtos);
+                dto.setRefundPolicy(policyDto);
+            }
+        }
 
         return dto;
     }

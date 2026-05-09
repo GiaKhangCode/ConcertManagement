@@ -50,6 +50,21 @@ public class AdminController {
     @Autowired
     private TrangThaiGheTheoSuatRepository trangThaiGheTheoSuatRepository;
 
+    @Autowired
+    private MauChinhSachHoanTienRepository mauChinhSachHoanTienRepository;
+
+    @Autowired
+    private QuyTacHoanTienRepository quyTacHoanTienRepository;
+
+    @Autowired
+    private DonMuaRepository donMuaRepository;
+
+    @Autowired
+    private com.stellar.backend.service.WalletService walletService;
+
+    @Autowired
+    private com.stellar.backend.repository.LichSuHoanTienRepository lichSuHoanTienRepository;
+
     /**
      * Lấy thông tin chi tiết sự kiện để chỉnh sửa (trả về dạng DTO đầy đủ)
      */
@@ -86,6 +101,7 @@ public class AdminController {
         if (lichDiens != null) {
             dto.setLichDienList(lichDiens.stream().map(ld -> {
                 EventCreateRequestDto.LichDienDto ldDto = new EventCreateRequestDto.LichDienDto();
+                ldDto.setMaLichDien(ld.getMaLichDien());
                 ldDto.setTenLichDien(ld.getTenLichDien());
                 ldDto.setThoiGianBatDau(ld.getThoiGianBatDau());
                 ldDto.setThoiGianKetThuc(ld.getThoiGianKetThuc());
@@ -95,8 +111,9 @@ public class AdminController {
 
         // Map Hạng vé và Khu vực
         if (sk.getDanhSachHangVe() != null) {
-            dto.setHangVeList(sk.getDanhSachHangVe().stream().map(hv -> {
+            dto.setHangVeList(sk.getDanhSachHangVe().stream().distinct().map(hv -> {
                 EventCreateRequestDto.HangVeDto hvDto = new EventCreateRequestDto.HangVeDto();
+                hvDto.setMaHangVe(hv.getMaHangVe());
                 hvDto.setTenHangVe(hv.getTenHangVe());
                 hvDto.setGiaNiemYet(hv.getGiaNiemYet());
                 hvDto.setTongSoLuong(hv.getTongSoLuong());
@@ -104,6 +121,7 @@ public class AdminController {
                 if (hv.getKhuVucList() != null) {
                     hvDto.setKhuVucList(hv.getKhuVucList().stream().map(kv -> {
                         EventCreateRequestDto.KhuVucDto kvDto = new EventCreateRequestDto.KhuVucDto();
+                        kvDto.setMaKhuVuc(kv.getMaKhuVuc());
                         kvDto.setTenKhuVuc(kv.getTenKhuVuc());
                         kvDto.setSucChuaKv(kv.getSucChuaKv());
                         
@@ -128,6 +146,23 @@ public class AdminController {
                 }
                 return hvDto;
             }).collect(Collectors.toList()));
+        }
+
+        // Map Refund Policy
+        if (sk.getMauChinhSachHoanTien() != null) {
+            EventCreateRequestDto.RefundPolicyDto policyDto = new EventCreateRequestDto.RefundPolicyDto();
+            policyDto.setName(sk.getMauChinhSachHoanTien().getTenChinhSach());
+            List<QuyTacHoanTien> rules = quyTacHoanTienRepository.findByMauChinhSachHoanTien_MaChinhSachHT(sk.getMauChinhSachHoanTien().getMaChinhSachHT());
+            if (rules != null && !rules.isEmpty()) {
+                List<EventCreateRequestDto.RefundPolicyDto.RuleDto> ruleDtos = rules.stream().map(r -> {
+                    EventCreateRequestDto.RefundPolicyDto.RuleDto rd = new EventCreateRequestDto.RefundPolicyDto.RuleDto();
+                    rd.setHoursBefore(r.getSoGioTruocSuKien());
+                    rd.setPercentage(r.getTyLeHoanTien());
+                    return rd;
+                }).collect(Collectors.toList());
+                policyDto.setRules(ruleDtos);
+            }
+            dto.setRefundPolicy(policyDto);
         }
 
         return ResponseEntity.ok(dto);
@@ -169,6 +204,28 @@ public class AdminController {
             sk.setTrangThai(isAdmin ? "Sắp diễn ra" : "Chờ phê duyệt");
 
             sk = suKienRepository.save(sk);
+
+            // Lưu chính sách hoàn tiền
+            if (request.getRefundPolicy() != null && request.getRefundPolicy().getName() != null) {
+                MauChinhSachHoanTien mauChinhSach = new MauChinhSachHoanTien();
+                mauChinhSach.setTenChinhSach(request.getRefundPolicy().getName());
+                mauChinhSach.setTaiKhoan(creator);
+                mauChinhSach = mauChinhSachHoanTienRepository.save(mauChinhSach);
+
+                if (request.getRefundPolicy().getRules() != null) {
+                    for (EventCreateRequestDto.RefundPolicyDto.RuleDto ruleDto : request.getRefundPolicy().getRules()) {
+                        QuyTacHoanTien quyTac = new QuyTacHoanTien();
+                        quyTac.setMauChinhSachHoanTien(mauChinhSach);
+                        quyTac.setSoGioTruocSuKien(ruleDto.getHoursBefore() != null ? ruleDto.getHoursBefore() : 0);
+                        quyTac.setTyLeHoanTien(ruleDto.getPercentage() != null ? ruleDto.getPercentage() : BigDecimal.ZERO);
+                        quyTacHoanTienRepository.save(quyTac);
+                    }
+                }
+                
+                // Liên kết với sự kiện
+                sk.setMauChinhSachHoanTien(mauChinhSach);
+                suKienRepository.save(sk);
+            }
 
             // Lưu Lịch diễn
             if (request.getLichDienList() != null) {
@@ -277,7 +334,41 @@ public class AdminController {
             sk.setMoTa(request.getMoTa());
             sk = suKienRepository.saveAndFlush(sk);
 
-            // 1. XỬ LÝ LỊCH DIỄN (UPSERT)
+            // 1. XỬ LÝ CHÍNH SÁCH HOÀN TIỀN
+            if (request.getRefundPolicy() != null && request.getRefundPolicy().getName() != null) {
+                MauChinhSachHoanTien mauChinhSach = sk.getMauChinhSachHoanTien();
+                if (mauChinhSach == null) {
+                    mauChinhSach = new MauChinhSachHoanTien();
+                    mauChinhSach.setTaiKhoan(sk.getNguoiTao() != null ? sk.getNguoiTao() : taiKhoanRepository.findById(userDetails.getId()).orElse(null));
+                }
+                mauChinhSach.setTenChinhSach(request.getRefundPolicy().getName());
+                mauChinhSach = mauChinhSachHoanTienRepository.save(mauChinhSach);
+
+                // Xóa các rules cũ
+                quyTacHoanTienRepository.deleteByMauChinhSachHoanTien_MaChinhSachHT(mauChinhSach.getMaChinhSachHT());
+
+                if (request.getRefundPolicy().getRules() != null) {
+                    for (EventCreateRequestDto.RefundPolicyDto.RuleDto ruleDto : request.getRefundPolicy().getRules()) {
+                        QuyTacHoanTien quyTac = new QuyTacHoanTien();
+                        quyTac.setMauChinhSachHoanTien(mauChinhSach);
+                        quyTac.setSoGioTruocSuKien(ruleDto.getHoursBefore() != null ? ruleDto.getHoursBefore() : 0);
+                        quyTac.setTyLeHoanTien(ruleDto.getPercentage() != null ? ruleDto.getPercentage() : BigDecimal.ZERO);
+                        quyTacHoanTienRepository.save(quyTac);
+                    }
+                }
+                sk.setMauChinhSachHoanTien(mauChinhSach);
+                suKienRepository.saveAndFlush(sk);
+            } else {
+                if (sk.getMauChinhSachHoanTien() != null) {
+                    Long oldId = sk.getMauChinhSachHoanTien().getMaChinhSachHT();
+                    sk.setMauChinhSachHoanTien(null);
+                    suKienRepository.saveAndFlush(sk);
+                    quyTacHoanTienRepository.deleteByMauChinhSachHoanTien_MaChinhSachHT(oldId);
+                    mauChinhSachHoanTienRepository.deleteById(oldId);
+                }
+            }
+
+            // 2. XỬ LÝ LỊCH DIỄN (UPSERT)
             List<LichDien> currentLichDiens = lichDienRepository.findBySuKien_MaSuKien(id);
             List<Long> incomingLichDienIds = request.getLichDienList() != null ? 
                 request.getLichDienList().stream().map(EventCreateRequestDto.LichDienDto::getMaLichDien).filter(Objects::nonNull).collect(Collectors.toList()) : List.of();
@@ -418,6 +509,89 @@ public class AdminController {
     }
 
     /**
+     * Hủy tất cả vé còn hiệu lực của sự kiện và hoàn 100% tiền vào ví người mua.
+     * Được gọi khi sự kiện chuyển sang trạng thái "Đã hủy".
+     */
+    @Transactional
+    private void cancelAllTicketsAndRefund(Long eventId, SuKien sk) {
+        // Lấy tất cả vé chưa bị hủy của sự kiện
+        List<Ve> activeTickets = veRepository.findByHangVe_SuKien_MaSuKienAndTrangThaiVeNot(eventId, "Đã hủy");
+
+        if (activeTickets.isEmpty()) return;
+
+        // Nhóm vé theo người mua (tài khoản) để cộng tiền một lần/người
+        java.util.Map<Long, BigDecimal> refundByUser = new java.util.HashMap<>();
+        java.util.Map<Long, Long> userToWallet = new java.util.HashMap<>();
+
+        for (Ve ve : activeTickets) {
+            // Hủy vé
+            ve.setTrangThaiVe("Đã hủy");
+            // Gỡ niêm yết bán lại nếu có
+            ve.setDaBanLai(0);
+            ve.setGiaBanLai(null);
+
+            // Giải phóng ghế nếu có
+            if (ve.getGheNgoi() != null && ve.getLichDien() != null) {
+                java.util.Optional<TrangThaiGheTheoSuat> optStatus =
+                    trangThaiGheTheoSuatRepository.findByMaGheAndMaLichDien(
+                        ve.getGheNgoi().getMaGhe(), ve.getLichDien().getMaLichDien());
+                if (optStatus.isPresent()) {
+                    TrangThaiGheTheoSuat status = optStatus.get();
+                    status.setTrangThai("Còn trống");
+                    status.setTaiKhoan(null);
+                    status.setThoiGianHetHan(null);
+                    trangThaiGheTheoSuatRepository.save(status);
+                }
+            }
+
+            // Tính tiền hoàn theo giá niêm yết hạng vé
+            BigDecimal giaVe = ve.getHangVe().getGiaNiemYet();
+            Long maTaiKhoan = ve.getDonMua().getTaiKhoan().getMaTaiKhoan();
+            refundByUser.merge(maTaiKhoan, giaVe, BigDecimal::add);
+
+            // Ghi lịch sử hoàn tiền cho từng vé
+            com.stellar.backend.entity.LichSuHoanTien lichSuHoan = new com.stellar.backend.entity.LichSuHoanTien();
+            lichSuHoan.setVe(ve);
+            lichSuHoan.setSuKien(sk);
+            lichSuHoan.setTaiKhoan(ve.getDonMua().getTaiKhoan());
+            lichSuHoan.setSoTienHoan(giaVe);
+            lichSuHoan.setLyDoHoan("Sự kiện bị hủy: " + sk.getTenSuKien());
+            lichSuHoan.setLoaiHoan("Hủy sự kiện");
+            lichSuHoanTienRepository.save(lichSuHoan);
+        }
+
+        veRepository.saveAll(activeTickets);
+
+        // Hoàn tiền 100% vào ví từng người mua
+        for (java.util.Map.Entry<Long, BigDecimal> entry : refundByUser.entrySet()) {
+            Long maTaiKhoan = entry.getKey();
+            BigDecimal soTienHoan = entry.getValue();
+            try {
+                walletService.receive(
+                    maTaiKhoan,
+                    soTienHoan,
+                    "Hoàn tiền 100% do sự kiện \"" + sk.getTenSuKien() + "\" bị hủy"
+                );
+            } catch (Exception e) {
+                // Log lỗi nhưng không dừng quá trình - không nên rollback toàn bộ vì ví có thể không tồn tại
+                System.err.println("[CANCEL REFUND] Lỗi hoàn tiền cho TK #" + maTaiKhoan + ": " + e.getMessage());
+            }
+        }
+
+        // Cập nhật trạng thái đơn mua liên quan sang "Đã hoàn tiền"
+        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKien(eventId);
+        for (DonMua dm : orders) {
+            if (!"Đã hoàn tiền".equals(dm.getTrangThaiThanhToan())) {
+                dm.setTrangThaiThanhToan("Đã hoàn tiền");
+                donMuaRepository.save(dm);
+            }
+        }
+
+        System.out.println("[CANCEL EVENT] Đã hủy " + activeTickets.size() + " vé và hoàn tiền cho "
+            + refundByUser.size() + " tài khoản của sự kiện ID=" + eventId);
+    }
+
+    /**
      * Lấy danh sách sự kiện chờ phê duyệt
      */
     @GetMapping("/pending-events")
@@ -537,6 +711,11 @@ public class AdminController {
 
             sk.setTrangThai(newStatus);
             suKienRepository.save(sk);
+
+            // Khi sự kiện bị hủy: tự động hủy vé và hoàn tiền 100% cho người mua
+            if ("Đã hủy".equals(newStatus)) {
+                cancelAllTicketsAndRefund(id, sk);
+            }
 
             return ResponseEntity.ok(Map.of(
                 "message", "Đã cập nhật trạng thái sự kiện từ [" + oldStatus + "] → [" + newStatus + "] thành công!",

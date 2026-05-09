@@ -516,19 +516,23 @@ DECLARE
     v_MaChinhSachHT       NUMBER;
     v_SoGioTruocSuKien    QUY_TAC_HOAN_TIEN.SoGioTruocSuKien%type;
     v_TyLeHoanTienCaoNhat NUMBER;
+    v_ThoiDiemYeuCau      TIMESTAMP;
 BEGIN
     IF :NEW.LoaiYeuCau = N'Hoàn tiền' THEN
+        v_ThoiDiemYeuCau := NVL(:NEW.ThoiDiemYeuCau, CURRENT_TIMESTAMP);
+        :NEW.ThoiDiemYeuCau := v_ThoiDiemYeuCau;
+
         SELECT SK.ThoiGianBD, SK.MaChinhSachHT
         INTO v_ThoiGianBD, v_MaChinhSachHT
         FROM DON_MUA DM
         JOIN SU_KIEN SK ON DM.MaSuKien = SK.MaSuKien
         WHERE DM.MaDonMua = :NEW.MaDonMua;
 
-        IF :NEW.ThoiDiemYeuCau >= v_ThoiGianBD THEN
+        IF v_ThoiDiemYeuCau >= v_ThoiGianBD THEN
             v_SoGioTruocSuKien := 0;
         ELSE
-            v_SoGioTruocSuKien := (EXTRACT(DAY FROM (v_ThoiGianBD - :NEW.ThoiDiemYeuCau)) * 24)
-                                + EXTRACT(HOUR FROM (v_ThoiGianBD - :NEW.ThoiDiemYeuCau));
+            v_SoGioTruocSuKien := (EXTRACT(DAY FROM (v_ThoiGianBD - v_ThoiDiemYeuCau)) * 24)
+                                + EXTRACT(HOUR FROM (v_ThoiGianBD - v_ThoiDiemYeuCau));
         END IF;
 
         SELECT NVL(MAX(TyLeHoanTien), 0)
@@ -732,7 +736,7 @@ CREATE OR REPLACE TRIGGER TRG_DON_MUA_AU_UPDATE_TRANGTHAITHANHTOAN_DAHUY
 AFTER UPDATE OF TrangThaiThanhToan ON DON_MUA
 FOR EACH ROW
 BEGIN
-    IF :NEW.TrangThaiThanhToan = N'Đã hủy' AND :OLD.TrangThaiThanhToan <> N'Đã hủy' THEN
+    IF (:NEW.TrangThaiThanhToan = N'Đã hủy' OR :NEW.TrangThaiThanhToan = N'Đã hoàn tiền') AND (:OLD.TrangThaiThanhToan <> N'Đã hủy' AND :OLD.TrangThaiThanhToan <> N'Đã hoàn tiền') THEN
         UPDATE VE
         SET TrangThaiVe = N'Đã hủy'
         WHERE MaDonMua = :NEW.MaDonMua;
@@ -753,8 +757,8 @@ BEGIN
             FROM DON_MUA
             WHERE MaDonMua = :NEW.MaDonMua;
 
-            IF v_TrangThaiThanhToan = N'Đã hủy' THEN
-                RAISE_APPLICATION_ERROR(-20017, N'Lỗi: Đơn mua đã bị hủy. Trạng thái của vé thuộc đơn này bắt buộc phải là "Đã hủy".');
+            IF v_TrangThaiThanhToan IN (N'Đã hủy', N'Đã hoàn tiền') THEN
+                RAISE_APPLICATION_ERROR(-20017, N'Lỗi: Đơn mua đã bị hủy hoặc hoàn tiền. Trạng thái của vé thuộc đơn này bắt buộc phải là "Đã hủy".');
             END IF;
 
         EXCEPTION
@@ -1004,8 +1008,10 @@ CREATE OR REPLACE TRIGGER TRG_DON_MUA_BU_CHAN_UPDATE
     BEFORE UPDATE OF TongTien ON DON_MUA
     FOR EACH ROW
 BEGIN
-    IF NOT PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate THEN
-        RAISE_APPLICATION_ERROR(-20030, N'LỖI BẢO MẬT: Cột Tổng Tiền được tính toán tự động, nghiêm cấm chỉnh sửa bằng tay!');
+    IF :NEW.TongTien <> :OLD.TongTien THEN
+        IF NOT PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate THEN
+            RAISE_APPLICATION_ERROR(-20030, N'LỖI BẢO MẬT: Cột Tổng Tiền được tính toán tự động, nghiêm cấm chỉnh sửa bằng tay!');
+        END IF;
     END IF;
 END;
 /

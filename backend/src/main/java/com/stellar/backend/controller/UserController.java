@@ -92,10 +92,13 @@ public class UserController {
         for(DonMua don : orders) {
             List<Ve> veList = veRepository.findByDonMua_MaDonMua(don.getMaDonMua());
             for(Ve ve : veList) {
+                if ("Đã hủy".equals(ve.getTrangThaiVe())) continue;
+
                 UserTicketResponseDto dto = new UserTicketResponseDto();
                 dto.setTicketId(ve.getMaVe());
                 dto.setTransactionId(don.getMaDonMua());
                 dto.setEventName(don.getSuKien().getTenSuKien());
+                dto.setEventId(don.getSuKien().getMaSuKien());
                 dto.setTotalPrice(don.getTongTien().divide(new java.math.BigDecimal(veList.size()), java.math.RoundingMode.HALF_UP));
                 dto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
                 dto.setTicketCount(1);

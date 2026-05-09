@@ -4,6 +4,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class EventDetailDto {
+    public static class RefundPolicyDto {
+        private String name;
+        private List<RuleDto> rules;
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public List<RuleDto> getRules() { return rules; }
+        public void setRules(List<RuleDto> rules) { this.rules = rules; }
+
+        public static class RuleDto {
+            private Integer hoursBefore;
+            private java.math.BigDecimal percentage;
+            public Integer getHoursBefore() { return hoursBefore; }
+            public void setHoursBefore(Integer hoursBefore) { this.hoursBefore = hoursBefore; }
+            public java.math.BigDecimal getPercentage() { return percentage; }
+            public void setPercentage(java.math.BigDecimal percentage) { this.percentage = percentage; }
+        }
+    }
+
     private Long id;
     private String title;
     private String image;
@@ -15,6 +33,7 @@ public class EventDetailDto {
     private String description; // Mô tả sự kiện
     private List<HangVeDto> ticketTiers;
     private List<LichDienDto> schedules; // Danh sách các suất diễn
+    private RefundPolicyDto refundPolicy;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -38,4 +57,6 @@ public class EventDetailDto {
     public void setTicketTiers(List<HangVeDto> ticketTiers) { this.ticketTiers = ticketTiers; }
     public List<LichDienDto> getSchedules() { return schedules; }
     public void setSchedules(List<LichDienDto> schedules) { this.schedules = schedules; }
+    public RefundPolicyDto getRefundPolicy() { return refundPolicy; }
+    public void setRefundPolicy(RefundPolicyDto refundPolicy) { this.refundPolicy = refundPolicy; }
 }

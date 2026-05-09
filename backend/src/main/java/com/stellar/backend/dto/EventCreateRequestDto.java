@@ -17,6 +17,10 @@ public class EventCreateRequestDto {
 
     private List<LichDienDto> lichDienList;
     private List<HangVeDto> hangVeList;
+    private RefundPolicyDto refundPolicy;
+
+    public RefundPolicyDto getRefundPolicy() { return refundPolicy; }
+    public void setRefundPolicy(RefundPolicyDto refundPolicy) { this.refundPolicy = refundPolicy; }
 
     public String getTenSuKien() { return tenSuKien; }
     public void setTenSuKien(String tenSuKien) { this.tenSuKien = tenSuKien; }
@@ -111,5 +115,25 @@ public class EventCreateRequestDto {
         public void setRowLabel(String rowLabel) { this.rowLabel = rowLabel; }
         public Integer getSeatCount() { return seatCount; }
         public void setSeatCount(Integer seatCount) { this.seatCount = seatCount; }
+    }
+
+    public static class RefundPolicyDto {
+        private String name;
+        private List<RuleDto> rules;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public List<RuleDto> getRules() { return rules; }
+        public void setRules(List<RuleDto> rules) { this.rules = rules; }
+
+        public static class RuleDto {
+            private Integer hoursBefore;
+            private BigDecimal percentage;
+            
+            public Integer getHoursBefore() { return hoursBefore; }
+            public void setHoursBefore(Integer hoursBefore) { this.hoursBefore = hoursBefore; }
+            public BigDecimal getPercentage() { return percentage; }
+            public void setPercentage(BigDecimal percentage) { this.percentage = percentage; }
+        }
     }
 }

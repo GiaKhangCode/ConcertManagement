@@ -19,10 +19,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+/**
+ * So sánh tọa độ ghế: A1 < A2 < B1 < B2 ...
+ * Tách phần chữ và phần số để sort đúng.
+ */
+class SeatCoordComparator implements Comparator<String> {
+    @Override
+    public int compare(String a, String b) {
+        String rowA = a.replaceAll("\\d+$", "");
+        String rowB = b.replaceAll("\\d+$", "");
+        int rowCmp = rowA.compareToIgnoreCase(rowB);
+        if (rowCmp != 0) return rowCmp;
+        try {
+            int numA = Integer.parseInt(a.replaceAll("^[^\\d]+", ""));
+            int numB = Integer.parseInt(b.replaceAll("^[^\\d]+", ""));
+            return Integer.compare(numA, numB);
+        } catch (NumberFormatException e) {
+            return a.compareTo(b);
+        }
+    }
+}
 
 @Service
 public class SeatService {
@@ -43,7 +65,10 @@ public class SeatService {
     private TaiKhoanRepository taiKhoanRepository;
 
     public List<GheNgoi> getSeatsByKhuVuc(Long maKhuVuc) {
-        return gheNgoiRepository.findByKhuVucMaKhuVuc(maKhuVuc);
+        List<GheNgoi> seats = gheNgoiRepository.findByKhuVucMaKhuVuc(maKhuVuc);
+        SeatCoordComparator cmp = new SeatCoordComparator();
+        seats.sort((a, b) -> cmp.compare(a.getToaDo(), b.getToaDo()));
+        return seats;
     }
 
     /**
@@ -102,6 +127,9 @@ public class SeatService {
         }
         
         List<GheNgoi> seats = gheNgoiRepository.findByKhuVucMaKhuVuc(maKhuVuc);
+        // Sort theo thứ tự A1, A2 ... B1, B2
+        SeatCoordComparator cmp = new SeatCoordComparator();
+        seats.sort((a, b) -> cmp.compare(a.getToaDo(), b.getToaDo()));
         List<TrangThaiGheTheoSuat> statuses = trangThaiGheTheoSuatRepository.findByMaLichDien(maLichDien);
 
         // Build map maGhe -> TrangThaiGheTheoSuat

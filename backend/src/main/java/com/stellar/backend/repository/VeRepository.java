@@ -11,7 +11,11 @@ public interface VeRepository extends JpaRepository<Ve, Long> {
     
     long countByHangVe_SuKien_MaSuKien(Long maSuKien);
     long countByHangVe_MaHangVe(Long maHangVe);
+    long countByHangVe_SuKien_MaSuKienAndTrangThaiVeIn(Long maSuKien, java.util.List<String> statuses);
     
+    // Lấy tất cả vé của một sự kiện mà chưa bị hủy (phục vụ hủy sự kiện)
+    List<Ve> findByHangVe_SuKien_MaSuKienAndTrangThaiVeNot(Long maSuKien, String trangThaiVe);
+
     @org.springframework.data.jpa.repository.Query("SELECT v FROM Ve v WHERE v.daBanLai = 1 AND v.giaBanLai IS NOT NULL")
     List<Ve> findActiveResales();
 }

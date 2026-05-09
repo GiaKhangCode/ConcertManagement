@@ -3,7 +3,7 @@ let selectedTicketId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
-    if(!token) {
+    if (!token) {
         alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         window.location.href = 'auth.html';
         return;
@@ -22,7 +22,7 @@ async function initProfile() {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         console.log("Kết quả API profile:", profRes.status);
-        if(profRes.ok) {
+        if (profRes.ok) {
             const profile = await profRes.json();
             console.log("Dữ liệu profile nhận được:", profile);
             document.getElementById('userNameLabel').innerText = profile.fullName || profile.username || "Người dùng";
@@ -37,7 +37,7 @@ async function initProfile() {
         // 3. Fetch History
         loadHistory();
 
-    } catch(err) {
+    } catch (err) {
         console.error("Lỗi khi tải thông tin hồ sơ:", err);
     }
 }
@@ -49,15 +49,15 @@ async function loadTickets() {
         const res = await fetch('http://localhost:8081/api/user/tickets', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
-        if(res.ok) {
+        if (res.ok) {
             const tickets = await res.json();
             console.log("DEBUG: Dữ liệu vé từ server:", tickets);
             document.getElementById('ticketCount').innerText = tickets.length + " vé";
-            if(tickets.length === 0) {
+            if (tickets.length === 0) {
                 ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa sở hữu vé nào.</p>';
                 return;
             }
-            
+
             ticketListCont.innerHTML = tickets.map(tk => {
                 const d = new Date(tk.bookingTime).toLocaleString('vi-VN');
                 return `
@@ -72,14 +72,14 @@ async function loadTickets() {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem;" onclick="openResaleModal(${tk.ticketId})">BÁN LẠI</button>
-                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff5555; color: #ff5555;" onclick="openRefundModal(${tk.ticketId})">HOÀN VÉ</button>
+                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff5555; color: #ff5555;" onclick="openRefundModal(${tk.ticketId}, ${tk.eventId})">HOÀN VÉ</button>
                             <div class="ticket-status">Khả dụng</div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
-    } catch(e) { console.error("Lỗi khi tải danh sách vé:", e); }
+    } catch (e) { console.error("Lỗi khi tải danh sách vé:", e); }
 }
 
 async function loadHistory() {
@@ -89,9 +89,9 @@ async function loadHistory() {
         const res = await fetch('http://localhost:8081/api/finance/wallet/history', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
-        if(res.ok) {
+        if (res.ok) {
             const history = await res.json();
-            if(history.length === 0) {
+            if (history.length === 0) {
                 container.innerHTML = '<p style="color:#a0a5b5; text-align:center; padding: 20px;">Chưa có giao dịch nào.</p>';
                 return;
             }
@@ -100,7 +100,7 @@ async function loadHistory() {
                 const color = isPlus ? '#50fa7b' : '#ff5555';
                 const icon = isPlus ? 'fa-arrow-down' : 'fa-arrow-up';
                 const bg = isPlus ? 'rgba(80, 250, 123, 0.1)' : 'rgba(255, 85, 85, 0.1)';
-                
+
                 return `
                     <div class="history-item">
                         <div class="history-icon" style="background: ${bg}; color: ${color};">
@@ -117,14 +117,14 @@ async function loadHistory() {
                 `;
             }).join('');
         }
-    } catch(e) { console.error("Lỗi khi tải lịch sử:", e); }
+    } catch (e) { console.error("Lỗi khi tải lịch sử:", e); }
 }
 
 // Logic nạp tiền
 document.getElementById('topUpBtn')?.addEventListener('click', async () => {
     const amount = prompt("Nhập số tiền nạp (VNĐ):", "500000");
-    if(!amount) return;
-    
+    if (!amount) return;
+
     const token = localStorage.getItem('stellar_token');
     try {
         const res = await fetch('http://localhost:8081/api/finance/wallet/deposit', {
@@ -132,11 +132,11 @@ document.getElementById('topUpBtn')?.addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ amount: parseFloat(amount) })
         });
-        if(res.ok) {
+        if (res.ok) {
             alert("Nạp tiền thành công!");
             initProfile();
         }
-    } catch(e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Lỗi kết nối"); }
 });
 
 // Tab Switching
@@ -156,18 +156,72 @@ function openResaleModal(ticketId) {
     openModal('resaleModal');
 }
 
-function openRefundModal(ticketId) {
+function openRefundModal(ticketId, eventId) {
     selectedTicketId = ticketId;
+
+    // Reset modal
+    const refundInfoCont = document.getElementById('refundInfo');
+    const formSection = document.getElementById('refundFormSection');
+    const disclaimer = document.getElementById('refundDisclaimer');
+    const modalActions = document.getElementById('refundModalActions');
+    const confirmBtn = document.getElementById('confirmRefundBtn');
+    document.getElementById('refundReason').value = '';
+
+    refundInfoCont.innerHTML = '<span style="color:#a0a5b5;"><i class="fa fa-spinner fa-spin" style="margin-right:8px;"></i>Đang tải thông tin chính sách...</span>';
+    formSection.style.display = 'none';
+    disclaimer.style.display = 'none';
+    confirmBtn.style.display = 'none';
+
     openModal('refundModal');
+
+    fetch('http://localhost:8081/api/events/' + eventId)
+        .then(res => res.json())
+        .then(ev => {
+            if (ev.refundPolicy && ev.refundPolicy.rules && ev.refundPolicy.rules.length > 0) {
+                // Co chinh sach: hien day du form
+                const sortedRules = ev.refundPolicy.rules.sort((a, b) => b.hoursBefore - a.hoursBefore);
+                let html = `<div style="font-size:0.82rem; color:#50fa7b; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;"><i class="fa fa-shield-halved" style="margin-right:6px;"></i>${ev.refundPolicy.name || 'Ch\u00ednh s\u00e1ch ho\u00e0n ti\u1ec1n'}</div><div style="display:flex; flex-direction:column; gap:8px;">`;
+                sortedRules.forEach(r => {
+                    html += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:8px; border-left:3px solid #50fa7b;"><span style="color:#ccc; font-size:0.85rem;">H\u1ee7y tr\u01b0\u1edbc <strong style="color:#fff;">${r.hoursBefore} gi\u1edd</strong></span><span style="color:#50fa7b; font-weight:700; font-size:0.95rem;">Ho\u00e0n ${r.percentage}%</span></div>`;
+                });
+                html += '</div>';
+                refundInfoCont.innerHTML = html;
+                formSection.style.display = 'block';
+                disclaimer.style.display = 'flex';
+                confirmBtn.style.display = 'inline-flex';
+            } else {
+                // Khong co chinh sach: chi hien thong bao
+                refundInfoCont.innerHTML = `
+                    <div style="text-align:center; padding:10px 0;">
+                        <div style="font-size:2.5rem; margin-bottom:12px; opacity:0.7;">🚫</div>
+                        <div style="color:#ff5555; font-weight:700; font-size:1rem; margin-bottom:8px;">
+                            SỰ KIỆN KHÔNG HỖ TRỢ HOÀN VÉ
+                        </div>
+                        <div style="font-size:0.85rem; color:#a0a5b5; line-height:1.6;">
+                            Ban tổ chức không áp dụng chính sách hoàn tiền cho sự kiện này.<br>
+                        </div>
+                    </div>`;
+                formSection.style.display = 'none';
+                disclaimer.style.display = 'none';
+                confirmBtn.style.display = 'none';
+            }
+        })
+        .catch(e => {
+            console.error('Loi tai chinh sach hoan tien', e);
+            refundInfoCont.innerHTML = '<span style="color:#ff5555;"><i class="fa fa-circle-xmark" style="margin-right:6px;"></i>Khong the tai chinh sach hoan tien.</span>';
+            formSection.style.display = 'none';
+            disclaimer.style.display = 'none';
+            confirmBtn.style.display = 'none';
+        });
 }
 
 document.getElementById('confirmResaleBtn')?.addEventListener('click', async () => {
     const price = document.getElementById('resalePrice').value;
-    if(!price) return alert("Vui lòng nhập giá bán");
-    if(!selectedTicketId || selectedTicketId === 'undefined') {
+    if (!price) return alert("Vui lòng nhập giá bán");
+    if (!selectedTicketId || selectedTicketId === 'undefined') {
         return alert("Lỗi: Không xác định được mã vé. Vui lòng tải lại trang.");
     }
-    
+
     const token = localStorage.getItem('stellar_token');
     try {
         const res = await fetch(`http://localhost:8081/api/finance/tickets/${selectedTicketId}/resale`, {
@@ -175,7 +229,7 @@ document.getElementById('confirmResaleBtn')?.addEventListener('click', async () 
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ price: parseFloat(price) })
         });
-        if(res.ok) {
+        if (res.ok) {
             alert("Niêm yết bán lại thành công!");
             closeModal('resaleModal');
             loadTickets();
@@ -183,12 +237,12 @@ document.getElementById('confirmResaleBtn')?.addEventListener('click', async () 
             const data = await res.json();
             alert("Lỗi: " + data.message);
         }
-    } catch(e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Lỗi kết nối"); }
 });
 
 document.getElementById('confirmRefundBtn')?.addEventListener('click', async () => {
     const reason = document.getElementById('refundReason').value;
-    if(!selectedTicketId || selectedTicketId === 'undefined') {
+    if (!selectedTicketId || selectedTicketId === 'undefined') {
         return alert("Lỗi: Không xác định được mã vé. Vui lòng tải lại trang.");
     }
     const token = localStorage.getItem('stellar_token');
@@ -198,13 +252,14 @@ document.getElementById('confirmRefundBtn')?.addEventListener('click', async () 
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ reason: reason })
         });
-        if(res.ok) {
-            alert("Yêu cầu hoàn tiền đã được gửi.");
+        if (res.ok) {
+            alert("Hoàn tiền tự động thành công!");
             closeModal('refundModal');
             loadTickets();
+            initProfile();
         } else {
             const data = await res.json();
             alert("Lỗi: " + data.message);
         }
-    } catch(e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Lỗi kết nối"); }
 });

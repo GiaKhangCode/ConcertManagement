@@ -169,6 +169,31 @@
                     style="resize: vertical; min-height: 120px; line-height: 1.6;"></textarea>
             </div>
 
+            <!-- CHÍNH SÁCH HOÀN TIỀN -->
+            <div style="margin-bottom: 40px; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; border-left: 3px solid #ff5555;">
+                <h3 style="color: #ff5555; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; font-family: 'Unbounded', sans-serif; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fa fa-undo"></i> CHÍNH SÁCH HOÀN TIỀN TỰ ĐỘNG</span>
+                    <label class="switch">
+                        <input type="checkbox" id="enableRefundPolicy" onchange="toggleRefundPolicy()">
+                        <span class="slider round"></span>
+                    </label>
+                </h3>
+                
+                <div id="refundPolicyContainer" style="display: none; animation: fadeIn 0.3s ease-out;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Tên Chính Sách</label>
+                        <input type="text" id="refundPolicyName" class="form-input" placeholder="VD: Chính sách hoàn tiền chuẩn của tổ chức">
+                    </div>
+                    
+                    <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Các Quy Tắc Hoàn Tiền</label>
+                    <div id="refundRulesList" style="margin-bottom: 15px;">
+                        <!-- Các rule sẽ được render ở đây -->
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline small" style="width: 100%; border-style: dashed;" onclick="addRefundRule()">+ THÊM QUY TẮC HOÀN TIỀN</button>
+                </div>
+            </div>
+
             <h3 style="color: #eab8ff; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; font-family: 'Unbounded', sans-serif; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa fa-calendar-alt"></i> 2. QUẢN LÝ TỪNG BUỔI DIỄN / NGÀY DIỄN</span>
                 <button type="button" class="btn btn-outline add-btn-anim" style="padding: 8px 20px; font-size: 0.8rem; border-radius: 20px;" onclick="addLichDien()">+ THÊM LỊCH DIỄN</button>
@@ -263,6 +288,16 @@
         .flatpickr-day.selected { background: var(--primary-cyan) !important; border-color: var(--primary-cyan) !important; color: #000 !important; font-weight: bold; }
         .flatpickr-day:hover { background: rgba(0, 243, 255, 0.1) !important; }
         .flatpickr-time input:hover, .flatpickr-time .flatpickr-am-pm:hover { background: rgba(255,255,255,0.05) !important; }
+        
+        /* Switch Toggle */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border: 1px solid rgba(255,255,255,0.2); }
+        .switch .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+        .switch input:checked + .slider { background-color: #50fa7b; border-color: #50fa7b; }
+        .switch input:checked + .slider:before { transform: translateX(20px); background-color: #000; }
+        .switch .slider.round { border-radius: 24px; }
+        .switch .slider.round:before { border-radius: 50%; }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

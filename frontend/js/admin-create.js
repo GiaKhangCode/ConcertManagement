@@ -1,5 +1,6 @@
 let lichDienCount = 0;
 let hangVeCount = 0;
+let refundRuleCount = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
@@ -123,6 +124,20 @@ async function loadEventData(id, token) {
 
         if (data.hangVeList?.length) data.hangVeList.forEach(hv => addHangVe(hv));
         else addHangVe();
+
+        // Load Refund Policy
+        if (data.refundPolicy) {
+            document.getElementById('enableRefundPolicy').checked = true;
+            document.getElementById('refundPolicyContainer').style.display = 'block';
+            document.getElementById('refundPolicyName').value = data.refundPolicy.name || '';
+            if (data.refundPolicy.rules && data.refundPolicy.rules.length > 0) {
+                data.refundPolicy.rules.forEach(rule => {
+                    addRefundRule(rule);
+                });
+            } else {
+                addRefundRule();
+            }
+        }
 
     } catch (e) { alert("Lỗi: " + e.message); window.location.href = "event-management.html"; }
 }
@@ -345,6 +360,40 @@ function autoRowLabels(capacity) {
 
 function removeEl(id) { document.getElementById(id)?.remove(); }
 
+function toggleRefundPolicy() {
+    const isEnabled = document.getElementById('enableRefundPolicy').checked;
+    const container = document.getElementById('refundPolicyContainer');
+    if (isEnabled) {
+        container.style.display = 'block';
+        if (refundRuleCount === 0) addRefundRule();
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function addRefundRule(data = null) {
+    refundRuleCount++;
+    const ruleId = `rule_${Date.now()}`;
+    const hours = data?.hoursBefore !== undefined ? data.hoursBefore : '';
+    const percent = data?.percentage !== undefined ? data.percentage : '';
+    const html = `
+        <div class="rule-item" id="${ruleId}" style="display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #50fa7b;">
+            <div>
+                <label style="font-size: 0.8rem; color: #a0a5b5;">Hủy trước (Số giờ)</label>
+                <input type="number" class="form-input rule-hours" required min="0" placeholder="VD: 48" style="padding: 10px;" value="${hours}">
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: #a0a5b5;">Tỷ lệ hoàn (%)</label>
+                <input type="number" class="form-input rule-percent" required min="1" max="100" placeholder="VD: 80" style="padding: 10px;" value="${percent}">
+            </div>
+            <button type="button" onclick="removeEl('${ruleId}')" style="background: rgba(255,85,85,0.1); color: #ff5555; border: none; border-radius: 5px; cursor: pointer; height: 40px; margin-top: 18px;">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    `;
+    document.getElementById('refundRulesList').insertAdjacentHTML('beforeend', html);
+}
+
 // =============================================
 // SUBMIT — 1 lần duy nhất, ghế tạo luôn trong backend
 // =============================================
@@ -411,6 +460,42 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         });
     });
 
+    const existingId = new URLSearchParams(window.location.search).get('id');
+    const isEdit = !!existingId;
+
+    const submitBtn = document.getElementById('submitEventBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${isEdit ? 'ĐANG CẬP NHẬT...' : 'ĐANG LƯU...'}`;
+
+    let refundPolicy = null;
+    if (document.getElementById('enableRefundPolicy').checked) {
+        const policyName = document.getElementById('refundPolicyName').value.trim();
+        if (!policyName) {
+            alert("Vui lòng nhập tên chính sách hoàn tiền!");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
+            return;
+        }
+        
+        const rules = [];
+        document.querySelectorAll('.rule-item').forEach(el => {
+            const hours = parseInt(el.querySelector('.rule-hours').value) || 0;
+            const percent = parseFloat(el.querySelector('.rule-percent').value) || 0;
+            if (percent > 0) {
+                rules.push({ hoursBefore: hours, percentage: percent });
+            }
+        });
+        
+        if (rules.length === 0) {
+            alert("Vui lòng thêm ít nhất 1 quy tắc hoàn tiền!");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
+            return;
+        }
+        
+        refundPolicy = { name: policyName, rules };
+    }
+
     const payload = {
         tenSuKien: document.getElementById('tenSuKien').value,
         maDiaDiem: parseInt(document.getElementById('maDiaDiem').value),
@@ -422,14 +507,8 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         anhThumbnailUrl: document.getElementById('eventThumbnail').value,
         phanLoai: document.getElementById('phanLoai').value,
         moTa: document.getElementById('moTa').value,
-        lichDienList, hangVeList
+        lichDienList, hangVeList, refundPolicy
     };
-
-    const existingId = new URLSearchParams(window.location.search).get('id');
-    const isEdit = !!existingId;
-    const submitBtn = document.getElementById('submitEventBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${isEdit ? 'ĐANG CẬP NHẬT...' : 'ĐANG LƯU...'}`;
 
     try {
         let maDiaDiemFinal = document.getElementById('maDiaDiem').value;

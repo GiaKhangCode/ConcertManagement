@@ -1,10 +1,10 @@
 package com.stellar.backend.controller;
 
 import com.stellar.backend.dto.RevenueResponseDto;
-import com.stellar.backend.entity.DonMua;
 import com.stellar.backend.entity.SuKien;
-import com.stellar.backend.repository.DonMuaRepository;
+import com.stellar.backend.entity.Ve;
 import com.stellar.backend.repository.SuKienRepository;
+import com.stellar.backend.repository.VeRepository;
 import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +25,15 @@ public class OrganizerController {
     private SuKienRepository suKienRepository;
 
     @Autowired
-    private DonMuaRepository donMuaRepository;
+    private VeRepository veRepository;
+
+    // Chỉ tính vé có trạng thái "Hiệu lực" hoặc "Đã check-in" là vé đã bán hợp lệ
+    private static final List<String> TRANG_THAI_VE_HOP_LE = List.of("Hiệu lực", "Đã check-in");
 
     /**
      * Lấy báo cáo doanh thu tổng hợp cho nhà tổ chức hiện tại.
      * Chỉ tính doanh thu của các sự kiện mà người đang đăng nhập đã tạo.
+     * Vé bị hủy ("Đã hủy") KHÔNG được tính vào số vé bán và doanh thu.
      */
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
@@ -43,47 +47,56 @@ public class OrganizerController {
             List<SuKien> suKienList = suKienRepository.findByNguoiTao_MaTaiKhoan(userId);
 
             BigDecimal tongDoanhThu = BigDecimal.ZERO;
-            int tongSoVeBan = 0;
+            long tongSoVeBan = 0;
             List<RevenueResponseDto.EventRevenueDetail> chiTiet = new ArrayList<>();
 
             for (SuKien sk : suKienList) {
-                // Lấy tất cả Đơn Mua của sự kiện này
-                List<DonMua> donMuas = donMuaRepository.findBySuKien_MaSuKien(sk.getMaSuKien());
+                // Đếm vé hợp lệ (Hiệu lực + Đã check-in), BỎ QUA vé Đã hủy
+                long soVeHopLe = veRepository.countByHangVe_SuKien_MaSuKienAndTrangThaiVeIn(
+                        sk.getMaSuKien(), TRANG_THAI_VE_HOP_LE);
 
+                // Tính doanh thu từ các vé hợp lệ (giá niêm yết * số lượng)
                 BigDecimal doanhThuSK = BigDecimal.ZERO;
-                int soVeSK = 0;
+                if (soVeHopLe > 0) {
+                    // Lấy danh sách vé hợp lệ để tính doanh thu theo giá niêm yết
+                    List<Ve> veHopLeList = veRepository
+                            .findAll()
+                            .stream()
+                            .filter(v -> v.getHangVe() != null
+                                    && v.getHangVe().getSuKien() != null
+                                    && v.getHangVe().getSuKien().getMaSuKien().equals(sk.getMaSuKien())
+                                    && TRANG_THAI_VE_HOP_LE.contains(v.getTrangThaiVe()))
+                            .toList();
 
-                for (DonMua dm : donMuas) {
-                    // Null-safe: tránh NullPointerException nếu tongTien chưa được set
-                    if (dm.getTongTien() != null) {
-                        doanhThuSK = doanhThuSK.add(dm.getTongTien());
+                    for (Ve v : veHopLeList) {
+                        if (v.getHangVe() != null && v.getHangVe().getGiaNiemYet() != null) {
+                            doanhThuSK = doanhThuSK.add(v.getHangVe().getGiaNiemYet());
+                        }
                     }
-                    soVeSK++;
                 }
 
                 tongDoanhThu = tongDoanhThu.add(doanhThuSK);
-                tongSoVeBan += soVeSK;
+                tongSoVeBan += soVeHopLe;
 
                 RevenueResponseDto.EventRevenueDetail detail = new RevenueResponseDto.EventRevenueDetail();
                 detail.setMaSuKien(sk.getMaSuKien());
                 detail.setTenSuKien(sk.getTenSuKien());
                 detail.setTrangThai(sk.getTrangThai());
                 detail.setDoanhThu(doanhThuSK);
-                detail.setSoVeBan(soVeSK);
+                detail.setSoVeBan((int) soVeHopLe);
                 detail.setAnhBiaUrl(sk.getAnhBiaUrl());
                 chiTiet.add(detail);
             }
 
             RevenueResponseDto response = new RevenueResponseDto();
             response.setTongDoanhThu(tongDoanhThu);
-            response.setTongSoVeBan(tongSoVeBan);
+            response.setTongSoVeBan((int) tongSoVeBan);
             response.setTongSoSuKien(suKienList.size());
             response.setChiTietSuKien(chiTiet);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            // Trả về lỗi rõ ràng thay vì để Spring tự ném 500
             return ResponseEntity.internalServerError().body(
                 java.util.Map.of("message", "Lỗi tải dữ liệu doanh thu: " + e.getMessage())
             );

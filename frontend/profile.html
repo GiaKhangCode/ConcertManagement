@@ -271,33 +271,217 @@
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Modal Styles -->
+    <style>
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .modal-header-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .modal-header-icon.green { background: rgba(80,250,123,0.12); color: #50fa7b; }
+        .modal-header-icon.red   { background: rgba(255,85,85,0.12);  color: #ff5555; }
+        .modal-header h3 { margin: 0; font-size: 1.15rem; font-family: 'Unbounded', sans-serif; }
+        .modal-header p  { margin: 4px 0 0; font-size: 0.82rem; color: var(--text-muted); }
+
+        /* Quick-price chips */
+        .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .quick-chip {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+            border: 1px solid rgba(0,229,255,0.25); color: var(--accent-secondary);
+            background: rgba(0,229,255,0.06); transition: all 0.2s;
+        }
+        .quick-chip:hover { background: rgba(0,229,255,0.18); border-color: var(--accent-secondary); transform: translateY(-1px); }
+
+        /* Price input wrapper */
+        .price-input-wrap {
+            position: relative; margin-bottom: 20px;
+        }
+        .price-input-wrap .currency-badge {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 0.78rem; font-weight: 700; color: var(--accent-secondary);
+            letter-spacing: 1px; pointer-events: none;
+        }
+        .price-input-wrap input {
+            padding-right: 56px !important;
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            border-color: rgba(0,229,255,0.25) !important;
+        }
+        .price-input-wrap input:focus { border-color: var(--accent-secondary) !important; box-shadow: 0 0 0 3px rgba(0,229,255,0.1); }
+        #pricePreview {
+            margin-top: 8px; font-size: 0.82rem; color: var(--text-muted);
+            min-height: 18px; transition: color 0.2s;
+        }
+        #pricePreview.has-value { color: #50fa7b; }
+
+        /* Reason tags */
+        .reason-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .reason-tag {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);
+            background: rgba(255,255,255,0.04); transition: all 0.2s;
+        }
+        .reason-tag:hover, .reason-tag.active {
+            background: rgba(255,85,85,0.12); border-color: #ff5555; color: #ff5555;
+        }
+
+        /* Textarea redesign */
+        .refund-textarea-wrap { position: relative; margin-bottom: 20px; }
+        .refund-textarea-wrap textarea {
+            resize: none; height: 110px;
+            border-color: rgba(255,255,255,0.1) !important;
+            border-radius: 12px !important;
+            font-size: 0.92rem !important;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            padding-bottom: 30px !important;
+        }
+        .refund-textarea-wrap textarea:focus {
+            border-color: rgba(255,85,85,0.5) !important;
+            box-shadow: 0 0 0 3px rgba(255,85,85,0.08);
+        }
+        .char-counter {
+            position: absolute; bottom: 10px; right: 14px;
+            font-size: 0.75rem; color: var(--text-muted); pointer-events: none;
+        }
+        .char-counter.warn { color: #ffaa00; }
+
+        /* Confirm disclaimer */
+        .refund-disclaimer {
+            background: rgba(255,85,85,0.06);
+            border: 1px solid rgba(255,85,85,0.15);
+            border-radius: 10px; padding: 12px 16px;
+            font-size: 0.8rem; color: #ff8080; margin-bottom: 20px;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .refund-disclaimer i { margin-top: 2px; flex-shrink: 0; }
+
+        /* Modal action row */
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-actions .btn { flex: 1; text-align: center; justify-content: center; }
+    </style>
+
+    <!-- ===================== MODAL BÁN LẠI VÉ ===================== -->
     <div id="resaleModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
-            <h3>NIÊM YẾT BÁN LẠI VÉ</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Nhập giá bạn muốn bán lại cho người khác.</p>
-            <input type="number" id="resalePrice" class="form-input" placeholder="Nhập giá bán (VNĐ)" style="margin-bottom: 20px;">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-outline small" onclick="closeModal('resaleModal')">HỦY</button>
-                <button class="btn btn-primary small" id="confirmResaleBtn">XÁC NHẬN NIÊM YẾT</button>
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <div class="modal-header-icon green"><i class="fa fa-tag"></i></div>
+                <div>
+                    <h3>NIÊM YẾT BÁN LẠI</h3>
+                    <p>Đặt giá bán lại vé của bạn cho người khác</p>
+                </div>
+            </div>
+
+            <!-- Quick-select chips -->
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Chọn nhanh mức giá</div>
+            <div class="quick-chips">
+                <button class="quick-chip" onclick="setResalePrice(100000)">100K</button>
+                <button class="quick-chip" onclick="setResalePrice(200000)">200K</button>
+                <button class="quick-chip" onclick="setResalePrice(500000)">500K</button>
+                <button class="quick-chip" onclick="setResalePrice(1000000)">1 Triệu</button>
+                <button class="quick-chip" onclick="setResalePrice(2000000)">2 Triệu</button>
+                <button class="quick-chip" onclick="setResalePrice(5000000)">5 Triệu</button>
+            </div>
+
+            <!-- Price input -->
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Hoặc nhập giá thủ công</div>
+            <div class="price-input-wrap">
+                <input type="number" id="resalePrice" class="form-input"
+                    placeholder="0" min="0"
+                    oninput="updatePricePreview()"
+                    style="width:100%;">
+                <span class="currency-badge">VNĐ</span>
+            </div>
+            <div id="pricePreview"></div>
+
+            <!-- Notice -->
+            <div style="background: rgba(80,250,123,0.05); border: 1px solid rgba(80,250,123,0.15); border-radius: 10px; padding: 12px 16px; font-size: 0.8rem; color: #a0a5b5; margin: 16px 0; display: flex; gap: 10px; align-items: center;">
+                <i class="fa fa-circle-info" style="color: #50fa7b;"></i>
+                Vé sẽ được niêm yết trên sàn. Bạn có thể hủy niêm yết bất kỳ lúc nào trước khi có người mua.
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-outline small" onclick="closeModal('resaleModal')">
+                    <i class="fa fa-xmark" style="margin-right:6px;"></i>HỦY BỎ
+                </button>
+                <button class="btn btn-primary small" id="confirmResaleBtn" style="background: linear-gradient(90deg,#50fa7b,#00e5ff); color:#000; font-weight:700;">
+                    <i class="fa fa-check" style="margin-right:6px;"></i>NIÊM YẾT NGAY
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- ===================== MODAL HOÀN VÉ ===================== -->
     <div id="refundModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
-            <h3>YÊU CẦU HOÀN TIỀN</h3>
-            <div id="refundInfo" style="background: rgba(0,229,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <!-- Info about refund % -->
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div class="modal-header-icon red"><i class="fa fa-rotate-left"></i></div>
+                <div>
+                    <h3>YÊU CẦU HOÀN VÉ</h3>
+                    <p>Điền thông tin bên dưới để gửi yêu cầu hoàn tiền</p>
+                </div>
             </div>
-            <textarea id="refundReason" class="form-input" placeholder="Lý do hoàn vé..." style="height: 100px; margin-bottom: 20px;"></textarea>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-outline small" onclick="closeModal('refundModal')">HỦY</button>
-                <button class="btn btn-primary small" id="confirmRefundBtn" style="background: #ff5555; border-color: #ff5555;">GỬI YÊU CẦU HOÀN TIỀN</button>
+
+            <!-- Refund policy info box -->
+            <div id="refundInfo" style="background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.12); border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 0.88rem;"></div>
+
+            <!-- Textarea - to hơn, không giới hạn ký tự -->
+            <div id="refundFormSection">
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Lý do hoàn vé <span style="color: #ff8080;">*</span></div>
+                <div class="refund-textarea-wrap">
+                    <textarea id="refundReason" class="form-input"
+                        placeholder="Nhập lý do hoàn vé của bạn..."
+                        style="width: 100%; box-sizing: border-box; height: 160px; resize: none;"></textarea>
+                </div>
+            </div>
+
+            <!-- Disclaimer chỉ hiện khi có refund policy -->
+            <div class="refund-disclaimer" id="refundDisclaimer">
+                <i class="fa fa-triangle-exclamation"></i>
+                <span>Sau khi xác nhận, yêu cầu <strong>không thể thu hồi</strong>. Số tiền hoàn theo chính sách sẽ được cộng vào ví của bạn trong vòng vài phút.</span>
+            </div>
+
+            <div class="modal-actions" id="refundModalActions">
+                <button class="btn btn-outline small" onclick="closeModal('refundModal')">
+                    <i class="fa fa-xmark" style="margin-right:6px;"></i>ĐÓNG
+                </button>
+                <button class="btn btn-primary small" id="confirmRefundBtn"
+                    style="background: linear-gradient(90deg,#ff5555,#ff3366); border:none; color:#fff; font-weight:700;">
+                    <i class="fa fa-rotate-left" style="margin-right:6px;"></i>XÁC NHẬN HOÀN VÉ
+                </button>
             </div>
         </div>
     </div>
-    </div>
+
+    <script>
+        function setResalePrice(val) {
+            document.getElementById('resalePrice').value = val;
+            updatePricePreview();
+        }
+        function updatePricePreview() {
+            const val = parseFloat(document.getElementById('resalePrice').value);
+            const el = document.getElementById('pricePreview');
+            if (val && val > 0) {
+                el.textContent = '≈ ' + val.toLocaleString('vi-VN') + ' đồng';
+                el.className = 'has-value';
+            } else {
+                el.textContent = '';
+                el.className = '';
+            }
+        }
+        function selectReason(btn, text) {
+            document.querySelectorAll('.reason-tag').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('refundReason').value = text;
+        }
+    </script>
 
     <div class="mascot-companion" id="mascotCompanion">
         <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>

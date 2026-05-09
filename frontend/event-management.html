@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <title>Ve'ryGood | Quản Lý Sự Kiện</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/test.png">
@@ -73,7 +76,11 @@
             overflow: hidden;
         }
 
-        .revenue-table { width: 100%; border-collapse: collapse; }
+        .revenue-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
         .revenue-table thead th {
             background: rgba(255, 255, 255, 0.03);
             padding: 1rem 1.5rem;
@@ -83,7 +90,10 @@
             border-bottom: 1px solid var(--border-subtle);
         }
 
-        .revenue-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+        .revenue-table td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
 
         .status-pill {
             display: inline-block;
@@ -92,8 +102,16 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
-        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
-        .status-expired { background: rgba(255, 51, 102, 0.1); color: #ff3366; }
+
+        .status-active {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+        }
+
+        .status-expired {
+            background: rgba(255, 51, 102, 0.1);
+            color: #ff3366;
+        }
 
         .chart-section {
             background: var(--card-bg);
@@ -110,7 +128,14 @@
             height: 200px;
         }
 
-        .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
         .bar {
             width: 100%;
             max-width: 60px;
@@ -118,7 +143,7 @@
             background: linear-gradient(180deg, var(--accent-secondary), rgba(0, 229, 255, 0.3));
             transition: height 1s ease;
         }
-        
+
         /* === ACTION BUTTONS (Đồng bộ từ Admin) === */
         .admin-btn {
             padding: 0.6rem 1rem;
@@ -148,30 +173,28 @@
             color: var(--accent-secondary);
         }
 
-        .btn-delete {
-            background: rgba(255, 51, 102, 0.05);
-            color: #ff3366;
-            border: 1px solid rgba(255, 51, 102, 0.1);
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
         }
 
-        .btn-delete:hover:not(:disabled) {
-            background: #ff3366;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
-            border-color: transparent;
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-
-        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
+
 <body>
     <div class="custom-cursor"></div>
     <div class="bg-mesh primary-mesh"></div>
     <div class="bg-mesh secondary-mesh"></div>
     <header class="navbar">
-        <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <a href="index.html" style="text-decoration:none; color:inherit;">
+            <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
+        </a>
         <div class="nav-center">
             <div class="search-bar">
                 <i class="fa fa-search"></i>
@@ -181,9 +204,10 @@
         <div class="nav-links">
             <a href="index.html" class="nav-btn">Trang Chủ</a>
             <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
-            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn active">Quản Lý Sự Kiện</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn active">Quản Lý Sự
+                Kiện</a>
             <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
-            
+
             <div class="account-dropdown" id="accountDropdown" style="display:none;">
                 <button class="btn btn-account">
                     <i class="fa fa-user-circle"></i>
@@ -202,21 +226,24 @@
 
     <main class="container" style="padding-top: 2rem;">
         <!-- Tối giản hóa Header -->
-        <div class="admin-page-header fade-up" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="admin-page-header fade-up"
+            style="display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <h1 class="neon-text" style="font-size: 1.8rem; font-family: 'Unbounded'; margin: 0;">QUẢN LÝ</h1>
-                <div style="background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600;">
+                <div
+                    style="background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600;">
                     DASHBOARD NHÀ TỔ CHỨC
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm mới</button>
+                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm
+                    mới</button>
             </div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card fade-up">
-                <div class="stat-label">Tổng doanh thu</div>
+                <div class="stat-label">Tổng vé bán ra</div>
                 <div class="stat-value" id="totalRevenue">---</div>
             </div>
             <div class="stat-card fade-up">
@@ -230,7 +257,7 @@
         </div>
 
         <div class="chart-section fade-up">
-            <h3 class="section-title">Biểu Đồ Doanh Thu</h3>
+            <h3 class="section-title">Biểu Đồ Vé Bán Theo Sự Kiện</h3>
             <div class="bar-chart" id="barChart">
                 <div class="empty-state">Đang tải dữ liệu...</div>
             </div>
@@ -245,12 +272,13 @@
                             <th>Sự kiện</th>
                             <th>Trạng thái</th>
                             <th>Vé bán</th>
-                            <th>Doanh thu</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="revenueTableBody">
-                        <tr><td colspan="5" class="empty-state">Đang tải dữ liệu...</td></tr>
+                        <tr>
+                            <td colspan="4" class="empty-state">Đang tải dữ liệu...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -258,13 +286,17 @@
     </main>
 
     <!-- Settlement Modal -->
-    <div id="settlementModal" class="modal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px);">
-        <div class="modal-content" style="background:#141928; margin:5% auto; padding:40px; border:1px solid var(--accent-secondary); border-radius:24px; width:90%; max-width:600px; color:#fff;">
+    <div id="settlementModal" class="modal"
+        style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);">
+        <div class="modal-content"
+            style="background:#141928; margin:3% auto; padding:40px; border:1px solid var(--accent-secondary); border-radius:24px; width:90%; max-width:680px; color:#fff; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                <h3 style="font-family:'Unbounded'; color:var(--accent-secondary); margin:0;">BÁO CÁO QUYẾT TOÁN</h3>
-                <button onclick="document.getElementById('settlementModal').style.display='none'" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <h3 style="font-family:'Unbounded'; color:var(--accent-secondary); margin:0; font-size:1rem;">BÁO CÁO
+                    QUYẾT TOÁN</h3>
+                <button onclick="document.getElementById('settlementModal').style.display='none'"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
-            
+
             <div id="settlementData" style="display:flex; flex-direction:column; gap:20px;">
                 <!-- Data will be loaded here -->
             </div>
@@ -309,42 +341,40 @@
         }
 
         function renderDashboard(data) {
-            document.getElementById('totalRevenue').textContent = (data.tongDoanhThu || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('totalRevenue').textContent = (data.tongSoVeBan || 0) + ' vé';
             document.getElementById('totalTickets').textContent = data.tongSoVeBan || 0;
             document.getElementById('totalEvents').textContent = data.tongSoSuKien || 0;
 
             const chart = document.getElementById('barChart');
             const tbody = document.getElementById('revenueTableBody');
-            
+
             if (!data.chiTietSuKien || data.chiTietSuKien.length === 0) {
                 chart.innerHTML = '<div class="empty-state">Chưa có dữ liệu sự kiện.</div>';
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Chưa có sự kiện nào.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Chưa có sự kiện nào.</td></tr>';
                 return;
             }
 
-            const maxRev = Math.max(...data.chiTietSuKien.map(e => e.doanhThu || 0), 1);
+            const maxVe = Math.max(...data.chiTietSuKien.map(e => e.soVeBan || 0), 1);
             chart.innerHTML = '';
             tbody.innerHTML = '';
 
-            const roles = JSON.parse(localStorage.getItem('stellar_roles') || '[]');
-            const isAdmin = roles.includes('ROLE_ADMIN');
-
             data.chiTietSuKien.forEach((ev, idx) => {
-                // Chart
-                const h = ((ev.doanhThu || 0) / maxRev) * 180;
+                // Biểu đồ dùng số vé bán
+                const h = ((ev.soVeBan || 0) / maxVe) * 180;
                 const bar = document.createElement('div');
                 bar.className = 'bar-item';
                 bar.innerHTML = `
-                    <div class="bar-value">${ev.doanhThu > 1e6 ? (ev.doanhThu/1e6).toFixed(1)+'M' : ev.doanhThu}</div>
+                    <div class="bar-value">${ev.soVeBan || 0} vé</div>
                     <div class="bar" style="height:0px;"></div>
                     <div class="bar-label">${ev.tenSuKien}</div>
                 `;
                 chart.appendChild(bar);
                 setTimeout(() => { bar.querySelector('.bar').style.height = h + 'px'; }, 100 + idx * 50);
 
-                // Table
+                // Table — 4 cột (bỏ doanh thu)
                 const tr = document.createElement('tr');
-                const statusClass = ev.trangThai === 'DIEN_RA' ? 'status-active' : 'status-expired';
+                const isCancelled = ev.trangThai === 'Đã hủy';
+                const statusClass = ev.trangThai === 'Sắp diễn ra' || ev.trangThai === 'Đang diễn ra' ? 'status-active' : 'status-expired';
                 tr.innerHTML = `
                     <td>
                         <div style="display:flex; align-items:center; gap:10px;">
@@ -354,13 +384,10 @@
                     </td>
                     <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
                     <td>${ev.soVeBan || 0}</td>
-                    <td><span style="color:#00ff88; font-weight:700;">${(ev.doanhThu || 0).toLocaleString('vi-VN')}đ</span></td>
                     <td>
                         <div style="display:flex; gap:10px;">
                             <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit">Chỉnh sửa</a>
                             <button onclick="showSettlement(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ffb86c; color: #ffb86c;">Quyết toán</button>
-                            ${isAdmin ? `
-                            <button onclick="deleteEvent(${ev.maSuKien})" class="admin-btn btn-delete">Xóa</button>` : ''}
                         </div>
                     </td>
                 `;
@@ -368,71 +395,144 @@
             });
         }
 
-        async function deleteEvent(id) {
-            if (!confirm("⚠️ Bạn có chắc chắn muốn xóa sự kiện này?")) return;
-            const token = localStorage.getItem('stellar_token');
-            try {
-                const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) { window.location.reload(); }
-                else { alert('Lỗi khi xóa sự kiện.'); }
-            } catch (e) { alert('Lỗi kết nối.'); }
-        }
-
         async function showSettlement(eventId) {
             const token = localStorage.getItem('stellar_token');
             const modal = document.getElementById('settlementModal');
             const container = document.getElementById('settlementData');
-            
+
             modal.style.display = 'block';
-            container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa fa-spinner fa-spin"></i> Đang tính toán...</div>';
-            
+            container.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin" style="font-size:2rem; color:var(--accent-secondary);"></i><p style="margin-top:15px; color:var(--text-muted);">Đang tính toán...</p></div>';
+
             try {
                 const res = await fetch(`http://localhost:8081/api/finance/settlement/${eventId}`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    container.innerHTML = `
-                        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px;">
-                            <h4 style="margin-top:0; color:var(--accent-secondary);">${data.eventName}</h4>
-                            <p style="font-size:0.85rem; color:var(--text-muted);">Mã quyết toán: SETTL-${eventId}-${Date.now()}</p>
-                        </div>
-                        
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:15px;">
-                                <div style="font-size:0.8rem; color:var(--text-muted);">Tổng vé bán</div>
-                                <div style="font-size:1.2rem; font-weight:bold;">${data.totalTicketsSold}</div>
-                            </div>
-                            <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:15px;">
-                                <div style="font-size:0.8rem; color:var(--text-muted);">Doanh thu gộp</div>
-                                <div style="font-size:1.2rem; font-weight:bold; color:#fff;">${data.grossRevenue.toLocaleString('vi-VN')}đ</div>
-                            </div>
-                        </div>
+                if (!res.ok) throw new Error('Server error');
+                const d = await res.json();
 
-                        <div style="padding:10px 0; border-bottom:1px dashed rgba(255,255,255,0.1);">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <span style="color:var(--text-muted);">Phí nền tảng (5%)</span>
-                                <span style="color:#ff5555;">-${data.platformFee.toLocaleString('vi-VN')}đ</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Phí cổng thanh toán (2%)</span>
-                                <span style="color:#ff5555;">-${data.gatewayFee.toLocaleString('vi-VN')}đ</span>
-                            </div>
-                        </div>
+                const fmt = (n) => (n || 0).toLocaleString('vi-VN') + 'đ';
+                const fmtN = (n) => (n || 0).toLocaleString('vi-VN');
 
-                        <div style="background:linear-gradient(90deg, rgba(0,255,136,0.1), transparent); padding:20px; border-radius:15px; border-left:4px solid #00ff88;">
-                            <div style="font-size:0.9rem; color:#00ff88; margin-bottom:5px;">THỰC NHẬN (NET)</div>
-                            <div style="font-size:1.8rem; font-family:'Unbounded'; font-weight:bold;">${data.netRevenue.toLocaleString('vi-VN')}đ</div>
+                // Badge trạng thái
+                const statusColor = d.trangThai === 'Đã hủy' ? '#ff3366' :
+                    d.trangThai === 'Đã kết thúc' ? '#a0a5b5' :
+                        d.trangThai === 'Đang diễn ra' ? '#00ff88' : '#00e5ff';
+
+                // Xây lịch sử hoàn tiền
+                const historyHtml = d.refundHistory && d.refundHistory.length > 0 ? `
+                    <div style="background:rgba(255,255,255,0.03); border-radius:15px; overflow:hidden;">
+                        <div style="padding:12px 16px; font-size:0.8rem; color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.06);
+                             display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fa fa-history" style="margin-right:8px;"></i>LỊCH SỬ HOÀN TIỀN GẦN NHẤT</span>
+                            <span style="color:#ffb86c;">${d.totalRefundCount} lần</span>
                         </div>
-                    `;
-                }
+                        ${d.refundHistory.map(r => `
+                            <div style="padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-size:0.85rem;">Vé #${r.maVe} — ${r.nguoiNhanHoan}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                                        <span style="background:${r.loaiHoan === 'Hủy sự kiện' ? 'rgba(255,51,102,0.15)' : 'rgba(255,184,108,0.15)'};
+                                               color:${r.loaiHoan === 'Hủy sự kiện' ? '#ff3366' : '#ffb86c'};
+                                               padding:2px 8px; border-radius:20px; font-size:0.7rem;">${r.loaiHoan}</span>
+                                        ${r.thoiDiemHoan ? ' &nbsp;' + new Date(r.thoiDiemHoan).toLocaleDateString('vi-VN') : ''}
+                                    </div>
+                                </div>
+                                <span style="color:#ff5555; font-weight:600;">-${fmt(r.soTienHoan)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '';
+
+                container.innerHTML = `
+                    <!-- Header sự kiện -->
+                    <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border-left:4px solid ${statusColor};">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <h4 style="margin:0 0 8px; color:#fff; font-size:1.1rem;">${d.eventName}</h4>
+                                <span style="font-size:0.75rem; padding:3px 10px; border-radius:20px; background:${statusColor}20; color:${statusColor};">${d.trangThai}</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-align:right;">
+                                ID: ${d.eventId}<br>
+                                ${new Date().toLocaleDateString('vi-VN')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thống kê vé -->
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px; letter-spacing:1px;">THỐNG KÊ VÉ</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                            <div style="background:rgba(0,229,255,0.06); padding:15px; border-radius:12px; text-align:center; border:1px solid rgba(0,229,255,0.1);">
+                                <div style="font-size:1.6rem; font-weight:700; font-family:'Unbounded'; color:#00e5ff;">${fmtN(d.totalTicketsAll)}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Số lượng vé phát hành</div>
+                            </div>
+                            <div style="background:rgba(0,255,136,0.06); padding:15px; border-radius:12px; text-align:center; border:1px solid rgba(0,255,136,0.1);">
+                                <div style="font-size:1.6rem; font-weight:700; font-family:'Unbounded'; color:#00ff88;">${fmtN(d.totalTicketsSold)}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Vé đã bán</div>
+                            </div>
+                            <div style="background:rgba(255,51,102,0.06); padding:15px; border-radius:12px; text-align:center; border:1px solid rgba(255,51,102,0.1);">
+                                <div style="font-size:1.6rem; font-weight:700; font-family:'Unbounded'; color:#ff3366;">${fmtN(d.totalTicketsCancelled)}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Vé đã hoàn</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dòng tiền -->
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px; letter-spacing:1px;">DÒNG TIỀN</div>
+                        <div style="background:rgba(255,255,255,0.03); border-radius:15px; overflow:hidden;">
+                            <div style="padding:14px 20px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.06);">
+                                <span style="color:var(--text-muted);">Doanh thu bán vé</span>
+                                <span style="color:#fff; font-weight:600;">+${fmt(d.grossRevenue)}</span>
+                            </div>
+                            <div style="padding:14px 20px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.06);">
+                                <div>
+                                    <span style="color:var(--text-muted);">Tổng đã hoàn</span>
+                                    ${d.refundsByUser > 0 || d.refundsByCancel > 0 ? `
+                                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">
+                                        ${d.refundsByUser > 0 ? `Số lượng yêu cầu hoàn vé: ${d.refundsByUser} lần` : ''}
+                                        ${d.refundsByUser > 0 && d.refundsByCancel > 0 ? ' &bull; ' : ''}
+                                        ${d.refundsByCancel > 0 ? `Hủy SK: ${d.refundsByCancel} lần` : ''}
+                                    </div>` : ''}
+                                </div>
+                                <span style="color:#ff5555; font-weight:600;">-${fmt(d.totalRefunds)}</span>
+                            </div>
+                            <div style="padding:14px 20px; display:flex; justify-content:space-between; background:rgba(0,229,255,0.05);">
+                                <span style="color:#00e5ff; font-weight:600;">Doanh thu thuần</span>
+                                <span style="color:#00e5ff; font-weight:700;">${fmt(d.netBeforeFee)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phí -->
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px; letter-spacing:1px;">CÁC KHOẢN PHÍ</div>
+                        <div style="background:rgba(255,255,255,0.03); border-radius:15px; overflow:hidden;">
+                            <div style="padding:14px 20px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.06);">
+                                <span style="color:var(--text-muted);">Phí nền tảng (${d.platformFeeRate})</span>
+                                <span style="color:#ff5555;">-${fmt(d.platformFee)}</span>
+                            </div>
+                            <div style="padding:14px 20px; display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Phí cổng thanh toán (${d.gatewayFeeRate})</span>
+                                <span style="color:#ff5555;">-${fmt(d.gatewayFee)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thực nhận -->
+                    <div style="background:linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,229,255,0.05)); padding:24px; border-radius:18px; border:1px solid rgba(0,255,136,0.25); text-align:center;">
+                        <div style="font-size:0.85rem; color:#00ff88; letter-spacing:2px; margin-bottom:8px;">DOANH THU THỰC TẾ</div>
+                        <div style="font-size:2.2rem; font-family:'Unbounded'; font-weight:700; color:#fff;">${fmt(d.netRevenue)}</div>
+                    </div>
+
+                    <!-- Lịch sử hoàn tiền -->
+                    ${historyHtml}
+                `;
             } catch (e) {
                 container.innerHTML = '<p style="color:red; text-align:center;">Lỗi khi tải dữ liệu quyết toán.</p>';
             }
         }
     </script>
 </body>
+
 </html>

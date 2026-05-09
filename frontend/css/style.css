@@ -17,7 +17,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    cursor: none;
 }
 
 body {
@@ -35,16 +34,24 @@ h1, h2, h3, h4, .logo {
 }
 
 .custom-cursor {
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 10000;
-    transform: translate(-50%, -50%);
-    mix-blend-mode: difference;
-    transition: width 0.2s, height 0.2s, background 0.2s;
+    display: none; /* Ẩn custom cursor, dùng cursor mặc định của OS */
+}
+
+/* Pointer cursor cho tất cả element có thể tương tác */
+a, button, [onclick], label[for],
+.btn, .buy-btn, .cat-pill, .nav-btn, .tab-btn,
+.event-card, .zone-card, .seat.available,
+.mascot-companion, .account-dropdown .btn-account,
+.dropdown-content a, input[type="checkbox"],
+input[type="radio"], select, summary {
+    cursor: pointer !important;
+}
+
+/* Input text dùng cursor text */
+input[type="text"], input[type="number"],
+input[type="email"], input[type="password"],
+textarea, .form-input:not(select) {
+    cursor: text;
 }
 
 /* Background Meshes */

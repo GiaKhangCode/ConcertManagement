@@ -6,10 +6,14 @@ public class UserTicketResponseDto {
     private Long ticketId;
     private Long transactionId;
     private String eventName;
+    private Long eventId;
     private String tierName;
     private BigDecimal totalPrice;
     private LocalDateTime bookingTime;
     private int ticketCount;
+    
+    public Long getEventId() { return eventId; }
+    public void setEventId(Long eventId) { this.eventId = eventId; }
     
     public Long getTicketId() { return ticketId; }
     public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
