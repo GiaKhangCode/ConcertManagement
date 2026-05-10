@@ -1,3 +1,4 @@
+E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\NhaToChuc.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\VeRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\HangVeDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\SuKien.java
@@ -20,6 +21,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DiaDiemR
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\JwtResponse.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\LichDienDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\LichSuBienDongVi.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\NhaToChucRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\KhuVucDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\GheNgoi.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\TrangThaiGheTheoSuatId.java
@@ -39,6 +41,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\EventCon
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\YeuCauHoTroRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\KhuVuc.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\MessageResponse.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\NhaTaiTro.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\service\EventService.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\BookingController.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\NhomQuyenRepository.java
@@ -56,10 +59,13 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\YeuCauHoTro.
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\UserProfileResponseDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\controller\UserController.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\EventCreateRequestDto.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\TaiTroId.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\NhaTaiTroRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\EventResponseDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\DiaDiem.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\SuKienRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\HangVeRepository.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\TaiTroRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\HangVe.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\LichSuHoanTien.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\GiaoDichRepository.java
@@ -69,6 +75,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\LoginRequest.ja
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\DonMuaRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\security\SecurityConfig.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\UserTicketResponseDto.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\TaiTro.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\service\TicketService.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\KhuVucSoDo.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\ResaleTicketDto.java

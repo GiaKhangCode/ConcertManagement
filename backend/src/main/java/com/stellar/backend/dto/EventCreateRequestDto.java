@@ -18,6 +18,10 @@ public class EventCreateRequestDto {
     private List<LichDienDto> lichDienList;
     private List<HangVeDto> hangVeList;
     private RefundPolicyDto refundPolicy;
+    private List<SponsorDto> sponsors;
+
+    public List<SponsorDto> getSponsors() { return sponsors; }
+    public void setSponsors(List<SponsorDto> sponsors) { this.sponsors = sponsors; }
 
     public RefundPolicyDto getRefundPolicy() { return refundPolicy; }
     public void setRefundPolicy(RefundPolicyDto refundPolicy) { this.refundPolicy = refundPolicy; }
@@ -135,5 +139,15 @@ public class EventCreateRequestDto {
             public BigDecimal getPercentage() { return percentage; }
             public void setPercentage(BigDecimal percentage) { this.percentage = percentage; }
         }
+    }
+
+    public static class SponsorDto {
+        private String name;
+        private String rank; // Hạng tài trợ (Kim Cương, Vàng, Bạc, Đồng)
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getRank() { return rank; }
+        public void setRank(String rank) { this.rank = rank; }
     }
 }

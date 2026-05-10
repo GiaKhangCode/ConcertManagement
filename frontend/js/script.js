@@ -312,6 +312,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 createEventNav.style.display = 'inline-flex';
+                
+                // Chặn click nếu là Nhà tổ chức chưa thiết lập hồ sơ
+                createEventNav.onclick = async (e) => {
+                    // Admin không bị chặn
+                    if (roles.includes('ROLE_ADMIN')) return;
+                    
+                    e.preventDefault();
+                    const token = localStorage.getItem('stellar_token');
+                    try {
+                        const res = await fetch('http://localhost:8081/api/user/profile', {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        if (res.ok) {
+                            const profile = await res.json();
+                            if (!profile.organizationName) {
+                                alert("⚠️ Bạn cần thiết lập thông tin nhà tổ chức trước khi tạo sự kiện!");
+                                window.location.href = "profile.html";
+                            } else {
+                                window.location.href = "admin-create.html";
+                            }
+                        } else {
+                            window.location.href = "admin-create.html";
+                        }
+                    } catch (err) {
+                        window.location.href = "admin-create.html";
+                    }
+                };
             }
             if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 revenueNav.style.display = 'inline-flex';

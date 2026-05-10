@@ -356,9 +356,35 @@
                     <div class="calendar-grid" id="calendarDays"></div>
                 </div>
 
+                <!-- Thông tin nhà tổ chức -->
+                <div id="organizerSection" style="margin-bottom: 40px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 25px; display: none;">
+                    <h3 style="font-family: 'Unbounded', sans-serif; color: var(--accent-secondary); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fa fa-building"></i> BAN TỔ CHỨC
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="background: rgba(0, 243, 255, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent-secondary); border: 1px solid rgba(0, 243, 255, 0.3);">
+                            <i class="fa fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <div id="organizerName" style="font-size: 1.2rem; font-weight: bold; color: #fff; margin-bottom: 5px;">---</div>
+                            <div id="organizerEmail" style="font-size: 0.9rem; color: #a0a5b5;"><i class="fa fa-envelope" style="margin-right: 5px; font-size: 0.8rem;"></i> ---</div>
+                        </div>
+                    </div>
+                </div>
+
                 <h2><i class="fa fa-book-open"></i> CHI TIẾT SỰ KIỆN</h2>
                 <div id="eventDescription" style="line-height: 1.8; color: #a0a5b5; font-size: 1.1rem; white-space: pre-wrap;">
                     <!-- Mô tả sẽ được render ở đây -->
+                </div>
+
+                <!-- Nhà tài trợ -->
+                <div id="sponsorsSection" style="display:none; margin-top: 40px;">
+                    <h3 style="font-family: 'Unbounded', sans-serif; color: #50fa7b; margin-bottom: 20px; font-size: 1.3rem;">
+                        <i class="fa fa-handshake"></i> ĐƠN VỊ ĐỒNG HÀNH
+                    </h3>
+                    <div id="sponsorsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                        <!-- Nhà tài trợ sẽ được render ở đây -->
+                    </div>
                 </div>
 
                 <!-- Chính sách hoàn vé -->

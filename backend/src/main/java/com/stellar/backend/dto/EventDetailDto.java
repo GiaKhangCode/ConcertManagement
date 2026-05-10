@@ -34,6 +34,23 @@ public class EventDetailDto {
     private List<HangVeDto> ticketTiers;
     private List<LichDienDto> schedules; // Danh sách các suất diễn
     private RefundPolicyDto refundPolicy;
+    private List<SponsorDto> sponsors;
+    private OrganizerDto organizer;
+
+    public OrganizerDto getOrganizer() { return organizer; }
+    public void setOrganizer(OrganizerDto organizer) { this.organizer = organizer; }
+
+    public List<SponsorDto> getSponsors() { return sponsors; }
+    public void setSponsors(List<SponsorDto> sponsors) { this.sponsors = sponsors; }
+
+    public static class OrganizerDto {
+        private String name;
+        private String email;
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -59,4 +76,13 @@ public class EventDetailDto {
     public void setSchedules(List<LichDienDto> schedules) { this.schedules = schedules; }
     public RefundPolicyDto getRefundPolicy() { return refundPolicy; }
     public void setRefundPolicy(RefundPolicyDto refundPolicy) { this.refundPolicy = refundPolicy; }
+
+    public static class SponsorDto {
+        private String name;
+        private String rank;
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getRank() { return rank; }
+        public void setRank(String rank) { this.rank = rank; }
+    }
 }

@@ -72,6 +72,15 @@ public class AdminController {
     @Autowired
     private KhuVucSoDoRepository khuVucSoDoRepository;
 
+    @Autowired
+    private NhaTaiTroRepository nhaTaiTroRepository;
+
+    @Autowired
+    private TaiTroRepository taiTroRepository;
+
+    @Autowired
+    private NhaToChucRepository nhaToChucRepository;
+
     /**
      * Lấy thông tin chi tiết sự kiện để chỉnh sửa (trả về dạng DTO đầy đủ)
      */
@@ -172,6 +181,16 @@ public class AdminController {
             dto.setRefundPolicy(policyDto);
         }
 
+        // Map Sponsors
+        if (sk.getDanhSachTaiTro() != null) {
+            dto.setSponsors(sk.getDanhSachTaiTro().stream().map(tt -> {
+                EventCreateRequestDto.SponsorDto sDto = new EventCreateRequestDto.SponsorDto();
+                sDto.setName(tt.getNhaTaiTro().getTenNhaTT());
+                sDto.setRank(tt.getHangTaiTro());
+                return sDto;
+            }).collect(Collectors.toList()));
+        }
+
         return ResponseEntity.ok(dto);
     }
 
@@ -184,6 +203,19 @@ public class AdminController {
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
                     .getContext().getAuthentication().getPrincipal();
             TaiKhoan creator = taiKhoanRepository.findById(userDetails.getId()).orElse(null);
+
+            // Kiểm tra thông tin nhà tổ chức nếu là ROLE_ORGANIZER
+            boolean isOrganizer = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ORGANIZER"));
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isOrganizer && !isAdmin) {
+                java.util.Optional<NhaToChuc> ntcOpt = nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(userDetails.getId());
+                if (ntcOpt.isEmpty() || ntcOpt.get().getTenNhaToChuc() == null || ntcOpt.get().getTenNhaToChuc().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng thiết lập đầy đủ thông tin nhà tổ chức trong phần hồ sơ trước khi tạo sự kiện!"));
+                }
+            }
 
             SuKien sk = new SuKien();
             sk.setTenSuKien(request.getTenSuKien());
@@ -205,9 +237,8 @@ public class AdminController {
             sk.setNguoiTao(creator);
             sk.setLaSuKienNoiBat(0); // Mặc định không nổi bật
 
+
             // Thiết lập trạng thái ban đầu
-            boolean isAdmin = userDetails.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             sk.setTrangThai(isAdmin ? "Sắp diễn ra" : "Chờ phê duyệt");
 
             sk = suKienRepository.save(sk);
@@ -270,6 +301,31 @@ public class AdminController {
                 }
             }
 
+            // Lưu Nhà tài trợ
+            if (request.getSponsors() != null) {
+                for (EventCreateRequestDto.SponsorDto sDto : request.getSponsors()) {
+                    String sName = (sDto.getName() != null) ? sDto.getName().trim() : "";
+                    if (sName.isEmpty()) continue; // Bỏ qua nếu tên trống
+
+                    NhaTaiTro ntt = nhaTaiTroRepository.findByTenNhaTT(sName)
+                            .orElseGet(() -> {
+                                NhaTaiTro newNtt = new NhaTaiTro();
+                                newNtt.setTenNhaTT(sName);
+                                return nhaTaiTroRepository.save(newNtt);
+                            });
+                    
+                    // Kiểm tra tồn tại để tránh lỗi trùng khóa chính (MaSuKien, MaNhaTT)
+                    TaiTroId ttId = new TaiTroId(sk.getMaSuKien(), ntt.getMaNhaTT());
+                    if (!taiTroRepository.existsById(ttId)) {
+                        TaiTro tt = new TaiTro();
+                        tt.setSuKien(sk);
+                        tt.setNhaTaiTro(ntt);
+                        tt.setHangTaiTro(sDto.getRank() != null ? sDto.getRank() : "Đồng");
+                        taiTroRepository.save(tt);
+                    }
+                }
+            }
+
             return ResponseEntity.ok(Map.of(
                 "message", "Khởi tạo sự kiện thành công!",
                 "eventId", sk.getMaSuKien(),
@@ -302,6 +358,17 @@ public class AdminController {
                 if (sk.getNguoiTao() == null || !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId())) {
                     return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền sửa sự kiện này!"));
                 }
+
+                // Kiểm tra thông tin nhà tổ chức nếu là ROLE_ORGANIZER
+                boolean isOrganizer = userDetails.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ORGANIZER"));
+                if (isOrganizer) {
+                    java.util.Optional<NhaToChuc> ntcOpt = nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(userDetails.getId());
+                    if (ntcOpt.isEmpty() || ntcOpt.get().getTenNhaToChuc() == null || ntcOpt.get().getTenNhaToChuc().isEmpty()) {
+                        return ResponseEntity.badRequest().body(Map.of("message", "Vui lòng thiết lập đầy đủ thông tin nhà tổ chức trong phần hồ sơ trước khi cập nhật sự kiện!"));
+                    }
+                }
+
                 sk.setTrangThai("Chờ phê duyệt");
             }
 
@@ -453,6 +520,31 @@ public class AdminController {
                     }
                 }
             }
+
+            // 3. XỬ LÝ NHÀ TÀI TRỢ (UPSERT)
+            // Xóa các liên kết cũ
+            if (sk.getDanhSachTaiTro() != null) {
+                taiTroRepository.deleteAll(sk.getDanhSachTaiTro());
+                sk.getDanhSachTaiTro().clear();
+            }
+
+            if (request.getSponsors() != null) {
+                for (EventCreateRequestDto.SponsorDto sDto : request.getSponsors()) {
+                    NhaTaiTro ntt = nhaTaiTroRepository.findByTenNhaTT(sDto.getName())
+                            .orElseGet(() -> {
+                                NhaTaiTro newNtt = new NhaTaiTro();
+                                newNtt.setTenNhaTT(sDto.getName());
+                                return nhaTaiTroRepository.save(newNtt);
+                            });
+                    
+                    TaiTro tt = new TaiTro();
+                    tt.setSuKien(sk);
+                    tt.setNhaTaiTro(ntt);
+                    tt.setHangTaiTro(sDto.getRank() != null ? sDto.getRank() : "Đồng");
+                    taiTroRepository.save(tt);
+                }
+            }
+
             return ResponseEntity.ok(Map.of("message", "Cập nhật thành công (Upsert)!"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -942,5 +1034,17 @@ public class AdminController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", "Lỗi lưu sơ đồ: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Lấy danh sách tất cả nhà tài trợ hiện có
+     */
+    @GetMapping("/sponsors")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getAllSponsors() {
+        return ResponseEntity.ok(nhaTaiTroRepository.findAll().stream().map(ntt -> Map.of(
+            "maNhaTT", ntt.getMaNhaTT(),
+            "tenNhaTT", ntt.getTenNhaTT()
+        )).collect(Collectors.toList()));
     }
 }

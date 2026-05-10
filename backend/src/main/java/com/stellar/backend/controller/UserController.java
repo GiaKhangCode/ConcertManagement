@@ -31,6 +31,9 @@ public class UserController {
     @Autowired
     private VeRepository veRepository;
 
+    @Autowired
+    private NhaToChucRepository nhaToChucRepository;
+
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -53,7 +56,63 @@ public class UserController {
             response.setWalletBalance(new java.math.BigDecimal("0"));
         }
 
+        // Lấy danh sách vai trò
+        List<String> roles = userDetails.getAuthorities().stream()
+            .map(item -> item.getAuthority())
+            .collect(java.util.stream.Collectors.toList());
+        response.setRoles(roles);
+
+        // Lấy thông tin nhà tổ chức nếu có
+        Optional<NhaToChuc> ntc = nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(tk.getMaTaiKhoan());
+        if(ntc.isPresent()) {
+            response.setOrganizationName(ntc.get().getTenNhaToChuc());
+            response.setTaxCode(ntc.get().getMaSoThue());
+            response.setBankInfo(ntc.get().getThongTinNganHang());
+            response.setSupportEmail(ntc.get().getEmailHoTro());
+        }
+
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/organizer-setup")
+    public ResponseEntity<?> setupOrganizer(@RequestBody java.util.Map<String, String> request) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        TaiKhoan tk = taiKhoanRepository.findById(userDetails.getId())
+            .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
+
+        // Kiểm tra xem có quyền ROLE_ORGANIZER không
+        boolean isOrganizer = userDetails.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ORGANIZER"));
+        
+        if(!isOrganizer) {
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Bạn không có quyền thực hiện thao tác này!"));
+        }
+
+        NhaToChuc ntc = nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(tk.getMaTaiKhoan())
+            .orElse(new NhaToChuc());
+        
+        String orgName = request.get("organizationName");
+        String taxCode = request.get("taxCode");
+        String bankInfo = request.get("bankInfo");
+        String supportEmail = request.get("supportEmail");
+
+        if (orgName == null || orgName.trim().isEmpty() ||
+            taxCode == null || taxCode.trim().isEmpty() ||
+            bankInfo == null || bankInfo.trim().isEmpty() ||
+            supportEmail == null || supportEmail.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Vui lòng cung cấp đầy đủ thông tin nhà tổ chức!"));
+        }
+
+        ntc.setTaiKhoan(tk);
+        ntc.setNguoiDaiDien(tk.getNguoiDung());
+        ntc.setTenNhaToChuc(orgName.trim());
+        ntc.setMaSoThue(taxCode.trim());
+        ntc.setThongTinNganHang(bankInfo.trim());
+        ntc.setEmailHoTro(supportEmail.trim());
+
+        nhaToChucRepository.save(ntc);
+
+        return ResponseEntity.ok(java.util.Map.of("message", "Cập nhật thông tin nhà tổ chức thành công!"));
     }
 
     @PostMapping("/wallet/topup")

@@ -28,6 +28,18 @@ async function initProfile() {
             document.getElementById('userNameLabel').innerText = profile.fullName || profile.username || "Người dùng";
             document.getElementById('userEmailLabel').innerText = profile.email || 'Thành viên Ve\'ryGood';
             document.getElementById('walletBalance').innerText = (profile.walletBalance || 0).toLocaleString('vi-VN') + " VNĐ";
+            
+            // Xử lý vai trò và tab nhà tổ chức
+            if (profile.roles && profile.roles.includes('ROLE_ORGANIZER')) {
+                document.getElementById('tab-organizer').style.display = 'block';
+                document.getElementById('userRoleDis').innerText = "Nhà tổ chức";
+                
+                // Đổ dữ liệu vào form nhà tổ chức
+                document.getElementById('orgName').value = profile.organizationName || '';
+                document.getElementById('orgTaxCode').value = profile.taxCode || '';
+                document.getElementById('orgBankInfo').value = profile.bankInfo || '';
+                document.getElementById('orgEmail').value = profile.supportEmail || '';
+            }
         } else {
             console.error("Lỗi API Profile:", await profRes.text());
         }
@@ -143,8 +155,48 @@ document.getElementById('topUpBtn')?.addEventListener('click', async () => {
 function switchTab(tab) {
     document.getElementById('tab-tickets').classList.toggle('active', tab === 'tickets');
     document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+    document.getElementById('tab-organizer').classList.toggle('active', tab === 'organizer');
+    
     document.getElementById('tickets-tab-content').style.display = tab === 'tickets' ? 'block' : 'none';
     document.getElementById('history-tab-content').style.display = tab === 'history' ? 'block' : 'none';
+    document.getElementById('organizer-tab-content').style.display = tab === 'organizer' ? 'block' : 'none';
+}
+
+async function saveOrganizerInfo() {
+    const token = localStorage.getItem('stellar_token');
+    const data = {
+        organizationName: document.getElementById('orgName').value,
+        taxCode: document.getElementById('orgTaxCode').value,
+        bankInfo: document.getElementById('orgBankInfo').value,
+        supportEmail: document.getElementById('orgEmail').value
+    };
+
+    if (!data.organizationName?.trim() || !data.taxCode?.trim() || !data.bankInfo?.trim() || !data.supportEmail?.trim()) {
+        alert("Vui lòng điền đầy đủ tất cả các thông tin nhà tổ chức!");
+        return;
+    }
+
+    try {
+        const res = await fetch('http://localhost:8081/api/user/organizer-setup', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            alert("Cập nhật thông tin nhà tổ chức thành công!");
+            initProfile(); // Tải lại để cập nhật UI
+        } else {
+            const err = await res.json();
+            alert("Lỗi: " + (err.message || "Không thể cập nhật thông tin"));
+        }
+    } catch (e) {
+        console.error("Lỗi khi lưu thông tin nhà tổ chức:", e);
+        alert("Lỗi kết nối máy chủ");
+    }
 }
 
 // Modal Helpers

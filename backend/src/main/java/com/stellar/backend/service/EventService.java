@@ -31,12 +31,14 @@ public class EventService {
     private final SuKienRepository suKienRepository;
     private final LichDienRepository lichDienRepository;
     private final QuyTacHoanTienRepository quyTacHoanTienRepository;
+    private final com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository;
 
     // Constructor Injection instead of @RequiredArgsConstructor
-    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository, QuyTacHoanTienRepository quyTacHoanTienRepository) {
+    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository, QuyTacHoanTienRepository quyTacHoanTienRepository, com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository) {
         this.suKienRepository = suKienRepository;
         this.lichDienRepository = lichDienRepository;
         this.quyTacHoanTienRepository = quyTacHoanTienRepository;
+        this.nhaToChucRepository = nhaToChucRepository;
     }
 
     @Transactional(readOnly = true)
@@ -152,6 +154,26 @@ public class EventService {
                 policyDto.setRules(ruleDtos);
                 dto.setRefundPolicy(policyDto);
             }
+        }
+
+        // Map Sponsors
+        if (sk.getDanhSachTaiTro() != null) {
+            dto.setSponsors(sk.getDanhSachTaiTro().stream().map(tt -> {
+                EventDetailDto.SponsorDto sDto = new EventDetailDto.SponsorDto();
+                sDto.setName(tt.getNhaTaiTro().getTenNhaTT());
+                sDto.setRank(tt.getHangTaiTro());
+                return sDto;
+            }).collect(Collectors.toList()));
+        }
+
+        // Map Organizer Info
+        if (sk.getNguoiTao() != null) {
+            nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(sk.getNguoiTao().getMaTaiKhoan()).ifPresent(ntc -> {
+                EventDetailDto.OrganizerDto oDto = new EventDetailDto.OrganizerDto();
+                oDto.setName(ntc.getTenNhaToChuc());
+                oDto.setEmail(ntc.getEmailHoTro());
+                dto.setOrganizer(oDto);
+            });
         }
 
         return dto;

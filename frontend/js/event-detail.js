@@ -56,6 +56,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="margin-top:20px;">Hãy cùng hàng ngàn khán giả khác hòa mình vào không khí cuồng nhiệt này và lưu giữ những kí ức phi thường. Hệ thống vé điện tử của chúng tôi đảm bảo chỗ ngồi có hạn luôn được bảo mật tuyệt vời. Chốt vé ngay để giành lấy tấm vé thông hành của bạn nhé!</p>
             `;
         }
+        // Hiển thị Nhà tổ chức
+        if (ev.organizer) {
+            document.getElementById('organizerSection').style.display = 'block';
+            document.getElementById('organizerName').innerText = ev.organizer.name;
+            document.getElementById('organizerEmail').innerText = ev.organizer.email;
+        }
+
+        
+        // Hiển thị Nhà tài trợ
+        const sponsorsSect = document.getElementById('sponsorsSection');
+        const sponsorsList = document.getElementById('sponsorsList');
+        if (ev.sponsors && ev.sponsors.length > 0) {
+            sponsorsSect.style.display = 'block';
+            sponsorsList.innerHTML = ev.sponsors.map(s => `
+                <div style="background: rgba(80, 250, 123, 0.05); border: 1px solid rgba(80, 250, 123, 0.2); padding: 15px; border-radius: 12px; text-align: center; transition: all 0.3s;" onmouseover="this.style.borderColor='#50fa7b'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='rgba(80, 250, 123, 0.2)'; this.style.transform='none'">
+                    <div style="font-size: 0.75rem; color: #50fa7b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Hạng ${s.rank}</div>
+                    <div style="font-weight: bold; color: #fff; font-size: 1.1rem;">${s.name}</div>
+                </div>
+            `).join('');
+        }
         
         // Hiển thị chính sách hoàn tiền
         const policyCont = document.getElementById('refundPolicyContainer');

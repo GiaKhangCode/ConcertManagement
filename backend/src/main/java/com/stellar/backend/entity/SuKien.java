@@ -41,6 +41,7 @@ public class SuKien {
     @JoinColumn(name = "MaChinhSachHT")
     private MauChinhSachHoanTien mauChinhSachHoanTien;
 
+
     @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
     private List<HangVe> danhSachHangVe;
 
@@ -62,7 +63,12 @@ public class SuKien {
     @Column(name = "LaSuKienNoiBat")
     private Integer laSuKienNoiBat = 0;
 
+    @OneToMany(mappedBy = "suKien", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaiTro> danhSachTaiTro;
+
     // Getters and Setters
+    public List<TaiTro> getDanhSachTaiTro() { return danhSachTaiTro; }
+    public void setDanhSachTaiTro(List<TaiTro> danhSachTaiTro) { this.danhSachTaiTro = danhSachTaiTro; }
     public Long getMaSuKien() { return maSuKien; }
     public void setMaSuKien(Long maSuKien) { this.maSuKien = maSuKien; }
 
@@ -113,4 +119,5 @@ public class SuKien {
 
     public List<LichDien> getDanhSachLichDien() { return danhSachLichDien; }
     public void setDanhSachLichDien(List<LichDien> danhSachLichDien) { this.danhSachLichDien = danhSachLichDien; }
+
 }

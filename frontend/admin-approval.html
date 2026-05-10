@@ -67,6 +67,7 @@
         .event-card.admin-view {
             height: auto;
             border-color: rgba(255, 255, 255, 0.1);
+            position: relative; /* Cần thiết cho overlay định vị chính xác */
         }
         
         /* Giao diện Body Card Admin */
@@ -332,6 +333,7 @@
             opacity: 0;
             transition: opacity 0.3s;
             border-radius: 16px;
+            pointer-events: none; /* Quan trọng: Để không chặn click vào các nút bên dưới */
         }
 
         .processed .status-overlay {
@@ -388,6 +390,11 @@
         @media (max-width: 768px) {
             .approval-grid { grid-template-columns: 1fr; }
             .admin-hero { padding: 2rem; }
+        }
+
+        .custom-cursor {
+            pointer-events: none !important;
+            z-index: 99999;
         }
     </style>
 </head>
@@ -725,7 +732,7 @@
             });
 
             // Attach cursor events
-            attachCursorEvents(document.querySelectorAll('.action-btn, a, .btn'));
+            attachCursorEvents(document.querySelectorAll('.admin-btn, .action-btn, a, .btn'));
         }
 
         async function approveEvent(id) {
@@ -953,7 +960,7 @@
                 `;
                 grid.appendChild(card);
             });
-            attachCursorEvents(grid.querySelectorAll('.action-btn'));
+            attachCursorEvents(grid.querySelectorAll('.admin-btn, .action-btn, .btn-update-status'));
         }
 
         // Cập nhật trạng thái sự kiện - gọi Oracle trigger-aware endpoint

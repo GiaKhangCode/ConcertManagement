@@ -2,6 +2,16 @@ let lichDienCount = 0;
 let hangVeCount = 0;
 let refundRuleCount = 0;
 
+async function safeParseJson(response, stepName) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch (e) {
+        console.error(`[${stepName}] Lỗi giải mã JSON. Nội dung nhận được:`, text);
+        throw new Error(`[${stepName}] Lỗi hệ thống: Phản hồi không đúng định dạng.`);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
     if (!token) { alert("Vui lòng đăng nhập."); window.location.href = "auth.html"; return; }
@@ -9,12 +19,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res = await fetch('http://localhost:8081/api/admin/locations', { headers: { 'Authorization': 'Bearer ' + token } });
         if (res.ok) {
-            const list = await res.json();
+            const list = await safeParseJson(res, "Tải danh sách địa điểm");
             let html = '<option value="">-- [ Chọn địa điểm tổ chức ] --</option>';
             list.forEach(d => { html += `<option value="${d.maDiaDiem}">${d.tenDiaDiem} (Sức chứa: ${d.sucChua}) - ${d.tinhThanh}</option>`; });
             document.getElementById('maDiaDiem').innerHTML = html;
         }
-    } catch (e) { console.error("Lỗi tải địa điểm:", e); }
+        
+        // Kiểm tra thông tin nhà tổ chức
+        const profRes = await fetch('http://localhost:8081/api/user/profile', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (profRes.ok) {
+            const profile = await safeParseJson(profRes, "Tải thông tin cá nhân");
+            const isOrganizer = profile.roles && profile.roles.includes('ROLE_ORGANIZER');
+            const isAdmin = profile.roles && profile.roles.includes('ROLE_ADMIN');
+            
+            if (isOrganizer && !isAdmin && !profile.organizationName) {
+                alert("⚠️ Bạn cần thiết lập thông tin nhà tổ chức trước khi tạo sự kiện!");
+                window.location.href = "profile.html";
+                return;
+            }
+            
+            // Hiển thị form nếu hợp lệ
+            document.getElementById('main-admin-container').style.display = 'block';
+        }
+    } catch (e) { 
+        console.error("Lỗi khởi tạo:", e);
+        // Nếu lỗi API vẫn cho hiện để không bị kẹt trang trắng (hoặc có thể xử lý khác tùy UI)
+        document.getElementById('main-admin-container').style.display = 'block';
+    }
 
     // Toggle Location Sections
     const btnExisting = document.getElementById('btnExistingLoc');
@@ -99,7 +130,7 @@ async function loadEventData(id, token) {
             cache: 'no-store' 
         });
         if (!res.ok) throw new Error("Không thể tải dữ liệu.");
-        const data = await res.json();
+        const data = await safeParseJson(res, "Tải dữ liệu sự kiện để sửa");
         document.getElementById('tenSuKien').value = data.tenSuKien || '';
         document.getElementById('maDiaDiem').value = data.maDiaDiem || '';
         document.getElementById('eventPoster').value = data.anhBiaUrl || '';
@@ -137,6 +168,11 @@ async function loadEventData(id, token) {
             } else {
                 addRefundRule();
             }
+        }
+
+        // Load Sponsors
+        if (data.sponsors && data.sponsors.length > 0) {
+            data.sponsors.forEach(s => addSponsorRow(s));
         }
 
         // Load Stage Builder (SeatMap)
@@ -417,6 +453,34 @@ function addRefundRule(data = null) {
 }
 
 // =============================================
+// SPONSOR BUILDERS
+// =============================================
+function addSponsorRow(data = null) {
+    const id = `sp_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const html = `
+        <div class="dynamic-box" id="${id}" style="border-left-color: #50fa7b; background: rgba(80, 250, 123, 0.05); padding: 20px;">
+            <button class="remove-btn" type="button" onclick="removeEl('${id}')"><i class="fa fa-times-circle"></i></button>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size: 0.85rem; color: #50fa7b; margin-bottom: 5px; display: block;">Tên Nhà Tài Trợ</label>
+                    <input type="text" class="form-input sp-name" required placeholder="VD: Pepsi, Heineken..." value="${data?.name || ''}">
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #50fa7b; margin-bottom: 5px; display: block;">Hạng Tài Trợ</label>
+                    <select class="form-input sp-rank">
+                        <option value="Kim Cương" ${data?.rank === 'Kim Cương' ? 'selected' : ''}>Kim Cương</option>
+                        <option value="Vàng" ${data?.rank === 'Vàng' ? 'selected' : ''}>Vàng</option>
+                        <option value="Bạc" ${data?.rank === 'Bạc' ? 'selected' : ''}>Bạc</option>
+                        <option value="Đồng" ${data?.rank === 'Đồng' || !data?.rank ? 'selected' : ''}>Đồng</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('sponsorsContainer').insertAdjacentHTML('beforeend', html);
+}
+
+// =============================================
 // SUBMIT — 1 lần duy nhất, ghế tạo luôn trong backend
 // =============================================
 document.getElementById('createEventForm').addEventListener('submit', async (e) => {
@@ -529,7 +593,11 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         anhThumbnailUrl: document.getElementById('eventThumbnail').value,
         phanLoai: document.getElementById('phanLoai').value,
         moTa: document.getElementById('moTa').value,
-        lichDienList, hangVeList, refundPolicy
+        lichDienList, hangVeList, refundPolicy,
+        sponsors: Array.from(document.querySelectorAll('#sponsorsContainer .dynamic-box')).map(node => ({
+            name: node.querySelector('.sp-name').value.trim(),
+            rank: node.querySelector('.sp-rank').value
+        }))
     };
 
     try {
@@ -555,15 +623,18 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             });
 
             if (!locRes.ok) {
-                const errData = await locRes.json();
-                throw new Error("Lỗi tạo địa điểm: " + errData.message);
+                const locErrText = await locRes.text();
+                console.error("Lỗi tạo địa điểm:", locErrText);
+                throw new Error("Lỗi tạo địa điểm: " + locErrText);
             }
 
             // Backend của chúng ta hiện tại chỉ trả về Map.of("message", "Thêm địa điểm thành công!")
             // Chúng ta nên lấy ID từ danh sách mới hoặc backend nên trả về ID.
             // Để đơn giản và chắc chắn, tôi sẽ fetch lại danh sách địa điểm và tìm địa điểm vừa tạo theo tên.
             const listRes = await fetch('http://localhost:8081/api/admin/locations', { headers: { 'Authorization': 'Bearer ' + token } });
-            const list = await listRes.json();
+            const listText = await listRes.text();
+            let list = [];
+            try { list = JSON.parse(listText); } catch(e) { console.error("Lỗi parse list địa điểm sau tạo:", listText); }
             const createdLoc = list.find(l => l.tenDiaDiem === locPayload.tenDiaDiem);
             if (createdLoc) {
                 maDiaDiemFinal = createdLoc.maDiaDiem;
@@ -582,7 +653,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             isEdit ? `http://localhost:8081/api/admin/events/update/${existingId}` : 'http://localhost:8081/api/admin/events/create',
             { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload) }
         );
-        const data = await response.json();
+        const data = await safeParseJson(response, isEdit ? "Cập nhật sự kiện" : "Tạo sự kiện mới");
 
         if (response.ok) {
             const savedId = isEdit ? existingId : data.eventId;
@@ -605,12 +676,15 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             showMascotMessage(`✅ ${successMsg}`);
             setTimeout(() => window.location.href = 'event-management.html', 3000);
         } else {
-            showMascotMessage("❌ Lỗi: " + (data.message || 'Vui lòng thử lại'), true);
+            // Hiển thị nội dung lỗi cụ thể từ Backend
+            const errMsg = data.message || responseText || 'Vui lòng kiểm tra lại dữ liệu nhập vào.';
+            showMascotMessage("❌ Lỗi: " + errMsg, true);
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
         }
     } catch (err) {
-        showMascotMessage("⚠️ Không thể kết nối backend (port 8081).", true);
+        console.error("Lỗi khi lưu sự kiện:", err);
+        showMascotMessage("⚠️ Lỗi hệ thống hoặc kết nối: " + err.message, true);
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa fa-check-circle" style="margin-right:15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
     }
