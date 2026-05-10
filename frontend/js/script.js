@@ -3,8 +3,10 @@ const cursor = document.querySelector('.custom-cursor');
 let interactables = document.querySelectorAll('a, button, input, .event-card');
 
 document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
+    if (cursor) {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    }
 });
 
 function attachCursorEvents(els) {
@@ -342,6 +344,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
                 revenueNav.style.display = 'inline-flex';
+            }
+            const promotionsNav = document.getElementById('promotionsNav');
+            if(promotionsNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
+                promotionsNav.style.display = 'inline-flex';
             }
             if(adminNav && roles.includes('ROLE_ADMIN')) {
                 adminNav.style.display = 'inline-flex';

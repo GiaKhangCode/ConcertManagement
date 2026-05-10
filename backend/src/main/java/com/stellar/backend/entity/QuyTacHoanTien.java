@@ -1,6 +1,7 @@
 package com.stellar.backend.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 
 @Entity
@@ -12,6 +13,7 @@ public class QuyTacHoanTien {
     @Column(name = "MaQuyTac")
     private Long maQuyTac;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaChinhSachHT")
     private MauChinhSachHoanTien mauChinhSachHoanTien;

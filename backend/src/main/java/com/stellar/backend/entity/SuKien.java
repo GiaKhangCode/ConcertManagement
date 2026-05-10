@@ -1,10 +1,13 @@
 package com.stellar.backend.entity;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "SU_KIEN")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SuKien {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,9 +45,11 @@ public class SuKien {
     private MauChinhSachHoanTien mauChinhSachHoanTien;
 
 
+    @JsonIgnore
     @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
     private List<HangVe> danhSachHangVe;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "suKien", fetch = FetchType.LAZY)
     private List<LichDien> danhSachLichDien;
 
@@ -63,6 +68,7 @@ public class SuKien {
     @Column(name = "LaSuKienNoiBat")
     private Integer laSuKienNoiBat = 0;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "suKien", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaiTro> danhSachTaiTro;
 

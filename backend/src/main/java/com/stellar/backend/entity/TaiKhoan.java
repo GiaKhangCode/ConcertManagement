@@ -1,12 +1,14 @@
 package com.stellar.backend.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "TAI_KHOAN")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TaiKhoan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

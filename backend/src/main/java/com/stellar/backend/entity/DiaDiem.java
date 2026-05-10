@@ -1,8 +1,10 @@
 package com.stellar.backend.entity;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "DIA_DIEM")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class DiaDiem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaDiaDiem") private Long maDiaDiem;

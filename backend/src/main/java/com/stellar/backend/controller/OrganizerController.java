@@ -3,6 +3,7 @@ package com.stellar.backend.controller;
 import com.stellar.backend.dto.RevenueResponseDto;
 import com.stellar.backend.entity.SuKien;
 import com.stellar.backend.entity.Ve;
+import com.stellar.backend.repository.DonMuaRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.VeRepository;
 import com.stellar.backend.security.UserDetailsImpl;
@@ -26,6 +27,9 @@ public class OrganizerController {
 
     @Autowired
     private VeRepository veRepository;
+
+    @Autowired
+    private DonMuaRepository donMuaRepository;
 
     // Chỉ tính vé có trạng thái "Hiệu lực" hoặc "Đã check-in" là vé đã bán hợp lệ
     private static final List<String> TRANG_THAI_VE_HOP_LE = List.of("Hiệu lực", "Đã check-in");
@@ -55,25 +59,9 @@ public class OrganizerController {
                 long soVeHopLe = veRepository.countByHangVe_SuKien_MaSuKienAndTrangThaiVeIn(
                         sk.getMaSuKien(), TRANG_THAI_VE_HOP_LE);
 
-                // Tính doanh thu từ các vé hợp lệ (giá niêm yết * số lượng)
-                BigDecimal doanhThuSK = BigDecimal.ZERO;
-                if (soVeHopLe > 0) {
-                    // Lấy danh sách vé hợp lệ để tính doanh thu theo giá niêm yết
-                    List<Ve> veHopLeList = veRepository
-                            .findAll()
-                            .stream()
-                            .filter(v -> v.getHangVe() != null
-                                    && v.getHangVe().getSuKien() != null
-                                    && v.getHangVe().getSuKien().getMaSuKien().equals(sk.getMaSuKien())
-                                    && TRANG_THAI_VE_HOP_LE.contains(v.getTrangThaiVe()))
-                            .toList();
-
-                    for (Ve v : veHopLeList) {
-                        if (v.getHangVe() != null && v.getHangVe().getGiaNiemYet() != null) {
-                            doanhThuSK = doanhThuSK.add(v.getHangVe().getGiaNiemYet());
-                        }
-                    }
-                }
+                // Tính doanh thu thực tế từ các đơn hàng thành công của sự kiện này
+                BigDecimal doanhThuSK = donMuaRepository.sumGrossRevenueBySuKien_MaSuKien(sk.getMaSuKien());
+                if (doanhThuSK == null) doanhThuSK = BigDecimal.ZERO;
 
                 tongDoanhThu = tongDoanhThu.add(doanhThuSK);
                 tongSoVeBan += soVeHopLe;

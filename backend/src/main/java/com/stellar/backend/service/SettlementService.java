@@ -3,9 +3,11 @@ package com.stellar.backend.service;
 import com.stellar.backend.entity.LichSuHoanTien;
 import com.stellar.backend.entity.SuKien;
 import com.stellar.backend.entity.Ve;
+import com.stellar.backend.repository.DonMuaRepository;
 import com.stellar.backend.repository.LichSuHoanTienRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.VeRepository;
+import com.stellar.backend.entity.DonMua;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,9 @@ public class SettlementService {
     private VeRepository veRepository;
 
     @Autowired
+    private DonMuaRepository donMuaRepository;
+
+    @Autowired
     private LichSuHoanTienRepository lichSuHoanTienRepository;
 
     public Map<String, Object> getEventSettlement(Long eventId) {
@@ -47,11 +52,7 @@ public class SettlementService {
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
 
         // ── 1. THỐNG KÊ VÉ ──────────────────────────────────────────────────
-        List<Ve> allTickets = veRepository.findAll().stream()
-                .filter(v -> v.getHangVe() != null
-                        && v.getHangVe().getSuKien() != null
-                        && v.getHangVe().getSuKien().getMaSuKien().equals(eventId))
-                .toList();
+        List<Ve> allTickets = veRepository.findByHangVe_SuKien_MaSuKien(eventId);
 
         long totalTicketsSold  = allTickets.stream()
                 .filter(v -> !"Đã hủy".equals(v.getTrangThaiVe())).count(); // vé còn hiệu lực
@@ -59,11 +60,9 @@ public class SettlementService {
                 .filter(v -> "Đã hủy".equals(v.getTrangThaiVe())).count();
         long totalTicketsAll   = allTickets.size(); // tổng vé đã phát hành
 
-        // ── 2. DOANH THU GỘP (tất cả vé từng bán, kể cả đã hủy) ────────────
-        BigDecimal grossRevenue = allTickets.stream()
-                .filter(v -> v.getHangVe().getGiaNiemYet() != null)
-                .map(v -> v.getHangVe().getGiaNiemYet())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // ── 2. DOANH THU GỘP (tổng số tiền thực tế khách đã trả cho các đơn hàng) ──
+        BigDecimal grossRevenue = donMuaRepository.sumGrossRevenueBySuKien_MaSuKien(eventId);
+        if (grossRevenue == null) grossRevenue = BigDecimal.ZERO;
 
         // ── 3. TỔNG TIỀN ĐÃ HOÀN (từ bảng LICH_SU_HOAN_TIEN) ───────────────
         BigDecimal totalRefunds = lichSuHoanTienRepository.sumSoTienHoanBySuKien(eventId);

@@ -8,6 +8,7 @@ import java.util.List;
 @Repository
 public interface VeRepository extends JpaRepository<Ve, Long> {
     List<Ve> findByDonMua_MaDonMua(Long maDonMua);
+    List<Ve> findByHangVe_SuKien_MaSuKien(Long maSuKien);
     
     long countByHangVe_SuKien_MaSuKien(Long maSuKien);
     long countByHangVe_MaHangVe(Long maHangVe);

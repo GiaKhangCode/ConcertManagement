@@ -1,10 +1,12 @@
 package com.stellar.backend.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 @Entity
 @Table(name = "MAU_CHINH_SACH_HOAN_TIEN")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class MauChinhSachHoanTien {
 
     @Id

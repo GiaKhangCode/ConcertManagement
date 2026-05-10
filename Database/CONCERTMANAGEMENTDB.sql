@@ -1484,7 +1484,7 @@ BEGIN
 
     -- 5. TẠO 1 ĐƠN MUA DUY NHẤT
     INSERT INTO DON_MUA (MaTaiKhoan, MaSuKien, TongTien, TrangThaiThanhToan)
-    VALUES (p_MaTaiKhoan, v_MaSuKien, v_TongTien, N'Chờ thanh toán')
+    VALUES (p_MaTaiKhoan, v_MaSuKien, 0, N'Chờ thanh toán')
     RETURNING MaDonMua INTO p_MaDonMua;
 
     -- 6. CẬP NHẬT TRẠNG THÁI CHO TẤT CẢ CÁC GHẾ

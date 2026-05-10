@@ -18,4 +18,8 @@ public class BookingRequestDto {
     private java.util.List<String> dsGhe;
     public java.util.List<String> getDsGhe() { return dsGhe; }
     public void setDsGhe(java.util.List<String> dsGhe) { this.dsGhe = dsGhe; }
+
+    private String discountCode;
+    public String getDiscountCode() { return discountCode; }
+    public void setDiscountCode(String discountCode) { this.discountCode = discountCode; }
 }

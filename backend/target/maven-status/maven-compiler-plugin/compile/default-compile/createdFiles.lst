@@ -44,7 +44,6 @@ com\stellar\backend\dto\RevenueResponseDto.class
 com\stellar\backend\entity\NguoiDung.class
 com\stellar\backend\repository\LichSuHoanTienRepository.class
 com\stellar\backend\service\TicketService.class
-com\stellar\backend\controller\BookingController.class
 com\stellar\backend\dto\EventCreateRequestDto$HangVeDto.class
 com\stellar\backend\security\SecurityConfig.class
 com\stellar\backend\repository\YeuCauHoTroRepository.class
