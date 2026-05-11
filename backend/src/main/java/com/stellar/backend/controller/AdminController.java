@@ -880,7 +880,6 @@ public class AdminController {
      * Thêm địa điểm mới
      */
     @PostMapping("/locations")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createLocation(@RequestBody DiaDiemRequestDto request) {
         try {
             DiaDiem dd = new DiaDiem();

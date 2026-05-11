@@ -59,7 +59,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/events/**").permitAll()
-                    .requestMatchers("/api/admin/locations").permitAll()
+                    .requestMatchers("/api/admin/locations/**").permitAll()
                     .requestMatchers("/api/finance/resale").permitAll()
                     // Các route phân quyền chi tiết được xử lý bởi @PreAuthorize trong Controller
                     .anyRequest().authenticated()

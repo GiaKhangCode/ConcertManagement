@@ -12,6 +12,138 @@ async function safeParseJson(response, stepName) {
     }
 }
 
+/**
+ * Biến đổi một thẻ <select> thông thường thành một combobox có tính năng tìm kiếm (Autocomplete)
+ * @param {string} selectId - ID của thẻ select gốc
+ * @param {string} placeholder - Văn bản gợi ý khi chưa chọn
+ */
+function setupAutocomplete(selectId, placeholder = "Tìm kiếm...") {
+    const select = document.getElementById(selectId);
+    if (!select) return null;
+
+    // Tạo container
+    const container = document.createElement('div');
+    container.className = 'autocomplete-container';
+    select.parentNode.insertBefore(container, select);
+
+    // Tạo input giả để tìm kiếm và hiển thị giá trị đã chọn
+    const wrapper = document.createElement('div');
+    wrapper.className = 'autocomplete-input-wrapper';
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-input';
+    input.placeholder = placeholder;
+    input.autocomplete = 'off';
+    
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-chevron-down';
+    
+    wrapper.appendChild(input);
+    wrapper.appendChild(icon);
+    container.appendChild(wrapper);
+
+    // Tạo danh sách kết quả
+    const results = document.createElement('div');
+    results.className = 'autocomplete-results';
+    container.appendChild(results);
+
+    // Ẩn select gốc
+    select.style.display = 'none';
+
+    let options = [];
+
+    const updateOptionsList = () => {
+        options = Array.from(select.options).map(opt => ({
+            text: opt.text,
+            value: opt.value,
+            element: opt
+        })).filter(opt => opt.value !== "");
+        
+        // Cập nhật giá trị hiển thị ban đầu nếu có
+        if (select.selectedIndex >= 0 && select.value !== "") {
+            input.value = select.options[select.selectedIndex].text;
+        } else {
+            input.value = "";
+        }
+    };
+
+    const renderResults = (filter = "") => {
+        results.innerHTML = "";
+        const filtered = options.filter(opt => 
+            opt.text.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        if (filtered.length === 0) {
+            results.innerHTML = `<div class="autocomplete-no-results">Không tìm thấy kết quả phù hợp</div>`;
+            return;
+        }
+
+        filtered.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-option';
+            if (opt.value === select.value) div.classList.add('selected');
+            div.textContent = opt.text;
+            div.onclick = () => {
+                select.value = opt.value;
+                input.value = opt.text;
+                container.classList.remove('active');
+                select.dispatchEvent(new Event('change'));
+            };
+            results.appendChild(div);
+        });
+    };
+
+    // Events
+    input.onfocus = () => {
+        updateOptionsList();
+        renderResults(""); // Hiển thị tất cả kết quả khi click vào để người dùng dễ chọn lại
+        container.classList.add('active');
+        input.select(); // Bôi đen text để dễ dàng xóa/thay thế
+    };
+
+    input.oninput = () => {
+        renderResults(input.value);
+    };
+
+    // Đóng khi click ngoài
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            container.classList.remove('active');
+            // Reset input về giá trị đã chọn nếu người dùng xóa sạch mà không chọn cái mới
+            if (select.selectedIndex >= 0 && select.value !== "") {
+                input.value = select.options[select.selectedIndex].text;
+            } else if (!select.value) {
+                input.value = "";
+            }
+        }
+    });
+
+    // Theo dõi thay đổi của select gốc để cập nhật input (ví dụ khi load dữ liệu edit)
+    const observer = new MutationObserver(() => {
+        updateOptionsList();
+        input.disabled = select.disabled;
+        if (select.disabled) container.classList.add('disabled');
+        else container.classList.remove('disabled');
+    });
+    observer.observe(select, { childList: true, attributes: true, attributeFilter: ['disabled'] });
+
+    // Khởi tạo trạng thái disabled ban đầu
+    input.disabled = select.disabled;
+    if (select.disabled) container.classList.add('disabled');
+
+    // Hỗ trợ cập nhật input khi giá trị select thay đổi từ code
+    select.addEventListener('change', () => {
+        if (select.selectedIndex >= 0 && select.value !== "") {
+            input.value = select.options[select.selectedIndex].text;
+        } else {
+            input.value = "";
+        }
+    });
+
+    return { refresh: updateOptionsList };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('stellar_token');
     if (!token) { alert("Vui lòng đăng nhập."); window.location.href = "auth.html"; return; }
@@ -23,7 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             let html = '<option value="">-- [ Chọn địa điểm tổ chức ] --</option>';
             list.forEach(d => { html += `<option value="${d.maDiaDiem}">${d.tenDiaDiem} (Sức chứa: ${d.sucChua}) - ${d.tinhThanh}</option>`; });
             document.getElementById('maDiaDiem').innerHTML = html;
+            
+            // Khởi tạo autocomplete cho maDiaDiem sau khi đã tải xong data
+            setupAutocomplete('maDiaDiem', "Tìm kiếm địa điểm...");
         }
+
+        // Khởi tạo autocomplete cho Phân loại sự kiện
+        setupAutocomplete('phanLoai', "-- [ Chọn thể loại ] --");
         
         // Kiểm tra thông tin nhà tổ chức
         const profRes = await fetch('http://localhost:8081/api/user/profile', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -81,9 +219,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const provinces = await fetch('https://provinces.open-api.vn/api/v2/p/').then(r => r.json());
         provinces.forEach(p => pSelect.add(new Option(p.name, p.code)));
 
+        // Khởi tạo autocomplete cho Tỉnh/Thành
+        setupAutocomplete('province', "Chọn Tỉnh/Thành...");
+        // Khởi tạo autocomplete cho Phường/Xã
+        setupAutocomplete('ward', "Chọn Phường/Xã...");
+
         pSelect.onchange = async () => {
             wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
             wSelect.disabled = true;
+            
+            // Dispatch event để autocomplete của ward biết là options đã bị xóa
+            wSelect.dispatchEvent(new Event('change'));
+
             if (pSelect.value) {
                 const data = await fetch(`https://provinces.open-api.vn/api/v2/p/${pSelect.value}?depth=2`).then(r => r.json());
                 if (data.wards) {
@@ -132,10 +279,24 @@ async function loadEventData(id, token) {
         if (!res.ok) throw new Error("Không thể tải dữ liệu.");
         const data = await safeParseJson(res, "Tải dữ liệu sự kiện để sửa");
         document.getElementById('tenSuKien').value = data.tenSuKien || '';
-        document.getElementById('maDiaDiem').value = data.maDiaDiem || '';
+        
+        // Gán địa điểm và kích hoạt sự kiện để autocomplete cập nhật UI
+        const maDiaDiemEl = document.getElementById('maDiaDiem');
+        if (maDiaDiemEl) {
+            maDiaDiemEl.value = data.maDiaDiem || '';
+            maDiaDiemEl.dispatchEvent(new Event('change'));
+        }
+
         document.getElementById('eventPoster').value = data.anhBiaUrl || '';
         document.getElementById('eventThumbnail').value = data.anhThumbnailUrl || '';
-        document.getElementById('phanLoai').value = data.phanLoai || '';
+        
+        // Gán phân loại và kích hoạt sự kiện
+        const phanLoaiEl = document.getElementById('phanLoai');
+        if (phanLoaiEl) {
+            phanLoaiEl.value = data.phanLoai || '';
+            phanLoaiEl.dispatchEvent(new Event('change'));
+        }
+
         document.getElementById('moTa').value = data.moTa || '';
 
         // Khởi tạo flatpickr TRƯỜC, sau đó dùng setDate() — không gán value trực tiếp
@@ -486,6 +647,33 @@ function addSponsorRow(data = null) {
 document.getElementById('createEventForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('stellar_token');
+    const existingId = new URLSearchParams(window.location.search).get('id');
+    const isEdit = !!existingId;
+    const submitBtn = document.getElementById('submitEventBtn');
+
+    // Validation cơ bản trước khi xử lý
+    const requiredFields = [
+        { id: 'tenSuKien', name: 'Tên sự kiện' },
+        { id: 'maDiaDiem', name: 'Địa điểm' },
+        { id: 'thoiGianMoBanVe', name: 'Thời gian mở bán vé' },
+        { id: 'thoiGianNgungBanVe', name: 'Thời gian ngừng bán vé' },
+        { id: 'thoiGianBD', name: 'Thời gian bắt đầu sự kiện' },
+        { id: 'thoiGianKT', name: 'Thời gian kết thúc sự kiện' },
+        { id: 'eventPoster', name: 'URL Ảnh Poster' },
+        { id: 'eventThumbnail', name: 'URL Ảnh Thumbnail' }
+    ];
+
+    for (const field of requiredFields) {
+        const el = document.getElementById(field.id);
+        // Nếu đang chọn địa điểm mới thì không check maDiaDiem selector
+        if (field.id === 'maDiaDiem' && document.getElementById('btnNewLoc').classList.contains('active')) continue;
+        
+        if (el && !el.value.trim()) {
+            alert(`Vui lòng nhập: ${field.name}`);
+            el.focus();
+            return;
+        }
+    }
 
     const lichDienList = [];
     document.querySelectorAll('#lichDienContainer .dynamic-box').forEach(node => {
@@ -499,57 +687,56 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
     });
 
     const hangVeList = [];
-    document.querySelectorAll('#hangVeContainer .dynamic-box').forEach(hvNode => {
-        const maHangVe = hvNode.dataset.maHangVe;
-        const khuVucList = [];
-        hvNode.querySelectorAll('.kv-item').forEach(kvEl => {
-            const maKhuVuc = kvEl.dataset.maKhuVuc;
-            const kvData = {
-                maKhuVuc: maKhuVuc ? parseInt(maKhuVuc) : null,
-                tenKhuVuc: kvEl.querySelector('.kv-name').value.trim(),
-                sucChuaKv: parseInt(kvEl.querySelector('.kv-capacity').value) || 0
-            };
-            // Thu thập cấu hình hàng ghế (rowConfigs)
-            const rowItems = kvEl.querySelectorAll('.kv-row-item');
-            if (rowItems.length > 0) {
-                const rowConfigs = [];
-                let totalSeatsInRows = 0;
-                rowItems.forEach(item => {
-                    const label = item.querySelector('.row-label').value.trim();
-                    const qty = parseInt(item.querySelector('.row-qty').value) || 0;
-                    if (label && qty > 0) {
-                        rowConfigs.push({ rowLabel: label, seatCount: qty });
-                        totalSeatsInRows += qty;
+    try {
+        document.querySelectorAll('#hangVeContainer .dynamic-box').forEach(hvNode => {
+            const maHangVe = hvNode.dataset.maHangVe;
+            const khuVucList = [];
+            hvNode.querySelectorAll('.kv-item').forEach(kvEl => {
+                const maKhuVuc = kvEl.dataset.maKhuVuc;
+                const kvData = {
+                    maKhuVuc: maKhuVuc ? parseInt(maKhuVuc) : null,
+                    tenKhuVuc: kvEl.querySelector('.kv-name').value.trim(),
+                    sucChuaKv: parseInt(kvEl.querySelector('.kv-capacity').value) || 0
+                };
+                // Thu thập cấu hình hàng ghế (rowConfigs)
+                const rowItems = kvEl.querySelectorAll('.kv-row-item');
+                if (rowItems.length > 0) {
+                    const rowConfigs = [];
+                    let totalSeatsInRows = 0;
+                    rowItems.forEach(item => {
+                        const label = item.querySelector('.row-label').value.trim();
+                        const qty = parseInt(item.querySelector('.row-qty').value) || 0;
+                        if (label && qty > 0) {
+                            rowConfigs.push({ rowLabel: label, seatCount: qty });
+                            totalSeatsInRows += qty;
+                        }
+                    });
+
+                    const capacity = parseInt(kvEl.querySelector('.kv-capacity').value) || 0;
+                    if (totalSeatsInRows > capacity) {
+                        alert(`Khu vực "${kvData.tenKhuVuc}" có tổng số ghế (${totalSeatsInRows}) vượt quá sức chứa (${capacity})!`);
+                        throw new Error("Validation failed");
                     }
-                });
 
-                const capacity = parseInt(kvEl.querySelector('.kv-capacity').value) || 0;
-                if (totalSeatsInRows > capacity) {
-                    alert(`Khu vực "${kvData.tenKhuVuc}" có tổng số ghế (${totalSeatsInRows}) vượt quá sức chứa (${capacity})!`);
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
-                    throw new Error("Validation failed");
+                    if (rowConfigs.length > 0) {
+                        kvData.rowConfigs = rowConfigs;
+                    }
                 }
-
-                if (rowConfigs.length > 0) {
-                    kvData.rowConfigs = rowConfigs;
-                }
-            }
-            khuVucList.push(kvData);
+                khuVucList.push(kvData);
+            });
+            hangVeList.push({
+                maHangVe: maHangVe ? parseInt(maHangVe) : null,
+                tenHangVe: hvNode.querySelector('.hv-name').value,
+                giaNiemYet: parseFloat(hvNode.querySelector('.hv-price').value),
+                tongSoLuong: parseInt(hvNode.querySelector('.hv-qty').value),
+                khuVucList
+            });
         });
-        hangVeList.push({
-            maHangVe: maHangVe ? parseInt(maHangVe) : null,
-            tenHangVe: hvNode.querySelector('.hv-name').value,
-            giaNiemYet: parseFloat(hvNode.querySelector('.hv-price').value),
-            tongSoLuong: parseInt(hvNode.querySelector('.hv-qty').value),
-            khuVucList
-        });
-    });
+    } catch (e) {
+        if (e.message === "Validation failed") return;
+        throw e;
+    }
 
-    const existingId = new URLSearchParams(window.location.search).get('id');
-    const isEdit = !!existingId;
-
-    const submitBtn = document.getElementById('submitEventBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${isEdit ? 'ĐANG CẬP NHẬT...' : 'ĐANG LƯU...'}`;
 
@@ -605,16 +792,33 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
 
         // Nếu người dùng chọn "Thêm địa điểm mới"
         if (document.getElementById('btnNewLoc').classList.contains('active')) {
-            const provinceName = document.getElementById('province').options[document.getElementById('province').selectedIndex].text;
-            const wardName = document.getElementById('ward').options[document.getElementById('ward').selectedIndex].text;
+            const pSel = document.getElementById('province');
+            const wSel = document.getElementById('ward');
+            
+            if (!pSel.value || !wSel.value) {
+                alert("Vui lòng chọn Tỉnh/Thành và Phường/Xã!");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
+                return;
+            }
+
+            const provinceName = pSel.options[pSel.selectedIndex].text;
+            const wardName = wSel.options[wSel.selectedIndex].text;
 
             const locPayload = {
-                tenDiaDiem: document.getElementById('newTenDiaDiem').value,
+                tenDiaDiem: document.getElementById('newTenDiaDiem').value.trim(),
                 sucChua: parseInt(document.getElementById('newSucChua').value) || 0,
                 tinhThanh: provinceName,
                 phuongXa: wardName,
-                soNhaTenDuong: document.getElementById('newSoNhaTenDuong').value
+                soNhaTenDuong: document.getElementById('newSoNhaTenDuong').value.trim()
             };
+
+            if (!locPayload.tenDiaDiem || locPayload.sucChua <= 0) {
+                alert("Vui lòng nhập tên địa điểm và sức chứa hợp lệ!");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
+                return;
+            }
 
             const locRes = await fetch('http://localhost:8081/api/admin/locations', {
                 method: 'POST',
@@ -628,9 +832,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
                 throw new Error("Lỗi tạo địa điểm: " + locErrText);
             }
 
-            // Backend của chúng ta hiện tại chỉ trả về Map.of("message", "Thêm địa điểm thành công!")
-            // Chúng ta nên lấy ID từ danh sách mới hoặc backend nên trả về ID.
-            // Để đơn giản và chắc chắn, tôi sẽ fetch lại danh sách địa điểm và tìm địa điểm vừa tạo theo tên.
+            // Fetch lại danh sách địa điểm và tìm địa điểm vừa tạo theo tên.
             const listRes = await fetch('http://localhost:8081/api/admin/locations', { headers: { 'Authorization': 'Bearer ' + token } });
             const listText = await listRes.text();
             let list = [];
@@ -677,7 +879,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             setTimeout(() => window.location.href = 'event-management.html', 3000);
         } else {
             // Hiển thị nội dung lỗi cụ thể từ Backend
-            const errMsg = data.message || responseText || 'Vui lòng kiểm tra lại dữ liệu nhập vào.';
+            const errMsg = data.message || 'Vui lòng kiểm tra lại dữ liệu nhập vào.';
             showMascotMessage("❌ Lỗi: " + errMsg, true);
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
@@ -686,6 +888,6 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         console.error("Lỗi khi lưu sự kiện:", err);
         showMascotMessage("⚠️ Lỗi hệ thống hoặc kết nối: " + err.message, true);
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa fa-check-circle" style="margin-right:15px;"></i> XÁC NHẬN VÀ LƯU SỰ KIỆN';
+        submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
     }
 });

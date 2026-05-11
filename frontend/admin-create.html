@@ -115,12 +115,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Mở Bán Vé</label>
-                    <input type="text" id="thoiGianMoBanVe" class="form-input dt-picker" required placeholder="Chọn ngày mở bán...">
-                    <div class="time-hint">Định dạng: Ngày/Tháng/Năm Giờ:Phút</div>
+                    <input type="text" id="thoiGianMoBanVe" class="form-input dt-picker" placeholder="Chọn ngày mở bán...">
                 </div>
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Ngừng Bán Vé</label>
-                    <input type="text" id="thoiGianNgungBanVe" class="form-input dt-picker" required placeholder="Chọn ngày ngừng bán...">
+                    <input type="text" id="thoiGianNgungBanVe" class="form-input dt-picker" placeholder="Chọn ngày kết thúc bán...">
                     <div class="time-hint">Định dạng: Ngày/Tháng/Năm Giờ:Phút</div>
                 </div>
             </div>
@@ -138,7 +137,8 @@
                 </div>
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Phân Loại Sự Kiện</label>
-                    <select id="phanLoai" class="form-input" required>
+                    <select id="phanLoai" class="form-input">
+                        <option value="">-- [ Chọn thể loại ] --</option>
                         <option value="music">Âm Nhạc (Concert, Live show...)</option>
                         <option value="theater">Sân Khấu & Nghệ Thuật</option>
                         <option value="workshop">Workshop & Hội Thảo</option>
@@ -151,12 +151,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Bắt Đầu Sự Kiện (Tổng quát)</label>
-                    <input type="text" id="thoiGianBD" class="form-input dt-picker" required placeholder="Chọn ngày bắt đầu...">
-                    <div class="time-hint">Định dạng: Ngày/Tháng/Năm Giờ:Phút</div>
+                    <input type="text" id="thoiGianBD" class="form-input dt-picker" placeholder="Chọn ngày bắt đầu...">
                 </div>
                 <div>
                     <label style="font-size: 0.9rem; color: #a0a5b5; margin-bottom: 8px; display: block;">Thời Gian Kết Thúc Sự Kiện</label>
-                    <input type="text" id="thoiGianKT" class="form-input dt-picker" required placeholder="Chọn ngày kết thúc...">
+                    <input type="text" id="thoiGianKT" class="form-input dt-picker" placeholder="Chọn ngày kết thúc...">
                     <div class="time-hint">Định dạng: Ngày/Tháng/Năm Giờ:Phút</div>
                 </div>
             </div>
@@ -392,6 +391,87 @@
             border-color: #00f3ff !important;
             font-weight: bold;
         }
+
+        /* Autocomplete Styles */
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+        .autocomplete-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .autocomplete-input-wrapper i {
+            position: absolute;
+            right: 15px;
+            color: rgba(255,255,255,0.4);
+            pointer-events: none;
+            transition: transform 0.3s;
+        }
+        .autocomplete-container.active .autocomplete-input-wrapper i {
+            transform: rotate(180deg);
+            color: var(--primary-cyan);
+        }
+        .autocomplete-results {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: rgba(15, 20, 35, 0.95);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            animation: fadeIn 0.2s ease-out;
+        }
+        .autocomplete-container.active .autocomplete-results {
+            display: block;
+        }
+        .autocomplete-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e6ed;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .autocomplete-option:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-option:hover {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--primary-cyan);
+            padding-left: 25px;
+        }
+        .autocomplete-option.selected {
+            background: rgba(0, 243, 255, 0.15);
+            color: var(--primary-cyan);
+            font-weight: 600;
+        }
+        .autocomplete-no-results {
+            padding: 15px;
+            color: #ff5555;
+            text-align: center;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+        .autocomplete-container.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .autocomplete-container.disabled input {
+            cursor: not-allowed;
+        }
+        /* Custom scrollbar for results */
+        .autocomplete-results::-webkit-scrollbar { width: 6px; }
+        .autocomplete-results::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .autocomplete-results::-webkit-scrollbar-thumb { background: rgba(0,243,255,0.2); border-radius: 10px; }
+        .autocomplete-results::-webkit-scrollbar-thumb:hover { background: rgba(0,243,255,0.4); }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
