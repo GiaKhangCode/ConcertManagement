@@ -477,6 +477,14 @@
                 <div class="loading-spinner"><div class="spinner"></div></div>
             </div>
         </section>
+        
+        <!-- Rejected Events Section -->
+        <section class="events-section fade-up stagger-1" style="margin-top: 5rem;">
+            <h2 class="section-title">SỰ KIỆN ĐÃ TỪ CHỐI (REJECTED)</h2>
+            <div class="approval-grid" id="rejectedGrid">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </section>
     </main>
 
     <!-- Toast Notification -->
@@ -487,14 +495,17 @@
     </footer>
 
     <script>
-        // Custom cursor
+        // === HELPERS & UI ===
         const cursor = document.querySelector('.custom-cursor');
         document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
+            if (cursor) {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            }
         });
 
         function attachCursorEvents(els) {
+            if (!cursor) return;
             els.forEach(el => {
                 el.addEventListener('mouseenter', () => {
                     cursor.style.transform = 'translate(-50%, -50%) scale(2.5)';
@@ -509,49 +520,63 @@
             });
         }
 
-        // Toast notification
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
+            if (!toast) return;
             toast.className = `toast ${type}`;
             toast.innerHTML = `${type === 'success' ? '✅' : '❌'} ${message}`;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        // Kiểm tra quyền truy cập & Đồng bộ Header (Sử dụng logic chuẩn từ script.js)
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Chưa xác định';
+            try {
+                return new Date(dateStr).toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function getStatusClass(status) {
+            const map = {
+                'Sắp diễn ra': 'sapdiendra',
+                'Đang diễn ra': 'dangdiendra',
+                'Đã kết thúc': 'daketthuc',
+                'Đã hủy': 'dahuy',
+                'Chờ phê duyệt': 'alert',
+                'Bị từ chối': 'alert'
+            };
+            return map[status] || 'live';
+        }
+
+        // === AUTH & INITIALIZATION ===
         document.addEventListener('DOMContentLoaded', () => {
             const currentUser = localStorage.getItem('stellar_user');
             const rolesStr = localStorage.getItem('stellar_roles');
             const token = localStorage.getItem('stellar_token');
 
-            // Role-based Access Control UI
-            if(rolesStr) {
-                try {
-                    const roles = JSON.parse(rolesStr);
-                    const createEventNav = document.getElementById('createEventNav');
-                    const revenueNav = document.getElementById('revenueNav');
-                    const adminNav = document.getElementById('adminNav');
-                    const locationNav = document.getElementById('locationNav');
-                    const myTicketsNav = document.getElementById('myTicketsNav');
-
-                    if(myTicketsNav) myTicketsNav.style.display = 'inline-flex';
-
-                    if(createEventNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        createEventNav.style.display = 'inline-flex';
-                    }
-                    if(revenueNav && (roles.includes('ROLE_ORGANIZER') || roles.includes('ROLE_ADMIN'))) {
-                        revenueNav.style.display = 'inline-flex';
-                    }
-                    if(adminNav && roles.includes('ROLE_ADMIN')) {
-                        adminNav.style.display = 'inline-flex';
-                    }
-                    if(locationNav && roles.includes('ROLE_ADMIN')) {
-                        locationNav.style.display = 'inline-flex';
-                    }
-                } catch(e) {}
+            if (!token) {
+                window.location.href = 'auth.html';
+                return;
             }
 
-            // Đồng bộ UI Header (Username & Dropdown)
+            let roles = [];
+            try { roles = JSON.parse(rolesStr || '[]'); } catch(e) {}
+
+            if (!roles.includes('ROLE_ADMIN')) {
+                alert('Truy cập bị từ chối. Chỉ dành cho Quản Trị Viên (Admin).');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Sync Header UI
             const authBtn = document.getElementById('authBtn');
             const accountDropdown = document.getElementById('accountDropdown');
             const userNameLabel = document.getElementById('userNameDropdown');
@@ -569,30 +594,28 @@
                 }
             }
 
+            // Show Admin Navs
+            const adminNav = document.getElementById('adminNav');
+            if (adminNav) adminNav.style.display = 'inline-flex';
+            
+            const revenueNav = document.getElementById('revenueNav');
+            if (revenueNav) revenueNav.style.display = 'inline-flex';
 
-            if (!token) {
-                window.location.href = 'auth.html';
-                return;
-            }
+            const createEventNav = document.getElementById('createEventNav');
+            if (createEventNav) createEventNav.style.display = 'inline-flex';
 
-            let roles = [];
-            try { roles = JSON.parse(rolesStr || '[]'); } catch(e) {}
+            const promotionsNav = document.getElementById('promotionsNav');
+            if (promotionsNav) promotionsNav.style.display = 'inline-flex';
 
-            if (!roles.includes('ROLE_ADMIN')) {
-                alert('Truy cập bị từ chối. Chỉ dành cho Quản Trị Viên (Admin).');
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Kích hoạt hiệu ứng fade-up cho các section (vì trang này không dùng script.js chung)
             initScrollReveal();
 
+            // Load Data
             loadPendingEvents(token);
             loadApprovedEvents(token);
             loadRefundRequests(token);
+            loadRejectedEvents(token);
         });
 
-        // Scroll Reveal Animation — cần thiết vì trang này không import script.js
         function initScrollReveal() {
             const revealEls = document.querySelectorAll('.fade-up');
             const observer = new IntersectionObserver((entries) => {
@@ -606,7 +629,7 @@
             revealEls.forEach(el => observer.observe(el));
         }
 
-
+        // === DATA LOADERS ===
         async function loadPendingEvents(token) {
             const grid = document.getElementById('approvalGrid');
             try {
@@ -614,36 +637,15 @@
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
-                if (res.status === 403 || res.status === 401) {
-                    alert('Phiên đăng nhập hết hạn hoặc không đủ quyền.');
-                    window.location.href = 'auth.html';
-                    return;
-                }
-
                 if (!res.ok) {
-                    let errMsg = `Lỗi server (${res.status})`;
-                    try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(_) {}
-                    grid.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1/-1;">
-                            <div class="empty-icon">⚠️</div>
-                            <h3>Lỗi tải dữ liệu</h3>
-                            <p>${errMsg}</p>
-                        </div>`;
-                    document.getElementById('pendingCountText').textContent = 'Không thể tải';
+                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>Lỗi tải dữ liệu (${res.status})</h3></div>`;
                     return;
                 }
 
                 const events = await res.json();
                 renderPendingEvents(events);
             } catch (e) {
-                console.error('Lỗi tải sự kiện:', e);
-                grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon">⚠️</div>
-                        <h3>Không thể kết nối Backend</h3>
-                        <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
-                    </div>`;
-                document.getElementById('pendingCountText').textContent = 'Không thể tải';
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>Không thể kết nối Backend</h3></div>`;
             }
         }
 
@@ -652,30 +654,14 @@
             const countText = document.getElementById('pendingCountText');
 
             if (!events || events.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon">🎉</div>
-                        <h3>Tất cả đã được xử lý!</h3>
-                        <p>Không có sự kiện nào đang chờ phê duyệt. Tuyệt vời!</p>
-                    </div>`;
-                countText.textContent = '0 sự kiện chờ duyệt';
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>Tất cả đã được xử lý!</h3></div>`;
+                if (countText) countText.textContent = '0 sự kiện chờ duyệt';
                 return;
             }
 
-            countText.textContent = `${events.length} sự kiện chờ duyệt`;
-            grid.innerHTML = '';
-
-            events.forEach((ev, idx) => {
-                const card = document.createElement('div');
-                card.className = 'event-card admin-view';
-                card.style.animationDelay = `${idx * 0.1}s`;
-                card.id = `event-card-${ev.maSuKien}`;
-
-                const dateStr = ev.thoiGianBD 
-                    ? new Date(ev.thoiGianBD).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                    : 'Chưa xác định';
-
-                card.innerHTML = `
+            if (countText) countText.textContent = `${events.length} sự kiện chờ duyệt`;
+            grid.innerHTML = events.map((ev, idx) => `
+                <div class="event-card admin-view" id="event-card-${ev.maSuKien}" style="animation-delay: ${idx * 0.1}s">
                     <div class="status-overlay" id="overlay-${ev.maSuKien}">
                         <div class="status-msg" id="msg-${ev.maSuKien}"></div>
                     </div>
@@ -684,58 +670,122 @@
                     </div>
                     <div class="card-body">
                         <h3>${ev.tenSuKien}</h3>
-                        
                         <div class="card-meta-grid">
-                            <div class="meta-item">
-                                <span class="meta-label">Thời gian</span>
-                                <span class="meta-value">${dateStr}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Địa điểm</span>
-                                <span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Phân loại</span>
-                                <span class="meta-value">${ev.phanLoai || 'Chưa phân loại'}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">ID Sự kiện</span>
-                                <span class="meta-value">#${ev.maSuKien}</span>
-                            </div>
+                            <div class="meta-item"><span class="meta-label">Thời gian</span><span class="meta-value">${formatDate(ev.thoiGianBD)}</span></div>
+                            <div class="meta-item"><span class="meta-label">Địa điểm</span><span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span></div>
+                            <div class="meta-item"><span class="meta-label">Phân loại</span><span class="meta-value">${ev.phanLoai || 'Chưa phân loại'}</span></div>
+                            <div class="meta-item"><span class="meta-label">ID</span><span class="meta-value">#${ev.maSuKien}</span></div>
                         </div>
-
-                        <div class="admin-description">
-                            ${ev.moTa ? ev.moTa : '<i>Không có mô tả chi tiết cho sự kiện này.</i>'}
-                        </div>
-
+                        <div class="admin-description">${ev.moTa || '<i>Không có mô tả chi tiết.</i>'}</div>
                         <div class="organizer-info">
                             <div class="organizer-avatar">${(ev.nguoiTao || 'U').charAt(0).toUpperCase()}</div>
                             <div class="organizer-name">${ev.nguoiTao || 'Người dùng ẩn danh'}</div>
                         </div>
-
                         <div class="card-actions">
-                            <button class="admin-btn btn-approve" onclick="approveEvent(${ev.maSuKien})">
-                                <i class="fa fa-check-circle"></i> Duyệt
-                            </button>
-                            <button class="admin-btn btn-reject" onclick="rejectEvent(${ev.maSuKien})">
-                                <i class="fa fa-times-circle"></i> Từ chối
-                            </button>
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;">
-                                <i class="fa fa-edit"></i> Sửa
-                            </a>
-                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})">
-                                <i class="fa fa-trash"></i> Xóa
-                            </button>
+                            <button class="admin-btn btn-approve" onclick="approveEvent(${ev.maSuKien})"><i class="fa fa-check-circle"></i> Duyệt</button>
+                            <button class="admin-btn btn-reject" onclick="rejectEvent(${ev.maSuKien})"><i class="fa fa-times-circle"></i> Từ chối</button>
+                            <a href="event-detail.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;"><i class="fa fa-info-circle"></i> Chi tiết</a>
+                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})"><i class="fa fa-trash"></i> Xóa</button>
                         </div>
                     </div>
-                `;
-                grid.appendChild(card);
-            });
-
-            // Attach cursor events
-            attachCursorEvents(document.querySelectorAll('.admin-btn, .action-btn, a, .btn'));
+                </div>
+            `).join('');
+            attachCursorEvents(grid.querySelectorAll('.admin-btn, a'));
         }
 
+        async function loadApprovedEvents(token) {
+            const grid = document.getElementById('featureGrid');
+            try {
+                const res = await fetch('http://localhost:8081/api/admin/approved-events', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) return;
+                const events = await res.json();
+                renderApprovedEvents(events);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderApprovedEvents(events) {
+            const grid = document.getElementById('featureGrid');
+            if (!events || events.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>Chưa có sự kiện khả dụng</h3></div>`;
+                return;
+            }
+
+            grid.innerHTML = events.map((ev, idx) => {
+                const statusClass = getStatusClass(ev.trangThai || 'Sắp diễn ra');
+                const isFinal = ['Đã kết thúc', 'Đã hủy'].includes(ev.trangThai);
+                return `
+                <div class="event-card admin-view" id="feature-card-${ev.maSuKien}" style="animation-delay: ${idx * 0.1}s; ${ev.laSuKienNoiBat ? 'border-color: var(--accent-secondary); box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);' : ''}">
+                    <div class="card-image" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://via.placeholder.com/400x225'}');">
+                        <div class="status-badge ${statusClass}" id="status-badge-${ev.maSuKien}">
+                            ${ev.laSuKienNoiBat ? '⭐ ' : ''}${ev.trangThai || 'Sắp diễn ra'}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h3>${ev.tenSuKien}</h3>
+                        <div class="card-meta-grid">
+                            <div class="meta-item"><span class="meta-label">Thời gian</span><span class="meta-value">${formatDate(ev.thoiGianBD)}</span></div>
+                            <div class="meta-item"><span class="meta-label">Địa điểm</span><span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span></div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
+                                <i class="fa fa-star"></i> ${ev.laSuKienNoiBat ? 'Đang Nổi Bật' : 'Nổi bật'}
+                            </button>
+                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;"><i class="fa fa-edit"></i> Sửa</a>
+                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})"><i class="fa fa-trash"></i> Xóa</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            attachCursorEvents(grid.querySelectorAll('.admin-btn, .btn-update-status'));
+        }
+
+        async function loadRejectedEvents(token) {
+            const grid = document.getElementById('rejectedGrid');
+            try {
+                const res = await fetch('http://localhost:8081/api/admin/rejected-events', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><h3>Không có sự kiện bị từ chối</h3></div>';
+                    return;
+                }
+                grid.innerHTML = data.map(sk => `
+                    <div class="event-card admin-view" id="rejected-card-${sk.maSuKien}">
+                        <div class="card-image" style="background-image: url('${sk.anhThumbnailUrl || sk.anhBiaUrl || 'https://via.placeholder.com/400x225'}');">
+                            <div class="status-badge alert">BỊ TỪ CHỐI</div>
+                        </div>
+                        <div class="card-body">
+                            <h3>${sk.tenSuKien}</h3>
+                            <div class="card-meta-grid">
+                                <div class="meta-item"><span class="meta-label">Người tạo</span><span class="meta-value">${sk.nguoiTao || 'N/A'}</span></div>
+                                <div class="meta-item"><span class="meta-label">ID</span><span class="meta-value">#${sk.maSuKien}</span></div>
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background: rgba(255, 51, 102, 0.1); border-radius: 8px; font-size: 0.85rem; color: #ff8fa3;">
+                                <b>Lý do:</b> ${sk.lyDoTuChoi || 'Không có lý do'}
+                            </div>
+                            <div class="card-actions" style="margin-top:15px;">
+                                <button class="admin-btn btn-approve" onclick="approveEvent(${sk.maSuKien})">
+                                    <i class="fa fa-redo"></i> DUYỆT LẠI
+                                </button>
+                                <a href="event-detail.html?id=${sk.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;">
+                                    <i class="fa fa-info-circle"></i> CHI TIẾT
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadRefundRequests(token) {
+            const grid = document.getElementById('refundGrid');
+            if (grid) grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><h3>Tính năng hoàn tiền đang phát triển</h3></div>';
+        }
+
+        // === ACTIONS ===
         async function approveEvent(id) {
             const token = localStorage.getItem('stellar_token');
             try {
@@ -743,279 +793,54 @@
                     method: 'PUT',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await res.json();
                 if (res.ok) {
-                    showToast(data.message || 'Phê duyệt thành công!', 'success');
+                    showToast('Phê duyệt thành công!', 'success');
                     markCardProcessed(id, 'approved');
+                    loadApprovedEvents(token);
+                    loadRejectedEvents(token);
                 } else {
-                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                    const data = await res.json();
+                    showToast(data.message || 'Lỗi phê duyệt', 'error');
                 }
-            } catch (e) {
-                showToast('Lỗi kết nối. Thử lại sau.', 'error');
-            }
+            } catch (e) { showToast('Lỗi kết nối', 'error'); }
         }
 
         async function rejectEvent(id) {
+            const reason = prompt("Lý do từ chối:", "Thông tin sự kiện không đầy đủ.");
+            if (reason === null) return;
             const token = localStorage.getItem('stellar_token');
             try {
                 const res = await fetch(`http://localhost:8081/api/admin/reject-event/${id}`, {
                     method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lyDo: reason })
                 });
-                const data = await res.json();
                 if (res.ok) {
-                    showToast(data.message || 'Đã từ chối sự kiện.', 'success');
+                    showToast('Đã từ chối sự kiện', 'success');
                     markCardProcessed(id, 'rejected');
+                    loadRejectedEvents(token);
                 } else {
-                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                    showToast('Lỗi từ chối', 'error');
                 }
-            } catch (e) {
-                showToast('Lỗi kết nối. Thử lại sau.', 'error');
-            }
+            } catch (e) { showToast('Lỗi kết nối', 'error'); }
         }
 
-        async function deleteEvent(id) {
-            if (!confirm("⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA VĨNH VIỄN SỰ KIỆN NÀY?\nToàn bộ dữ liệu Lịch diễn, Hạng vé và Khu vực sẽ bị xóa sạch.")) {
-                return;
-            }
 
+        async function deleteEvent(id) {
+            if (!confirm("XÓA VĨNH VIỄN sự kiện này?")) return;
             const token = localStorage.getItem('stellar_token');
             try {
                 const res = await fetch(`http://localhost:8081/api/admin/events/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await res.json();
                 if (res.ok) {
-                    showToast(data.message || 'Đã xóa sự kiện thành công.', 'success');
-                    // Xóa card khỏi UI
-                    const card = document.getElementById(`event-card-${id}`);
-                    if (card) {
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.8)';
-                        setTimeout(() => {
-                            card.remove();
-                            // Cập nhật số lượng
-                            const remaining = document.querySelectorAll('.approval-card:not(.processed)').length;
-                            document.getElementById('pendingCountText').textContent = `${remaining} sự kiện chờ duyệt`;
-                        }, 400);
-                    } else {
-                        // Nếu ở Feature Grid thì reload
-                        loadApprovedEvents(token);
-                    }
+                    showToast('Đã xóa thành công', 'success');
+                    location.reload();
                 } else {
-                    showToast(data.message || 'Lỗi khi xóa sự kiện.', 'error');
+                    showToast('Lỗi khi xóa', 'error');
                 }
-            } catch (e) {
-                showToast('Lỗi kết nối khi xóa sự kiện.', 'error');
-            }
-        }
-
-        function markCardProcessed(id, action) {
-            const card = document.getElementById(`event-card-${id}`);
-            if (!card) return;
-            card.classList.add('processed');
-
-            const msg = document.getElementById(`msg-${id}`);
-            if (action === 'approved') {
-                msg.className = 'status-msg msg-approved';
-                msg.innerHTML = '<i class="fa fa-check-circle"></i> ĐÃ PHÊ DUYỆT';
-            } else {
-                msg.className = 'status-msg msg-rejected';
-                msg.innerHTML = '<i class="fa fa-times-circle"></i> ĐÃ TỪ CHỐI';
-            }
-
-            // Cập nhật số lượng chờ duyệt
-            const remaining = document.querySelectorAll('#approvalGrid .event-card:not(.processed)').length;
-            document.getElementById('pendingCountText').textContent = `${remaining} sự kiện chờ duyệt`;
-        }
-
-        /* === TÍNH NĂNG ĐẶT SỰ KIỆN NỔI BẬT === */
-        async function loadApprovedEvents(token) {
-            const grid = document.getElementById('featureGrid');
-            try {
-                const res = await fetch('http://localhost:8081/api/admin/approved-events', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-
-                if (res.status === 403 || res.status === 401) {
-                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon">🔒</div>
-                        <h3>Không có quyền truy cập</h3>
-                    </div>`;
-                    return;
-                }
-
-                if (!res.ok) {
-                    let errMsg = `Lỗi server (${res.status})`;
-                    try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(_) {}
-                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon">⚠️</div>
-                        <h3>Lỗi tải danh sách</h3>
-                        <p>${errMsg}</p>
-                    </div>`;
-                    return;
-                }
-
-                const events = await res.json();
-                renderApprovedEvents(events);
-            } catch (e) {
-                console.error('Lỗi tải sự kiện đã phê duyệt:', e);
-                // Hiển thị empty state thay vì để spinner bị treo mãi
-                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-                    <div class="empty-icon">⚠️</div>
-                    <h3>Không thể kết nối Backend</h3>
-                    <p>Hệ thống đang bảo trì. Vui lòng thử lại sau.</p>
-                </div>`;
-            }
-        }
-
-        // Hàm lấy class CSS tương ứng với trạng thái
-        function getStatusClass(status) {
-            const map = {
-                'Sắp diễn ra': 'sapdiendra',
-                'Đang diễn ra': 'dangdiendra',
-                'Đã kết thúc': 'daketthuc',
-                'Đã hủy': 'dahuy',
-                'Chờ phê duyệt': 'alert'
-            };
-            return map[status] || 'live';
-        }
-
-        function renderApprovedEvents(events) {
-            const grid = document.getElementById('featureGrid');
-            if (!events || events.length === 0) {
-                grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon">🎟️</div>
-                        <h3>Chưa có sự kiện khả dụng</h3>
-                    </div>`;
-                return;
-            }
-
-            grid.innerHTML = '';
-            events.forEach((ev, idx) => {
-                const card = document.createElement('div');
-                card.className = 'event-card admin-view';
-                card.id = `feature-card-${ev.maSuKien}`;
-                card.style.animationDelay = `${idx * 0.1}s`;
-
-                // Nếu đang là sự kiện nổi bật, add một border đặc biệt
-                if (ev.laSuKienNoiBat) {
-                    card.style.borderColor = 'var(--accent-secondary)';
-                    card.style.boxShadow = '0 0 30px rgba(0, 229, 255, 0.2)';
-                }
-
-                const dateStr = ev.thoiGianBD ? new Date(ev.thoiGianBD).toLocaleDateString('vi-VN') : 'Chưa xác định';
-                const statusClass = getStatusClass(ev.trangThai || 'Sắp diễn ra');
-                const currentStatus = ev.trangThai || 'Sắp diễn ra';
-
-                // Các trạng thái đã kết thúc/hủy thì không cho đổi
-                const isFinalStatus = ['Đã kết thúc', 'Đã hủy'].includes(currentStatus);
-
-                card.innerHTML = `
-                    <div class="card-image" style="background-image: url('${ev.anhThumbnailUrl || ev.anhBiaUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'}');">
-                        <div class="status-badge ${statusClass}" id="status-badge-${ev.maSuKien}">
-                            ${ev.laSuKienNoiBat ? '⭐ ' : ''}${currentStatus}
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <h3>${ev.tenSuKien}</h3>
-                        <div class="card-meta-grid">
-                            <div class="meta-item">
-                                <span class="meta-label">Thời gian</span>
-                                <span class="meta-value">${dateStr}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Địa điểm</span>
-                                <span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span>
-                            </div>
-                        </div>
-
-                        <!-- Widget cập nhật trạng thái -->
-                        <div class="status-update-widget">
-                            <label><i class="fa fa-sync-alt" style="margin-right:4px;"></i>Trạng thái</label>
-                            <select class="status-select" id="status-select-${ev.maSuKien}" ${isFinalStatus ? 'disabled' : ''}>
-                                <option value="Sắp diễn ra" ${currentStatus === 'Sắp diễn ra' ? 'selected' : ''}>📅 Sắp diễn ra</option>
-                                <option value="Đang diễn ra" ${currentStatus === 'Đang diễn ra' ? 'selected' : ''}>🔴 Đang diễn ra</option>
-                                <option value="Đã kết thúc" ${currentStatus === 'Đã kết thúc' ? 'selected' : ''}>✅ Đã kết thúc</option>
-                                <option value="Đã hủy" ${currentStatus === 'Đã hủy' ? 'selected' : ''}>❌ Đã hủy</option>
-                            </select>
-                            <button class="btn-update-status" id="btn-status-${ev.maSuKien}"
-                                onclick="updateEventStatus(${ev.maSuKien})" ${isFinalStatus ? 'disabled title="Sự kiện đã kết thúc/hủy"' : ''}>
-                                <i class="fa fa-save"></i> Lưu
-                            </button>
-                        </div>
-
-                        <div class="card-actions">
-                            <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
-                                <i class="fa fa-star"></i> ${ev.laSuKienNoiBat ? 'Đang Nổi Bật' : 'Đặt làm Nổi bật'}
-                            </button>
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;">
-                                <i class="fa fa-edit"></i> Chỉnh sửa
-                            </a>
-                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})">
-                                <i class="fa fa-trash"></i> Xóa bỏ
-                            </button>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-            attachCursorEvents(grid.querySelectorAll('.admin-btn, .action-btn, .btn-update-status'));
-        }
-
-        // Cập nhật trạng thái sự kiện - gọi Oracle trigger-aware endpoint
-        async function updateEventStatus(id) {
-            const token = localStorage.getItem('stellar_token');
-            const select = document.getElementById(`status-select-${id}`);
-            const btn = document.getElementById(`btn-status-${id}`);
-            if (!select) return;
-
-            const newStatus = select.value;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang lưu...';
-
-            try {
-                const res = await fetch(`http://localhost:8081/api/admin/events/${id}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ trangThai: newStatus })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(data.message || 'Cập nhật trạng thái thành công!', 'success');
-
-                    // Cập nhật badge trực tiếp trên UI mà không cần reload
-                    const badge = document.getElementById(`status-badge-${id}`);
-                    if (badge) {
-                        badge.className = `status-badge ${getStatusClass(newStatus)}`;
-                        badge.textContent = newStatus;
-                    }
-
-                    // Nếu là trạng thái cuối thì disable widget
-                    const isFinal = ['Đã kết thúc', 'Đã hủy'].includes(newStatus);
-                    if (isFinal) {
-                        select.disabled = true;
-                        btn.disabled = true;
-                        btn.innerHTML = '<i class="fa fa-lock"></i> Đã khóa';
-                    } else {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
-                    }
-                } else {
-                    showToast('⚠️ ' + (data.message || 'Có lỗi xảy ra khi cập nhật.'), 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
-                }
-            } catch (e) {
-                showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa fa-save"></i> Lưu';
-            }
+            } catch (e) { showToast('Lỗi kết nối', 'error'); }
         }
 
         async function setFeatured(id) {
@@ -1025,28 +850,35 @@
                     method: 'PUT',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await res.json();
                 if (res.ok) {
-                    showToast(data.message || 'Đã cài đặt sự kiện nổi bật!', 'success');
-                    // Tải lại list để refresh UI
+                    showToast('Đã đặt làm nổi bật!', 'success');
                     loadApprovedEvents(token);
                 } else {
-                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                    showToast('Lỗi cài đặt', 'error');
                 }
-            } catch (e) {
-                showToast('Lỗi kết nối. Thử lại sau.', 'error');
-            }
+            } catch (e) { showToast('Lỗi kết nối', 'error'); }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-             // Sync Auth UI additionally if needed
-        });
+        function markCardProcessed(id, action) {
+            const card = document.getElementById(`event-card-${id}`);
+            if (!card) return;
+            card.classList.add('processed');
+            const overlay = document.getElementById(`overlay-${id}`);
+            const msg = document.getElementById(`msg-${id}`);
+            if (overlay && msg) {
+                msg.className = `status-msg ${action === 'approved' ? 'msg-approved' : 'msg-rejected'}`;
+                msg.innerHTML = action === 'approved' ? 'ĐÃ PHÊ DUYỆT' : 'ĐÃ TỪ CHỐI';
+            }
+            const remaining = document.querySelectorAll('#approvalGrid .event-card:not(.processed)').length;
+            const countText = document.getElementById('pendingCountText');
+            if (countText) countText.textContent = `${remaining} sự kiện chờ duyệt`;
+        }
     </script>
+    <script src="js/script.js"></script>
     <!-- Mascot Companion -->
     <div class="mascot-companion" id="mascotCompanion">
         <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
-    <script src="js/script.js"></script>
 </body>
 </html>

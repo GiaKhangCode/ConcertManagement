@@ -111,6 +111,7 @@ public class AdminController {
         dto.setAnhThumbnailUrl(sk.getAnhThumbnailUrl());
         dto.setPhanLoai(sk.getPhanLoai());
         dto.setMoTa(sk.getMoTa());
+        dto.setLyDoTuChoi(sk.getLyDoTuChoi());
 
         // Map Lịch diễn
         List<LichDien> lichDiens = lichDienRepository.findBySuKien_MaSuKien(id);
@@ -683,6 +684,29 @@ public class AdminController {
             m.put("anhBiaUrl", sk.getAnhBiaUrl() != null ? sk.getAnhBiaUrl() : "");
             m.put("anhThumbnailUrl", sk.getAnhThumbnailUrl() != null ? sk.getAnhThumbnailUrl() : "");
             m.put("laSuKienNoiBat", sk.getLaSuKienNoiBat() != null && sk.getLaSuKienNoiBat() == 1);
+            m.put("lyDoTuChoi", sk.getLyDoTuChoi());
+            return m;
+        }).collect(Collectors.toList()));
+    }
+    
+    /**
+     * Lấy danh sách sự kiện đã bị từ chối
+     */
+    @GetMapping("/rejected-events")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getRejectedEvents() {
+        List<SuKien> list = suKienRepository.findByTrangThai("Bị từ chối");
+        return ResponseEntity.ok(list.stream().map(sk -> {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("maSuKien", sk.getMaSuKien());
+            m.put("tenSuKien", sk.getTenSuKien());
+            m.put("trangThai", sk.getTrangThai());
+            m.put("thoiGianBD", sk.getThoiGianBD() != null ? sk.getThoiGianBD().toString() : "");
+            m.put("diaDiem", sk.getDiaDiem() != null ? sk.getDiaDiem().getTenDiaDiem() : "Chưa xác định");
+            m.put("anhBiaUrl", sk.getAnhBiaUrl() != null ? sk.getAnhBiaUrl() : "");
+            m.put("anhThumbnailUrl", sk.getAnhThumbnailUrl() != null ? sk.getAnhThumbnailUrl() : "");
+            m.put("lyDoTuChoi", sk.getLyDoTuChoi());
+            m.put("nguoiTao", (sk.getNguoiTao() != null && sk.getNguoiTao().getNguoiDung() != null ? sk.getNguoiTao().getNguoiDung().getHoTen() : "Hệ thống"));
             return m;
         }).collect(Collectors.toList()));
     }
@@ -697,6 +721,7 @@ public class AdminController {
         SuKien sk = suKienRepository.findById(id).orElse(null);
         if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy sự kiện!"));
         sk.setTrangThai("Sắp diễn ra");
+        sk.setLyDoTuChoi(null);
         suKienRepository.save(sk);
         return ResponseEntity.ok(Map.of("message", "Đã phê duyệt sự kiện và đưa vào trạng thái Đang bán vé/Sắp diễn ra."));
     }
@@ -706,12 +731,15 @@ public class AdminController {
      */
     @PutMapping("/reject-event/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> rejectEvent(@PathVariable Long id) {
+    public ResponseEntity<?> rejectEvent(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         SuKien sk = suKienRepository.findById(id).orElse(null);
         if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy sự kiện!"));
+        
+        String reason = (body != null && body.containsKey("lyDo")) ? body.get("lyDo") : "Không có lý do cụ thể";
         sk.setTrangThai("Bị từ chối");
+        sk.setLyDoTuChoi(reason);
         suKienRepository.save(sk);
-        return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện."));
+        return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện với lý do: " + reason));
     }
 
     /**
@@ -731,74 +759,6 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Đã thiết lập sự kiện làm TIÊU ĐIỂM trên trang chủ."));
     }
 
-    /**
-     * Cập nhật trạng thái sự kiện thủ công (Admin only)
-     * Hỗ trợ đầy đủ vòng đời: Sắp diễn ra → Đang diễn ra → Đã kết thúc / Đã hủy
-     * Các Oracle triggers sẽ tự động validate và ném lỗi nếu vi phạm ràng buộc
-     */
-    @Transactional
-    @PutMapping("/events/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateEventStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        try {
-            String newStatus = body.get("trangThai");
-
-            // Danh sách trạng thái hợp lệ theo CHECK constraint trong Oracle DB
-            List<String> validStatuses = List.of("Chờ phê duyệt", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc", "Đã hủy");
-            if (newStatus == null || !validStatuses.contains(newStatus)) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Trạng thái không hợp lệ! Chỉ chấp nhận: " + String.join(", ", validStatuses)
-                ));
-            }
-
-            SuKien sk = suKienRepository.findById(id).orElse(null);
-            if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy sự kiện!"));
-
-            String oldStatus = sk.getTrangThai();
-
-            // Không cho phép đổi ngược từ trạng thái đã kết thúc/hủy
-            if (("Đã kết thúc".equals(oldStatus) || "Đã hủy".equals(oldStatus))
-                    && !newStatus.equals(oldStatus)) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Không thể thay đổi trạng thái của sự kiện đã kết thúc hoặc đã hủy!"
-                ));
-            }
-
-            sk.setTrangThai(newStatus);
-            suKienRepository.save(sk);
-
-            // Khi sự kiện bị hủy: tự động hủy vé và hoàn tiền 100% cho người mua
-            if ("Đã hủy".equals(newStatus)) {
-                cancelAllTicketsAndRefund(id, sk);
-            }
-
-            return ResponseEntity.ok(Map.of(
-                "message", "Đã cập nhật trạng thái sự kiện từ [" + oldStatus + "] → [" + newStatus + "] thành công!",
-                "trangThaiMoi", newStatus
-            ));
-
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // Bắt lỗi từ Oracle trigger (ví dụ: không cho kết thúc trước giờ KT)
-            String msg = e.getMostSpecificCause().getMessage();
-            // Trích xuất thông điệp từ Oracle ORA-20xxx
-            if (msg != null && msg.contains("ORA-20")) {
-                int start = msg.indexOf("ORA-20");
-                String oraMsg = msg.substring(start);
-                // Lấy phần sau mã lỗi ORA-20xxx:
-                int colon = oraMsg.indexOf(": ");
-                if (colon != -1) {
-                    oraMsg = oraMsg.substring(colon + 2);
-                    // Cắt bỏ phần "\nORA-06512..." nếu có
-                    int newline = oraMsg.indexOf("\n");
-                    if (newline != -1) oraMsg = oraMsg.substring(0, newline);
-                }
-                return ResponseEntity.badRequest().body(Map.of("message", oraMsg.trim()));
-            }
-            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi ràng buộc dữ liệu: " + e.getMostSpecificCause().getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi hệ thống: " + e.getMessage()));
-        }
-    }
 
     /**
      * Xóa sự kiện hoàn toàn

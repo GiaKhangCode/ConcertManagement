@@ -14,6 +14,7 @@ public class EventCreateRequestDto {
     private String anhThumbnailUrl;
     private String phanLoai;
     private String moTa; // Mô tả sự kiện
+    private String lyDoTuChoi; // Lý do từ chối (nếu có)
 
     private List<LichDienDto> lichDienList;
     private List<HangVeDto> hangVeList;
@@ -46,6 +47,8 @@ public class EventCreateRequestDto {
     public void setPhanLoai(String phanLoai) { this.phanLoai = phanLoai; }
     public String getMoTa() { return moTa; }
     public void setMoTa(String moTa) { this.moTa = moTa; }
+    public String getLyDoTuChoi() { return lyDoTuChoi; }
+    public void setLyDoTuChoi(String lyDoTuChoi) { this.lyDoTuChoi = lyDoTuChoi; }
     public List<LichDienDto> getLichDienList() { return lichDienList; }
     public void setLichDienList(List<LichDienDto> lichDienList) { this.lichDienList = lichDienList; }
     public List<HangVeDto> getHangVeList() { return hangVeList; }

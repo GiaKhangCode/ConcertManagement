@@ -84,6 +84,7 @@ E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\ViCaNhan
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\QuyTacHoanTienRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\dto\UserProfileResponseDto.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\TaiTroId.java
+E:\EventManagement\backend\src\main\java\com\stellar\backend\scheduler\EventStatusScheduler.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\repository\NhaTaiTroRepository.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\DiaDiem.java
 E:\EventManagement\backend\src\main\java\com\stellar\backend\entity\LichSuHoanTien.java

@@ -68,6 +68,9 @@ public class SuKien {
     @Column(name = "LaSuKienNoiBat")
     private Integer laSuKienNoiBat = 0;
 
+    @Column(name = "LyDoTuChoi", length = 1000)
+    private String lyDoTuChoi;
+
     @JsonIgnore
     @OneToMany(mappedBy = "suKien", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaiTro> danhSachTaiTro;
@@ -122,6 +125,9 @@ public class SuKien {
 
     public Integer getLaSuKienNoiBat() { return laSuKienNoiBat; }
     public void setLaSuKienNoiBat(Integer laSuKienNoiBat) { this.laSuKienNoiBat = laSuKienNoiBat; }
+
+    public String getLyDoTuChoi() { return lyDoTuChoi; }
+    public void setLyDoTuChoi(String lyDoTuChoi) { this.lyDoTuChoi = lyDoTuChoi; }
 
     public List<LichDien> getDanhSachLichDien() { return danhSachLichDien; }
     public void setDanhSachLichDien(List<LichDien> danhSachLichDien) { this.danhSachLichDien = danhSachLichDien; }

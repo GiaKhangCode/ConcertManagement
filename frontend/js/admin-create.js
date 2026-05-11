@@ -299,6 +299,16 @@ async function loadEventData(id, token) {
 
         document.getElementById('moTa').value = data.moTa || '';
 
+        // Hiển thị lý do từ chối nếu có
+        const rejectionDiv = document.getElementById('rejectionReason');
+        const rejectionText = document.getElementById('rejectionReasonText');
+        if (data.lyDoTuChoi && data.lyDoTuChoi.trim()) {
+            rejectionDiv.style.display = 'block';
+            rejectionText.textContent = data.lyDoTuChoi;
+        } else {
+            rejectionDiv.style.display = 'none';
+        }
+
         // Khởi tạo flatpickr TRƯỜC, sau đó dùng setDate() — không gán value trực tiếp
         const fpBD = flatpickr('#thoiGianBD', { enableTime: true, altInput: true, altFormat: "d/m/Y H:i", dateFormat: "Y-m-d\\TH:i", time_24hr: true });
         const fpKT = flatpickr('#thoiGianKT', { enableTime: true, altInput: true, altFormat: "d/m/Y H:i", dateFormat: "Y-m-d\\TH:i", time_24hr: true });
@@ -456,125 +466,7 @@ function addKhuVuc(containerId, data = null) {
                     <i class="fa fa-trash-alt"></i>
                 </button>
             </div>
-            <div class="kv-seat-wrap" id="kv_seat_${id}"></div>
         </div>`);
-
-    // Gắn event listener cho ô sức chứa
-    const capInput = document.querySelector(`#${id} .kv-capacity`);
-    capInput.addEventListener('input', () => buildSeatConfig(id, data));
-    capInput.addEventListener('change', () => buildSeatConfig(id, data));
-
-    // Nếu đã có sức chứa (chế độ edit) → hiện config ngay
-    if (capacity > 0) buildSeatConfig(id, data);
-}
-
-// Tạo block cấu hình ghế bên dưới khu vực
-function buildSeatConfig(kvId, data = null) {
-    const el = document.getElementById(kvId);
-    if (!el) return;
-    const capacity = parseInt(el.querySelector('.kv-capacity').value) || 0;
-    const wrapEl = document.getElementById(`kv_seat_${kvId}`);
-    if (!wrapEl) return;
-
-    if (capacity <= 0) { wrapEl.innerHTML = ''; return; }
-
-    // Đã có rồi thì cập nhật preview, không tạo lại
-    if (wrapEl.querySelector('.kv-rows')) { updateKvPreview(kvId); return; }
-
-    // Ưu tiên dùng data.rowConfigs nếu có (chế độ edit)
-    const rowConfigs = (data && data.rowConfigs && data.rowConfigs.length > 0) ? data.rowConfigs : null;
-
-    wrapEl.innerHTML = `
-        <div class="kv-seat-config">
-            <div class="kv-seat-config-title"><i class="fa fa-chair"></i> CẤU HÌNH GHẾ NGỒI</div>
-            <div id="rows_container_${kvId}" class="kv-rows-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-                <!-- Rows will be added here -->
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <button type="button" class="btn btn-outline small" style="padding: 5px 15px; font-size: 0.75rem; border-color: #50fa7b; color: #50fa7b;" 
-                    onclick="addRowToKv('${kvId}')">
-                    <i class="fa fa-plus"></i> THÊM HÀNG
-                </button>
-                <div class="kv-total-label" id="kv_total_${kvId}" style="font-weight: bold;"></div>
-            </div>
-            <div class="kv-error-msg" id="kv_error_${kvId}" style="color: #ff5555; font-size: 0.8rem; margin-top: 10px; display: none;">
-                <i class="fa fa-exclamation-triangle"></i> Tổng số ghế không được vượt quá sức chứa khu vực!
-            </div>
-        </div>`;
-
-    if (rowConfigs) {
-        rowConfigs.forEach(rc => addRowToKv(kvId, rc.rowLabel, rc.seatCount));
-    } else {
-        // Mặc định tạo 1 hàng A nếu là khu vực mới
-        addRowToKv(kvId, 'A', 10);
-    }
-    updateKvPreview(kvId);
-}
-
-function addRowToKv(kvId, label = '', qty = 10) {
-    const container = document.getElementById(`rows_container_${kvId}`);
-    if (!container) return;
-    
-    const rowId = `row_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
-    const rowHtml = `
-        <div class="kv-row-item" id="${rowId}" style="display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-            <div>
-                <input type="text" class="form-input row-label" value="${label}" placeholder="Tên hàng (A, B...)" style="padding: 8px;">
-            </div>
-            <div>
-                <input type="number" class="form-input row-qty" value="${qty}" min="1" placeholder="Số ghế" style="padding: 8px;">
-            </div>
-            <button type="button" onclick="removeRow('${rowId}', '${kvId}')" style="background: rgba(255,85,85,0.1); color: #ff5555; border: none; border-radius: 5px; cursor: pointer; height: 35px;">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>`;
-    
-    container.insertAdjacentHTML('beforeend', rowHtml);
-    
-    // Gắn sự kiện để update preview
-    const rowEl = document.getElementById(rowId);
-    rowEl.querySelector('.row-label').addEventListener('input', () => updateKvPreview(kvId));
-    rowEl.querySelector('.row-qty').addEventListener('input', () => updateKvPreview(kvId));
-    
-    updateKvPreview(kvId);
-}
-
-function removeRow(rowId, kvId) {
-    document.getElementById(rowId)?.remove();
-    updateKvPreview(kvId);
-}
-
-function updateKvPreview(kvId) {
-    const el = document.getElementById(kvId);
-    if (!el) return;
-    const container = document.getElementById(`rows_container_${kvId}`);
-    const capacityInput = el.querySelector('.kv-capacity');
-    if (!container || !capacityInput) return;
-
-    const rowItems = container.querySelectorAll('.kv-row-item');
-    let total = 0;
-    rowItems.forEach(item => {
-        const qty = parseInt(item.querySelector('.row-qty').value) || 0;
-        total += qty;
-    });
-
-    const capacity = parseInt(capacityInput.value) || 0;
-    const totalEl = document.getElementById(`kv_total_${kvId}`);
-    const errorEl = document.getElementById(`kv_error_${kvId}`);
-    
-    if (totalEl) {
-        const isOver = total > capacity;
-        totalEl.innerHTML = `Tổng: <strong style="color:${isOver ? '#ff5555' : '#50fa7b'}">${total}</strong> / ${capacity} ghế`;
-        
-        if (errorEl) {
-            errorEl.style.display = isOver ? 'block' : 'none';
-        }
-    }
-}
-
-function autoRowLabels(capacity) {
-    const n = Math.min(Math.max(1, Math.ceil(capacity / 10)), 26);
-    return Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i));
 }
 
 function removeEl(id) { document.getElementById(id)?.remove(); }
@@ -698,30 +590,6 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
                     tenKhuVuc: kvEl.querySelector('.kv-name').value.trim(),
                     sucChuaKv: parseInt(kvEl.querySelector('.kv-capacity').value) || 0
                 };
-                // Thu thập cấu hình hàng ghế (rowConfigs)
-                const rowItems = kvEl.querySelectorAll('.kv-row-item');
-                if (rowItems.length > 0) {
-                    const rowConfigs = [];
-                    let totalSeatsInRows = 0;
-                    rowItems.forEach(item => {
-                        const label = item.querySelector('.row-label').value.trim();
-                        const qty = parseInt(item.querySelector('.row-qty').value) || 0;
-                        if (label && qty > 0) {
-                            rowConfigs.push({ rowLabel: label, seatCount: qty });
-                            totalSeatsInRows += qty;
-                        }
-                    });
-
-                    const capacity = parseInt(kvEl.querySelector('.kv-capacity').value) || 0;
-                    if (totalSeatsInRows > capacity) {
-                        alert(`Khu vực "${kvData.tenKhuVuc}" có tổng số ghế (${totalSeatsInRows}) vượt quá sức chứa (${capacity})!`);
-                        throw new Error("Validation failed");
-                    }
-
-                    if (rowConfigs.length > 0) {
-                        kvData.rowConfigs = rowConfigs;
-                    }
-                }
                 khuVucList.push(kvData);
             });
             hangVeList.push({
