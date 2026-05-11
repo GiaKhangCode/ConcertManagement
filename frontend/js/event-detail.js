@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('eventDate').innerText = new Date(ev.startDate).toLocaleString('vi-VN');
         document.getElementById('eventLocation').innerText = ev.location;
         document.getElementById('eventStatus').innerText = ev.status;
+        window.currentEventStatus = ev.status; // Lưu trạng thái sự kiện
         document.getElementById('eventPoster').src = ev.image;
         
         // Hiển thị mô tả
@@ -260,8 +261,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function logout() {
+    if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+        localStorage.removeItem('stellar_token');
+        localStorage.removeItem('stellar_user');
+        localStorage.removeItem('stellar_roles');
+        window.location.href = 'index.html';
+    }
+}
+
 // Logic mua vé chuyển trang
 window.handleBooking = function(eventId, ticketTierId, tierName) {
+    if (window.currentEventStatus === 'Đã kết thúc') {
+        showMascotMessage("Sự kiện này đã kết thúc, bạn không thể mua vé nữa nha! 😢", true);
+        return;
+    }
+
     const token = localStorage.getItem('stellar_token');
     if(!token) {
         alert("Bạn cần đăng nhập để có thể đặt vé sự kiện này!");
@@ -269,15 +284,29 @@ window.handleBooking = function(eventId, ticketTierId, tierName) {
         return;
     }
     
-    // Lấy maLichDien từ schedule đầu tiên (hoặc có thể mở rộng chọn suất diễn sau)
-    // Ở đây ta tìm maLichDien từ dữ liệu đã load hoặc gọi lại API nếu cần.
-    // Tuy nhiên, để đơn giản và chính xác, ta sẽ lấy từ danh sách schedules đã có trong app.
-    
-    // Tìm schedule đầu tiên của sự kiện này
-    // Lưu ý: schedules được trả về trong object ev ở trên. Ta nên lưu nó vào biến global hoặc tìm cách lấy.
-    // Giả sử ta lấy schedule đầu tiên có sẵn:
     const schedules = window.eventSchedules || [];
     const maLichDien = (schedules.length > 0 && schedules[0].id) ? schedules[0].id : eventId;
 
     window.location.href = `booking.html?eventId=${eventId}&tierId=${ticketTierId}&tierName=${encodeURIComponent(tierName)}&scheduleId=${maLichDien}`;
+}
+
+function showMascotMessage(msg, isError = false) {
+    const tooltip = document.getElementById('mascotTooltip');
+    const mascot = document.getElementById('mascotCompanion');
+    if (tooltip) {
+        tooltip.innerText = msg;
+        tooltip.classList.add('show');
+        if (isError) {
+            tooltip.classList.add('error');
+            if(mascot) mascot.style.animation = 'shake 0.5s ease';
+        } else {
+            tooltip.classList.remove('error');
+            if(mascot) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }
+        
+        setTimeout(() => {
+            tooltip.classList.remove('show');
+            if(mascot && isError) mascot.style.animation = 'floatMascot 4s ease-in-out infinite';
+        }, 5000);
+    }
 }

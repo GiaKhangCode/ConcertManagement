@@ -524,6 +524,12 @@
                 if (!response.ok) throw new Error(`Sự kiện không tồn tại (HTTP ${response.status})`);
                 const ev = await response.json();
                 
+                if (ev.status === 'Đã kết thúc') {
+                    alert("Sự kiện này đã kết thúc, bạn không thể mua vé nữa nha! 😢");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
                 // Thu thập tất cả khu vực của sự kiện và giá tiền tương ứng
                 eventZones = [];
                 zonePriceMap = {};

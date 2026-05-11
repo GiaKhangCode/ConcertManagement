@@ -168,12 +168,20 @@ function createEventCard(ev, idx) {
             </div>
             <div class="card-footer">
                 <div class="price">Từ <span>${priceVal}đ</span></div>
-                <button class="buy-btn" onclick="window.location.href='event-detail.html?id=${ev.id}'">Mua</button>
+                <button class="buy-btn" onclick="handleBuyClick(${ev.id}, '${ev.status}')">Mua</button>
             </div>
         </div>
     `;
     return card;
 }
+
+window.handleBuyClick = function(id, status) {
+    if (status === 'Đã kết thúc') {
+        showMascotMessage("Sự kiện này đã kết thúc, bạn không thể mua vé nữa nha! 😢", true);
+        return;
+    }
+    window.location.href = `event-detail.html?id=${id}`;
+};
 
 function updateFeaturedHero(featured) {
     const heroTitle = document.querySelector('.feature-content h1');
@@ -196,7 +204,7 @@ function updateFeaturedHero(featured) {
             featureSpans[1].innerHTML = `${locIcon} ${featured.location || 'Chưa cập nhật'}`;
         }
         
-        if(heroBuyBtn) heroBuyBtn.onclick = () => window.location.href = `event-detail.html?id=${featured.id}`;
+        if(heroBuyBtn) heroBuyBtn.onclick = () => handleBuyClick(featured.id, featured.status);
         if(heroDetailBtn) heroDetailBtn.onclick = () => window.location.href = `event-detail.html?id=${featured.id}`;
         
         if(hologramCard) {
