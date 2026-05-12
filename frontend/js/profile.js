@@ -77,7 +77,9 @@ async function loadTickets() {
                         <div style="flex: 1;">
                             <h4>SỰ KIỆN: ${tk.eventName}</h4>
                             <div class="ticket-meta">
-                                <span><i class="fa fa-qrcode"></i> TIC-${tk.ticketId} (Đơn: ${tk.transactionId})</span>
+                                <span style="cursor: pointer; color: var(--accent-secondary);" onclick="showQRCode(${tk.ticketId})">
+                                    <i class="fa fa-qrcode"></i> TIC-${tk.ticketId} (Đơn: ${tk.transactionId})
+                                </span>
                                 <span><i class="fa fa-ticket"></i> ${tk.ticketCount} vé (${tk.tierName})</span>
                                 <span><i class="fa fa-clock"></i> ${d}</span>
                             </div>
@@ -315,3 +317,26 @@ document.getElementById('confirmRefundBtn')?.addEventListener('click', async () 
         }
     } catch (e) { alert("Lỗi kết nối"); }
 });
+
+function showQRCode(ticketId) {
+    const container = document.getElementById('qrcodeContainer');
+    const idLabel = document.getElementById('qrTicketId');
+    
+    if (!container || !idLabel) return;
+
+    // Clear previous QR
+    container.innerHTML = "";
+    idLabel.innerText = "TIC-" + ticketId;
+    
+    // Generate new QR
+    new QRCode(container, {
+        text: ticketId.toString(),
+        width: 200,
+        height: 200,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+    
+    openModal('qrModal');
+}

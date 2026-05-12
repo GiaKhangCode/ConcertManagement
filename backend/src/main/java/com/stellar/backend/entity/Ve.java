@@ -40,6 +40,12 @@ public class Ve {
     @Column(name = "GiaBanLai")
     private BigDecimal giaBanLai;
 
+    @Column(name = "LinkQRCode")
+    private String linkQRCode;
+
+    @Column(name = "ThoiGianCheckIn")
+    private LocalDateTime thoiGianCheckIn;
+
     public Long getMaVe() { return maVe; }
     public void setMaVe(Long maVe) { this.maVe = maVe; }
     public BigDecimal getGiaBanLai() { return giaBanLai; }
@@ -58,4 +64,8 @@ public class Ve {
     public void setThoiGianDaBan(LocalDateTime thoiGianDaBan) { this.thoiGianDaBan = thoiGianDaBan; }
     public Integer getDaBanLai() { return daBanLai; }
     public void setDaBanLai(Integer daBanLai) { this.daBanLai = daBanLai; }
+    public String getLinkQRCode() { return linkQRCode; }
+    public void setLinkQRCode(String linkQRCode) { this.linkQRCode = linkQRCode; }
+    public LocalDateTime getThoiGianCheckIn() { return thoiGianCheckIn; }
+    public void setThoiGianCheckIn(LocalDateTime thoiGianCheckIn) { this.thoiGianCheckIn = thoiGianCheckIn; }
 }

@@ -508,6 +508,29 @@
         </div>
     </div>
 
+    <!-- ===================== MODAL HIỂN THỊ QR CODE ===================== -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content" style="max-width: 360px; text-align: center; margin: 5% auto;">
+            <div class="modal-header" style="justify-content: center; margin-bottom: 20px;">
+                <div class="modal-header-icon green" style="background: rgba(0, 243, 255, 0.1); color: var(--accent-secondary);"><i class="fa fa-qrcode"></i></div>
+                <h3 style="margin: 0; font-family: 'Unbounded', sans-serif; font-size: 1.1rem;">MÃ SOÁT VÉ</h3>
+            </div>
+            
+            <div id="qrcodeContainer" style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);">
+                <!-- QR Code will be generated here -->
+            </div>
+            
+            <div id="qrTicketId" style="font-family: 'Space Mono', monospace; color: var(--accent-secondary); font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;"></div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 25px;">
+                Vui lòng xuất trình mã này tại quầy soát vé để được vào cổng sự kiện.
+            </p>
+            
+            <button class="btn btn-outline small" onclick="closeModal('qrModal')" style="width: 100%;">
+                <i class="fa fa-xmark" style="margin-right:6px;"></i>ĐÓNG
+            </button>
+        </div>
+    </div>
+
     <script>
         function setResalePrice(val) {
             document.getElementById('resalePrice').value = val;
@@ -537,6 +560,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/script.js"></script>
     <script src="js/profile.js"></script>
 </body>

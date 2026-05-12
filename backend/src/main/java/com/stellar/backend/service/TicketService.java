@@ -1,7 +1,7 @@
 package com.stellar.backend.service;
 
 import com.stellar.backend.entity.*;
-import com.stellar.backend.dto.ResaleTicketDto;
+import com.stellar.backend.dto.*;
 import com.stellar.backend.repository.VeRepository;
 import com.stellar.backend.repository.YeuCauHoTroRepository;
 import com.stellar.backend.repository.TaiKhoanRepository;
@@ -9,6 +9,7 @@ import com.stellar.backend.repository.DonMuaRepository;
 import com.stellar.backend.repository.QuyTacHoanTienRepository;
 import com.stellar.backend.repository.TrangThaiGheTheoSuatRepository;
 import com.stellar.backend.repository.LichSuHoanTienRepository;
+import com.stellar.backend.repository.NhatKySoatVeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,9 @@ import java.util.stream.Collectors;
 public class TicketService {
     @Autowired
     private VeRepository veRepository;
+
+    @Autowired
+    private NhatKySoatVeRepository nhatKySoatVeRepository;
 
     @Autowired
     private YeuCauHoTroRepository yeuCauHoTroRepository;
@@ -317,5 +321,63 @@ public class TicketService {
 
     public List<YeuCauHoTro> getPendingRefunds() {
         return yeuCauHoTroRepository.findByLoaiYeuCauAndTrangThaiXuLy("Hoàn tiền", "Chờ phản hồi");
+    }
+
+    @Transactional
+    public CheckInResponse checkIn(CheckInRequest request, Long staffId) {
+        try {
+            Long ticketId = Long.parseLong(request.getQrCode());
+            Ve ve = veRepository.findById(ticketId)
+                    .orElseThrow(() -> new RuntimeException("Vé không tồn tại hoặc mã QR không hợp lệ"));
+
+            // 1. Kiểm tra trạng thái vé
+            if ("Đã Check-in".equals(ve.getTrangThaiVe())) {
+                logCheckInHistory(staffId, ve, 0, request.getDeviceName());
+                return new CheckInResponse(false, "Vé này đã được sử dụng lúc " + ve.getThoiGianCheckIn());
+            }
+            if (!"Hiệu lực".equals(ve.getTrangThaiVe())) {
+                logCheckInHistory(staffId, ve, 0, request.getDeviceName());
+                return new CheckInResponse(false, "Vé không hợp lệ (Trạng thái: " + ve.getTrangThaiVe() + ")");
+            }
+
+            // 2. Kiểm tra thời gian (Chỉ cho phép soát vé trước/trong khi sự kiện diễn ra)
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startTime = ve.getLichDien().getThoiGianBatDau();
+            if (now.isBefore(startTime.minusHours(4))) { // Cho phép vào trước 4 tiếng
+                return new CheckInResponse(false, "Chưa đến giờ soát vé cho sự kiện này");
+            }
+
+            // 3. Cập nhật trạng thái vé
+            ve.setTrangThaiVe("Đã Check-in");
+            ve.setThoiGianCheckIn(now);
+            veRepository.save(ve);
+
+            // 4. Ghi nhật ký thành công
+            logCheckInHistory(staffId, ve, 1, request.getDeviceName());
+
+            // 5. Trả về kết quả
+            CheckInResponse response = new CheckInResponse(true, "Soát vé thành công!");
+            response.setTicketId(ve.getMaVe().toString());
+            response.setEventName(ve.getLichDien().getSuKien().getTenSuKien());
+            response.setAttendeeName(ve.getDonMua().getTaiKhoan().getNguoiDung().getHoTen());
+            response.setSeatInfo(ve.getGheNgoi() != null ? ve.getGheNgoi().getToaDo() : "Vé đứng/Tự do");
+            response.setCheckInTime(now);
+            return response;
+
+        } catch (NumberFormatException e) {
+            return new CheckInResponse(false, "Mã QR không đúng định dạng hệ thống");
+        } catch (Exception e) {
+            return new CheckInResponse(false, "Lỗi hệ thống: " + e.getMessage());
+        }
+    }
+
+    private void logCheckInHistory(Long staffId, Ve ve, Integer status, String deviceName) {
+        TaiKhoan staff = taiKhoanRepository.findById(staffId).orElse(null);
+        NhatKySoatVe log = new NhatKySoatVe();
+        log.setTaiKhoan(staff);
+        log.setVe(ve);
+        log.setTrangThaiSoatVe(status);
+        log.setThietBiQuet(deviceName != null ? deviceName : "Unknown Device");
+        nhatKySoatVeRepository.save(log);
     }
 }
