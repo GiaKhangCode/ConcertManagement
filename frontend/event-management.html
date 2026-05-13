@@ -265,7 +265,13 @@
         </div>
 
         <section class="revenue-section fade-up">
-            <h2 class="section-title">Danh Sách Sự Kiện</h2>
+        <section class="revenue-section fade-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Danh Sách Sự Kiện</h2>
+                <button class="btn btn-outline small" style="border-color: #00e5ff; color: #00e5ff;" onclick="showSettlementHistory()">
+                    <i class="fa fa-history"></i> LỊCH SỬ QUYẾT TOÁN
+                </button>
+            </div>
             <div class="revenue-table-wrapper">
                 <table class="revenue-table">
                     <thead>
@@ -302,8 +308,67 @@
                 <!-- Data will be loaded here -->
             </div>
 
-            <div style="margin-top:40px; text-align:center;">
+            <div style="margin-top:40px; text-align:center; display: flex; gap: 10px; justify-content: center;">
                 <button class="btn btn-outline small" onclick="window.print()">XUẤT BÁO CÁO (PDF)</button>
+                <button id="executeSettlementBtn" class="btn btn-primary small" style="display:none; background: linear-gradient(90deg, #ffb86c, #ff9f43); color: #000; font-weight: bold;" onclick="executeSettlement()">THỰC HIỆN QUYẾT TOÁN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settlement History Modal -->
+    <div id="historyModal" class="modal"
+        style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);">
+        <div class="modal-content"
+            style="background:#141928; margin:3% auto; padding:40px; border:1px solid #00e5ff; border-radius:24px; width:90%; max-width:800px; color:#fff; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h3 style="font-family:'Unbounded'; color:#00e5ff; margin:0; font-size:1.2rem;"><i class="fa fa-history"></i> LỊCH SỬ QUYẾT TOÁN</h3>
+                <button onclick="document.getElementById('historyModal').style.display='none'"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+
+            <div class="revenue-table-wrapper">
+                <table class="revenue-table">
+                    <thead>
+                        <tr>
+                            <th>Mã QT</th>
+                            <th>Sự kiện</th>
+                            <th>Số tiền</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="5" class="empty-state">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="emailModal" class="modal"
+        style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);">
+        <div class="modal-content"
+            style="background:#141928; margin:5% auto; padding:40px; border:1px solid #ff55ff; border-radius:24px; width:90%; max-width:600px; color:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="font-family:'Unbounded'; color:#ff55ff; margin:0; font-size:1.1rem;"><i class="fa fa-envelope"></i> GỬI EMAIL THÔNG BÁO</h3>
+                <button onclick="document.getElementById('emailModal').style.display='none'"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Gửi email thông báo hàng loạt cho tất cả những khách hàng đã mua vé sự kiện này (ví dụ: Thay đổi lịch diễn, thông báo quan trọng).</p>
+            
+            <input type="hidden" id="emailEventId">
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Tiêu đề Email</label>
+                <input type="text" id="emailSubject" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,85,255,0.3); border-radius: 8px; color: white;" placeholder="VD: THAY ĐỔI LỊCH DIỄN - SỰ KIỆN ABC">
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Nội dung Email</label>
+                <textarea id="emailContent" style="width: 100%; padding: 12px; height: 150px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,85,255,0.3); border-radius: 8px; color: white; resize: vertical;" placeholder="Nhập nội dung thông báo..."></textarea>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn btn-outline small" onclick="document.getElementById('emailModal').style.display='none'">HỦY BỎ</button>
+                <button id="sendEmailBtn" class="btn btn-primary small" style="background: #ff55ff; border: none; color: white; font-weight: bold; margin-left: 10px;" onclick="sendEventEmail()">GỬI EMAIL</button>
             </div>
         </div>
     </div>
@@ -386,9 +451,10 @@
                     <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
                     <td>${ev.soVeBan || 0}</td>
                     <td>
-                        <div style="display:flex; gap:10px;">
+                        <div style="display:flex; gap:10px; flex-wrap: wrap;">
                             <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit">Chỉnh sửa</a>
                             <button onclick="showSettlement(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ffb86c; color: #ffb86c;">Quyết toán</button>
+                            <button onclick="openEmailModal(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ff55ff; color: #ff55ff;"><i class="fa fa-envelope"></i> Gửi Mail</button>
                         </div>
                     </td>
                 `;
@@ -529,8 +595,130 @@
                     <!-- Lịch sử hoàn tiền -->
                     ${historyHtml}
                 `;
+
+                const btn = document.getElementById('executeSettlementBtn');
+                btn.style.display = 'inline-block';
+                // Chỉ cho quyết toán nếu sự kiện Đã kết thúc hoặc Đã hủy
+                if (d.trangThai === 'Đã kết thúc' || d.trangThai === 'Đã hủy') {
+                    btn.disabled = false;
+                    btn.dataset.eventId = eventId;
+                    btn.innerHTML = 'THỰC HIỆN QUYẾT TOÁN';
+                } else {
+                    btn.disabled = true;
+                    btn.innerHTML = 'CHƯA THỂ QUYẾT TOÁN';
+                    btn.title = 'Chỉ có thể quyết toán khi sự kiện đã kết thúc';
+                }
             } catch (e) {
                 container.innerHTML = '<p style="color:red; text-align:center;">Lỗi khi tải dữ liệu quyết toán.</p>';
+                document.getElementById('executeSettlementBtn').style.display = 'none';
+            }
+        }
+
+        async function executeSettlement() {
+            const btn = document.getElementById('executeSettlementBtn');
+            const eventId = btn.dataset.eventId;
+            if (!eventId) return;
+
+            if (!confirm("Xác nhận thực hiện quyết toán? Số tiền sẽ được cộng vào ví của bạn.")) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG XỬ LÝ...';
+
+            try {
+                const res = await fetch(`http://localhost:8081/api/finance/settlement/${eventId}/execute`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stellar_token') }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Quyết toán thành công!");
+                    document.getElementById('settlementModal').style.display = 'none';
+                    loadRevenue(localStorage.getItem('stellar_token')); // Refresh data
+                } else {
+                    alert("Lỗi: " + (data.message || "Không thể quyết toán"));
+                    btn.disabled = false;
+                    btn.innerHTML = 'THỰC HIỆN QUYẾT TOÁN';
+                }
+            } catch (e) {
+                alert("Lỗi hệ thống");
+                btn.disabled = false;
+                btn.innerHTML = 'THỰC HIỆN QUYẾT TOÁN';
+            }
+        }
+
+        async function showSettlementHistory() {
+            document.getElementById('historyModal').style.display = 'block';
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Đang tải...</td></tr>';
+
+            try {
+                const res = await fetch('http://localhost:8081/api/finance/settlement/history', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stellar_token') }
+                });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Chưa có lịch sử quyết toán nào.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(h => `
+                    <tr>
+                        <td>#${h.maQuyetToan}</td>
+                        <td>${h.suKien}</td>
+                        <td style="color: #00e5ff; font-weight: bold;">+${(h.soTienQuyetToan || 0).toLocaleString('vi-VN')}đ</td>
+                        <td>${h.thoiDiemQuyetToan ? new Date(h.thoiDiemQuyetToan).toLocaleString('vi-VN') : ''}</td>
+                        <td><span style="color: #00ff88; background: rgba(0,255,136,0.1); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">${h.trangThai}</span></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state" style="color:red;">Lỗi tải dữ liệu.</td></tr>';
+            }
+        }
+
+        function openEmailModal(eventId) {
+            document.getElementById('emailEventId').value = eventId;
+            document.getElementById('emailSubject').value = '';
+            document.getElementById('emailContent').value = '';
+            document.getElementById('emailModal').style.display = 'block';
+        }
+
+        async function sendEventEmail() {
+            const eventId = document.getElementById('emailEventId').value;
+            const subject = document.getElementById('emailSubject').value.trim();
+            const content = document.getElementById('emailContent').value.trim();
+            
+            if (!subject || !content) {
+                alert("Vui lòng nhập đầy đủ tiêu đề và nội dung email!");
+                return;
+            }
+
+            const btn = document.getElementById('sendEmailBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ĐANG GỬI...';
+
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${eventId}/send-email`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('stellar_token') 
+                    },
+                    body: JSON.stringify({ subject, content })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || "Đã gửi email thành công!");
+                    document.getElementById('emailModal').style.display = 'none';
+                } else {
+                    alert("Lỗi: " + (data.message || "Không thể gửi email"));
+                }
+            } catch (e) {
+                alert("Lỗi hệ thống");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'GỬI EMAIL';
             }
         }
     </script>

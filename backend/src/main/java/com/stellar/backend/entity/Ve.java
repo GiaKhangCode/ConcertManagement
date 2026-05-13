@@ -21,6 +21,10 @@ public class Ve {
     private HangVe hangVe;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaKhuVuc")
+    private KhuVuc khuVuc;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaGhe")
     private GheNgoi gheNgoi;
 
@@ -54,6 +58,8 @@ public class Ve {
     public void setDonMua(DonMua donMua) { this.donMua = donMua; }
     public HangVe getHangVe() { return hangVe; }
     public void setHangVe(HangVe hangVe) { this.hangVe = hangVe; }
+    public KhuVuc getKhuVuc() { return khuVuc; }
+    public void setKhuVuc(KhuVuc khuVuc) { this.khuVuc = khuVuc; }
     public GheNgoi getGheNgoi() { return gheNgoi; }
     public void setGheNgoi(GheNgoi gheNgoi) { this.gheNgoi = gheNgoi; }
     public LichDien getLichDien() { return lichDien; }

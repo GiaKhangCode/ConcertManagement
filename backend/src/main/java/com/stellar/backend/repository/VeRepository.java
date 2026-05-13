@@ -12,6 +12,9 @@ public interface VeRepository extends JpaRepository<Ve, Long> {
     
     long countByHangVe_SuKien_MaSuKien(Long maSuKien);
     long countByHangVe_MaHangVe(Long maHangVe);
+    long countByKhuVuc_MaKhuVuc(Long maKhuVuc);
+    long countByKhuVuc_MaKhuVucAndTrangThaiVeNotIn(Long maKhuVuc, java.util.Collection<String> trangThaiVe);
+    long countByHangVe_MaHangVeAndTrangThaiVeNotIn(Long maHangVe, java.util.Collection<String> trangThaiVe);
     long countByHangVe_SuKien_MaSuKienAndTrangThaiVeIn(Long maSuKien, java.util.List<String> statuses);
     
     // Lấy tất cả vé của một sự kiện mà chưa bị hủy (phục vụ hủy sự kiện)

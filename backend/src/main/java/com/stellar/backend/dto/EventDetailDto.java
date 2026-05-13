@@ -43,6 +43,16 @@ public class EventDetailDto {
     public List<SponsorDto> getSponsors() { return sponsors; }
     public void setSponsors(List<SponsorDto> sponsors) { this.sponsors = sponsors; }
 
+    private List<NgheSiDto> ngheSiList;
+    public List<NgheSiDto> getNgheSiList() { return ngheSiList; }
+    public void setNgheSiList(List<NgheSiDto> ngheSiList) { this.ngheSiList = ngheSiList; }
+
+    public static class NgheSiDto {
+        private String tenNgheSi;
+        public String getTenNgheSi() { return tenNgheSi; }
+        public void setTenNgheSi(String tenNgheSi) { this.tenNgheSi = tenNgheSi; }
+    }
+
     public static class OrganizerDto {
         private String name;
         private String email;

@@ -47,6 +47,15 @@ public class SettlementService {
     @Autowired
     private LichSuHoanTienRepository lichSuHoanTienRepository;
 
+    @Autowired
+    private com.stellar.backend.repository.LichSuQuyetToanRepository lichSuQuyetToanRepository;
+
+    @Autowired
+    private WalletService walletService;
+
+    @Autowired
+    private com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository;
+
     public Map<String, Object> getEventSettlement(Long eventId) {
         SuKien sk = suKienRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
@@ -127,6 +136,53 @@ public class SettlementService {
         report.put("refundHistory",        refundHistory);
         report.put("totalRefundCount",     recentRefunds.size());
 
+        return report;
+    }
+
+    public Map<String, Object> executeSettlement(Long eventId) {
+        SuKien sk = suKienRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
+
+        if (!"Đã kết thúc".equals(sk.getTrangThai())) {
+            throw new RuntimeException("Chỉ có thể quyết toán khi sự kiện đã kết thúc");
+        }
+
+        // Kiểm tra xem đã quyết toán chưa
+        if (lichSuQuyetToanRepository.findAll().stream().anyMatch(q -> q.getKyQT() != null && q.getKyQT().contains("Sự kiện: " + eventId + " -") && "Đã xử lý".equals(q.getTrangThai()))) {
+            throw new RuntimeException("Sự kiện này đã được quyết toán trước đó");
+        }
+
+        Map<String, Object> report = getEventSettlement(eventId);
+        BigDecimal netRevenue = (BigDecimal) report.get("netRevenue");
+
+        if (netRevenue.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Doanh thu không đủ để quyết toán");
+        }
+
+        com.stellar.backend.entity.TaiKhoan tkNhan = sk.getNguoiTao();
+        if (tkNhan == null) {
+            throw new RuntimeException("Không tìm thấy tài khoản nhà tổ chức để nhận tiền");
+        }
+
+        com.stellar.backend.entity.NhaToChuc ntc = nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(tkNhan.getMaTaiKhoan())
+                .orElseThrow(() -> new RuntimeException("Tài khoản không phải nhà tổ chức hợp lệ"));
+
+        // Thực hiện cộng tiền
+        walletService.receive(tkNhan.getMaTaiKhoan(), netRevenue, "Quyết toán doanh thu sự kiện: " + sk.getTenSuKien());
+
+        // Lưu lịch sử
+        com.stellar.backend.entity.LichSuQuyetToan ls = new com.stellar.backend.entity.LichSuQuyetToan();
+        ls.setNhaToChuc(ntc);
+        ls.setKyQT("Sự kiện: " + sk.getMaSuKien() + " - " + sk.getTenSuKien());
+        ls.setTongDoanhThu((BigDecimal) report.get("grossRevenue"));
+        ls.setPhiNenTang(((BigDecimal) report.get("platformFee")).add((BigDecimal) report.get("gatewayFee")));
+        ls.setSoTienChuyen(netRevenue);
+        ls.setTrangThai("Đã xử lý");
+        ls.setChungTuThanhToan("Chuyển vào ví");
+        lichSuQuyetToanRepository.save(ls);
+
+        report.put("settlementStatus", "Đã xử lý");
+        report.put("settlementAmount", netRevenue);
         return report;
     }
 }

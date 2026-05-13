@@ -20,6 +20,10 @@ public class EventCreateRequestDto {
     private List<HangVeDto> hangVeList;
     private RefundPolicyDto refundPolicy;
     private List<SponsorDto> sponsors;
+    private List<NgheSiDto> ngheSiList;
+
+    public List<NgheSiDto> getNgheSiList() { return ngheSiList; }
+    public void setNgheSiList(List<NgheSiDto> ngheSiList) { this.ngheSiList = ngheSiList; }
 
     public List<SponsorDto> getSponsors() { return sponsors; }
     public void setSponsors(List<SponsorDto> sponsors) { this.sponsors = sponsors; }
@@ -152,5 +156,12 @@ public class EventCreateRequestDto {
         public void setName(String name) { this.name = name; }
         public String getRank() { return rank; }
         public void setRank(String rank) { this.rank = rank; }
+    }
+
+    public static class NgheSiDto {
+        private String tenNgheSi;
+        
+        public String getTenNgheSi() { return tenNgheSi; }
+        public void setTenNgheSi(String tenNgheSi) { this.tenNgheSi = tenNgheSi; }
     }
 }

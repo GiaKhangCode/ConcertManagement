@@ -28,12 +28,12 @@ async function initProfile() {
             document.getElementById('userNameLabel').innerText = profile.fullName || profile.username || "Người dùng";
             document.getElementById('userEmailLabel').innerText = profile.email || 'Thành viên Ve\'ryGood';
             document.getElementById('walletBalance').innerText = (profile.walletBalance || 0).toLocaleString('vi-VN') + " VNĐ";
-            
+
             // Xử lý vai trò và tab nhà tổ chức
             if (profile.roles && profile.roles.includes('ROLE_ORGANIZER')) {
                 document.getElementById('tab-organizer').style.display = 'block';
                 document.getElementById('userRoleDis').innerText = "Nhà tổ chức";
-                
+
                 // Đổ dữ liệu vào form nhà tổ chức
                 document.getElementById('orgName').value = profile.organizationName || '';
                 document.getElementById('orgTaxCode').value = profile.taxCode || '';
@@ -62,38 +62,73 @@ async function loadTickets() {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (res.ok) {
-            const tickets = await res.json();
-            console.log("DEBUG: Dữ liệu vé từ server:", tickets);
-            document.getElementById('ticketCount').innerText = tickets.length + " vé";
-            if (tickets.length === 0) {
-                ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa sở hữu vé nào.</p>';
+            const orders = await res.json();
+            console.log("DEBUG: Dữ liệu đơn mua từ server:", orders);
+            document.getElementById('ticketCount').innerText = orders.length + " đơn mua";
+            if (orders.length === 0) {
+                ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa có đơn mua nào.</p>';
                 return;
             }
 
-            ticketListCont.innerHTML = tickets.map(tk => {
-                const d = new Date(tk.bookingTime).toLocaleString('vi-VN');
+            ticketListCont.innerHTML = orders.map(order => {
+                const d = new Date(order.bookingTime).toLocaleString('vi-VN');
+                const ticketsHtml = order.tickets.map(tk => {
+                    const isRefundedOrCanceled = tk.status === 'Đã hoàn vé' || tk.status === 'Đã hủy';
+                    const actionsHtml = isRefundedOrCanceled
+                        ? `<span style="color: #ff5555; font-weight: bold; font-size: 0.85rem;"><i class="fa fa-undo"></i> ${tk.status}</span>`
+                        : `<button class="btn btn-outline small" style="padding: 4px 10px; font-size: 0.7rem;" onclick="showQRCode(${tk.ticketId})"><i class="fa fa-qrcode"></i> Mã QR</button>
+                           <button class="btn btn-outline small" style="padding: 4px 10px; font-size: 0.7rem;" onclick="openResaleModal(${tk.ticketId})">Bán lại</button>
+                           <button class="btn btn-outline small" style="padding: 4px 10px; font-size: 0.7rem; border-color: #ff5555; color: #ff5555;" onclick="openRefundModal(${tk.ticketId}, ${order.eventId})">Hoàn vé</button>`;
+
+                    return `
+                    <div class="ticket-sub-item" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px 15px; margin-top: 10px; border-radius: 8px; border-left: 3px solid ${isRefundedOrCanceled ? '#ff5555' : '#00f3ff'}; opacity: ${isRefundedOrCanceled ? '0.7' : '1'};">
+                        <div>
+                            <strong style="color: ${isRefundedOrCanceled ? '#ff5555' : '#00f3ff'};">Vé #${tk.ticketId}</strong> - Hạng: ${tk.tierName}
+                            <div style="font-size: 0.8rem; color: #a0a5b5; margin-top: 5px;"><i class="fa fa-map-marker-alt"></i> Khu vực: ${tk.zoneName} | <i class="fa fa-chair"></i> Ghế: ${tk.seatInfo}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
                 return `
-                    <div class="ticket-item">
-                        <div style="flex: 1;">
-                            <h4>SỰ KIỆN: ${tk.eventName}</h4>
-                            <div class="ticket-meta">
-                                <span style="cursor: pointer; color: var(--accent-secondary);" onclick="showQRCode(${tk.ticketId})">
-                                    <i class="fa fa-qrcode"></i> TIC-${tk.ticketId} (Đơn: ${tk.transactionId})
-                                </span>
-                                <span><i class="fa fa-ticket"></i> ${tk.ticketCount} vé (${tk.tierName})</span>
-                                <span><i class="fa fa-clock"></i> ${d}</span>
+                    <div class="ticket-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleOrderDetails(${order.transactionId})">
+                            <div style="flex: 1;">
+                                <h4>SỰ KIỆN: ${order.eventName}</h4>
+                                <div class="ticket-meta">
+                                    <span><i class="fa fa-receipt"></i> Đơn mua #${order.transactionId}</span>
+                                    <span><i class="fa fa-ticket"></i> ${order.tickets.length} vé</span>
+                                    <span><i class="fa fa-clock"></i> ${d}</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #50fa7b; font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: bold; margin-bottom: 5px;">${order.totalPrice.toLocaleString('vi-VN')} đ</div>
+                                <div style="font-size: 0.8rem; color: var(--accent-secondary);"><i class="fa fa-chevron-down" id="icon-order-${order.transactionId}"></i> Xem chi tiết vé</div>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem;" onclick="openResaleModal(${tk.ticketId})">BÁN LẠI</button>
-                            <button class="btn btn-outline small" style="padding: 5px 12px; font-size: 0.75rem; border-color: #ff5555; color: #ff5555;" onclick="openRefundModal(${tk.ticketId}, ${tk.eventId})">HOÀN VÉ</button>
-                            <div class="ticket-status">Khả dụng</div>
+                        <div id="order-details-${order.transactionId}" style="display: none; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 5px;">
+                            ${ticketsHtml}
                         </div>
                     </div>
                 `;
             }).join('');
         }
     } catch (e) { console.error("Lỗi khi tải danh sách vé:", e); }
+}
+
+window.toggleOrderDetails = function (orderId) {
+    const el = document.getElementById('order-details-' + orderId);
+    const icon = document.getElementById('icon-order-' + orderId);
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+    } else {
+        el.style.display = 'none';
+        icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+    }
 }
 
 async function loadHistory() {
@@ -158,7 +193,7 @@ function switchTab(tab) {
     document.getElementById('tab-tickets').classList.toggle('active', tab === 'tickets');
     document.getElementById('tab-history').classList.toggle('active', tab === 'history');
     document.getElementById('tab-organizer').classList.toggle('active', tab === 'organizer');
-    
+
     document.getElementById('tickets-tab-content').style.display = tab === 'tickets' ? 'block' : 'none';
     document.getElementById('history-tab-content').style.display = tab === 'history' ? 'block' : 'none';
     document.getElementById('organizer-tab-content').style.display = tab === 'organizer' ? 'block' : 'none';
@@ -181,9 +216,9 @@ async function saveOrganizerInfo() {
     try {
         const res = await fetch('http://localhost:8081/api/user/organizer-setup', {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token 
+                'Authorization': 'Bearer ' + token
             },
             body: JSON.stringify(data)
         });
@@ -321,22 +356,22 @@ document.getElementById('confirmRefundBtn')?.addEventListener('click', async () 
 function showQRCode(ticketId) {
     const container = document.getElementById('qrcodeContainer');
     const idLabel = document.getElementById('qrTicketId');
-    
+
     if (!container || !idLabel) return;
 
     // Clear previous QR
     container.innerHTML = "";
     idLabel.innerText = "TIC-" + ticketId;
-    
+
     // Generate new QR
     new QRCode(container, {
         text: ticketId.toString(),
         width: 200,
         height: 200,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
     });
-    
+
     openModal('qrModal');
 }

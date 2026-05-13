@@ -179,6 +179,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Hiển thị form nếu hợp lệ
             document.getElementById('main-admin-container').style.display = 'block';
         }
+
+        // Tải danh sách nghệ sĩ có sẵn
+        const artRes = await fetch('http://localhost:8081/api/admin/artists', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (artRes.ok) {
+            const artists = await safeParseJson(artRes, "Tải danh sách nghệ sĩ");
+            window.artistOptionsHTML = artists.map(a => `<option value="${a.tenNgheSi}">${a.tenNgheSi}</option>`).join('');
+        }
+
     } catch (e) { 
         console.error("Lỗi khởi tạo:", e);
         // Nếu lỗi API vẫn cho hiện để không bị kẹt trang trắng (hoặc có thể xử lý khác tùy UI)
@@ -344,6 +352,11 @@ async function loadEventData(id, token) {
         // Load Sponsors
         if (data.sponsors && data.sponsors.length > 0) {
             data.sponsors.forEach(s => addSponsorRow(s));
+        }
+
+        // Load Artists
+        if (data.ngheSiList && data.ngheSiList.length > 0) {
+            data.ngheSiList.forEach(ns => addArtistRow(ns));
         }
 
         // Load Stage Builder (SeatMap)
@@ -534,6 +547,73 @@ function addSponsorRow(data = null) {
 }
 
 // =============================================
+// ARTIST BUILDERS
+// =============================================
+function toggleArtistMode(rowId, mode) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const btnEx = row.querySelector('.btn-art-existing');
+    const btnNew = row.querySelector('.btn-art-new');
+    const secEx = row.querySelector('.art-existing-section');
+    const secNew = row.querySelector('.art-new-section');
+
+    if (mode === 'existing') {
+        btnEx.classList.add('active');
+        btnNew.classList.remove('active');
+        secEx.style.display = 'block';
+        secNew.style.display = 'none';
+        row.dataset.mode = 'existing';
+    } else {
+        btnNew.classList.add('active');
+        btnEx.classList.remove('active');
+        secNew.style.display = 'block';
+        secEx.style.display = 'none';
+        row.dataset.mode = 'new';
+    }
+}
+
+function addArtistRow(data = null) {
+    const id = `art_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    // Mặc định hiển thị select nếu không có data hoặc data đã có mã nghệ sĩ, còn lại là new
+    const isNew = data && !data.maNgheSi && data.tenNgheSi;
+    const initialMode = isNew ? 'new' : 'existing';
+
+    const html = `
+        <div class="dynamic-box" id="${id}" data-mode="${initialMode}" style="border-left-color: #ff55ff; background: rgba(255, 85, 255, 0.05); padding: 20px;">
+            <button class="remove-btn" type="button" onclick="removeEl('${id}')"><i class="fa fa-times-circle"></i></button>
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <button type="button" class="btn btn-outline small btn-art-existing ${initialMode === 'existing' ? 'active' : ''}" onclick="toggleArtistMode('${id}', 'existing')">Chọn có sẵn</button>
+                <button type="button" class="btn btn-outline small btn-art-new ${initialMode === 'new' ? 'active' : ''}" onclick="toggleArtistMode('${id}', 'new')">Thêm mới</button>
+            </div>
+            
+            <div class="art-existing-section" style="display: ${initialMode === 'existing' ? 'block' : 'none'};">
+                <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Chọn Nghệ Sĩ</label>
+                <select class="form-input art-select" style="width: 100%;">
+                    <option value="">-- Chọn nghệ sĩ --</option>
+                    ${window.artistOptionsHTML || ''}
+                </select>
+            </div>
+
+            <div class="art-new-section" style="display: ${initialMode === 'new' ? 'block' : 'none'};">
+                <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Tên Nghệ Sĩ Mới</label>
+                <input type="text" class="form-input art-name" placeholder="VD: Sơn Tùng M-TP..." value="${isNew ? data.tenNgheSi : ''}">
+            </div>
+        </div>
+    `;
+    document.getElementById('artistsContainer').insertAdjacentHTML('beforeend', html);
+
+    // Set giá trị nếu có
+    if (!isNew && data && data.tenNgheSi) {
+        const select = document.getElementById(id).querySelector('.art-select');
+        select.value = data.tenNgheSi;
+        setupAutocomplete(select.id || (select.id = 'select_' + id), "Tìm kiếm nghệ sĩ...");
+    } else {
+        const select = document.getElementById(id).querySelector('.art-select');
+        setupAutocomplete(select.id || (select.id = 'select_' + id), "Tìm kiếm nghệ sĩ...");
+    }
+}
+
+// =============================================
 // SUBMIT — 1 lần duy nhất, ghế tạo luôn trong backend
 // =============================================
 document.getElementById('createEventForm').addEventListener('submit', async (e) => {
@@ -544,28 +624,45 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
     const submitBtn = document.getElementById('submitEventBtn');
 
     // Validation cơ bản trước khi xử lý
+    // Chỉ validate các trường text thông thường, KHÔNG validate datetime (do flatpickr dùng hidden input)
     const requiredFields = [
         { id: 'tenSuKien', name: 'Tên sự kiện' },
-        { id: 'maDiaDiem', name: 'Địa điểm' },
-        { id: 'thoiGianMoBanVe', name: 'Thời gian mở bán vé' },
-        { id: 'thoiGianNgungBanVe', name: 'Thời gian ngừng bán vé' },
-        { id: 'thoiGianBD', name: 'Thời gian bắt đầu sự kiện' },
-        { id: 'thoiGianKT', name: 'Thời gian kết thúc sự kiện' },
         { id: 'eventPoster', name: 'URL Ảnh Poster' },
         { id: 'eventThumbnail', name: 'URL Ảnh Thumbnail' }
     ];
 
     for (const field of requiredFields) {
         const el = document.getElementById(field.id);
-        // Nếu đang chọn địa điểm mới thì không check maDiaDiem selector
-        if (field.id === 'maDiaDiem' && document.getElementById('btnNewLoc').classList.contains('active')) continue;
-        
         if (el && !el.value.trim()) {
             alert(`Vui lòng nhập: ${field.name}`);
             el.focus();
             return;
         }
     }
+
+    // Validate địa điểm
+    const isNewLoc = document.getElementById('btnNewLoc').classList.contains('active');
+    if (!isNewLoc && !document.getElementById('maDiaDiem').value) {
+        alert('Vui lòng chọn địa điểm tổ chức!');
+        return;
+    }
+
+    // Validate datetime: đọc trực tiếp value của input gốc (flatpickr ghi vào đây)
+    const dateFields = [
+        { id: 'thoiGianMoBanVe', name: 'Thời gian mở bán vé' },
+        { id: 'thoiGianNgungBanVe', name: 'Thời gian ngừng bán vé' },
+        { id: 'thoiGianBD', name: 'Thời gian bắt đầu sự kiện' },
+        { id: 'thoiGianKT', name: 'Thời gian kết thúc sự kiện' }
+    ];
+    for (const field of dateFields) {
+        const el = document.getElementById(field.id);
+        if (el && !el.value) {
+            alert(`Vui lòng chọn: ${field.name}`);
+            return;
+        }
+    }
+
+    console.log('[Submit] Validation passed, building payload...');
 
     const lichDienList = [];
     document.querySelectorAll('#lichDienContainer .dynamic-box').forEach(node => {
@@ -652,7 +749,12 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         sponsors: Array.from(document.querySelectorAll('#sponsorsContainer .dynamic-box')).map(node => ({
             name: node.querySelector('.sp-name').value.trim(),
             rank: node.querySelector('.sp-rank').value
-        }))
+        })),
+        ngheSiList: Array.from(document.querySelectorAll('#artistsContainer .dynamic-box')).map(node => {
+            const mode = node.dataset.mode;
+            const tenNs = mode === 'existing' ? node.querySelector('.art-select').value.trim() : node.querySelector('.art-name').value.trim();
+            return { tenNgheSi: tenNs };
+        }).filter(ns => ns.tenNgheSi)
     };
 
     try {

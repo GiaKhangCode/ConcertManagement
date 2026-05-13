@@ -103,7 +103,17 @@
             align-items: center;
         }
 
-        .ticket-list { display: flex; flex-direction: column; gap: 20px; }
+        .ticket-list { 
+            display: flex; flex-direction: column; gap: 20px; 
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-secondary) transparent;
+        }
+        .ticket-list::-webkit-scrollbar { width: 6px; }
+        .ticket-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .ticket-list::-webkit-scrollbar-thumb { background: var(--accent-secondary); border-radius: 10px; }
 
         .ticket-item {
             background: rgba(255, 255, 255, 0.03);
@@ -262,7 +272,7 @@
         <main class="profile-main fade-up" style="animation-delay: 0.15s;">
             <!-- Tabs -->
             <div style="display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <button class="tab-btn active" onclick="switchTab('tickets')" id="tab-tickets">VÉ CỦA TÔI</button>
+                <button class="tab-btn active" onclick="switchTab('tickets')" id="tab-tickets">ĐƠN MUA CỦA TÔI</button>
                 <button class="tab-btn" onclick="switchTab('history')" id="tab-history">LỊCH SỬ GIAO DỊCH</button>
                 <button class="tab-btn" onclick="switchTab('organizer')" id="tab-organizer" style="display: none;">NHÀ TỔ CHỨC</button>
             </div>
@@ -270,8 +280,8 @@
             <!-- Ticket List Tab -->
             <div id="tickets-tab-content">
                 <div class="section-title">
-                    <h2>VÉ ĐÃ SỞ HỮU</h2>
-                    <span style="font-size: 0.9rem; color: var(--accent-secondary);" id="ticketCount">0 vé</span>
+                    <h2>ĐƠN MUA CỦA BẠN</h2>
+                    <span style="font-size: 0.9rem; color: var(--accent-secondary);" id="ticketCount">0 đơn mua</span>
                 </div>
                 <div class="ticket-list" id="ticketListCont">
                     <div style="text-align: center; padding: 40px; color: var(--text-muted);">

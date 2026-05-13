@@ -1035,11 +1035,37 @@ function getStageBuilderData() {
 
     let zones = [];
     let dsGhe = [];
+    let seatMapCache = {};
+    
     json.objects.forEach(obj => {
         if (obj.shapeType === 'SEAT') {
+            let zId = obj.zoneId || 'no_zone';
+            if (!seatMapCache[zId]) seatMapCache[zId] = {};
+            let label = obj.customLabel || 'Ghe';
+            
+            // Xử lý trùng lặp ToaDo trong cùng 1 khu vực để fix lỗi khóa nhầm nhiều ghế
+            if (seatMapCache[zId][label]) {
+                let suffix = 1;
+                while (seatMapCache[zId][label + '_' + suffix]) {
+                    suffix++;
+                }
+                label = label + '_' + suffix;
+                obj.customLabel = label;
+                
+                // Đồng bộ lại Text hiển thị trên Canvas
+                let canvasObj = canvas.getObjects().find(o => o.uuid === obj.uuid);
+                if (canvasObj) {
+                    canvasObj.set('customLabel', label);
+                    if (canvasObj.getObjects && canvasObj.getObjects().length > 1) {
+                        canvasObj.getObjects()[1].set('text', label);
+                    }
+                }
+            }
+            seatMapCache[zId][label] = true;
+
             dsGhe.push({
                 maKhuVuc: obj.zoneId ? parseInt(obj.zoneId) : null,
-                toaDo: obj.customLabel || '',
+                toaDo: label,
             });
         } else if (obj.shapeType) {
             let z = {

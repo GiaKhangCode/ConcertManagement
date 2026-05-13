@@ -19,6 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.stellar.backend.entity.NhatKyDangNhap;
+import com.stellar.backend.repository.NhatKyDangNhapRepository;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,32 +53,58 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    NhatKyDangNhapRepository nhatKyDangNhapRepository;
+
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-        
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // Update last login timestamp
-        TaiKhoan tk = taiKhoanRepository.findById(userDetails.getId()).orElse(null);
-        if (tk != null) {
-            tk.setLanDangNhapCuoi(LocalDateTime.now());
-            taiKhoanRepository.save(tk);
+            // Update last login timestamp
+            TaiKhoan tk = taiKhoanRepository.findById(userDetails.getId()).orElse(null);
+            if (tk != null) {
+                tk.setLanDangNhapCuoi(LocalDateTime.now());
+                taiKhoanRepository.save(tk);
+
+                NhatKyDangNhap log = new NhatKyDangNhap();
+                log.setTaiKhoan(tk);
+                log.setTenDangNhapNhapVao(loginRequest.getUsername());
+                log.setDiaChiIP(request.getRemoteAddr());
+                log.setUserAgent(request.getHeader("User-Agent"));
+                log.setTrangThai("Thành công");
+                nhatKyDangNhapRepository.save(log);
+            }
+
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(new JwtResponse(jwt, 
+                                                     userDetails.getId(), 
+                                                     userDetails.getUsername(), 
+                                                     userDetails.getEmail(),
+                                                     roles));
+        } catch (Exception e) {
+            TaiKhoan tk = taiKhoanRepository.findByTenDangNhap(loginRequest.getUsername()).orElse(null);
+            if (tk != null) {
+                NhatKyDangNhap log = new NhatKyDangNhap();
+                log.setTaiKhoan(tk);
+                log.setTenDangNhapNhapVao(loginRequest.getUsername());
+                log.setDiaChiIP(request.getRemoteAddr());
+                log.setUserAgent(request.getHeader("User-Agent"));
+                log.setTrangThai("Thất bại");
+                log.setLyDoThatBai("Sai mật khẩu");
+                nhatKyDangNhapRepository.save(log);
+            }
+            return ResponseEntity.badRequest().body(new MessageResponse("Lỗi: Tài khoản hoặc mật khẩu không chính xác!"));
         }
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(jwt, 
-                                                 userDetails.getId(), 
-                                                 userDetails.getUsername(), 
-                                                 userDetails.getEmail(),
-                                                 roles));
     }
 
     @PostMapping("/register")

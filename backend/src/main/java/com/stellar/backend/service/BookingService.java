@@ -27,6 +27,9 @@ public class BookingService {
     private SuKienRepository suKienRepository;
 
     @Autowired
+    private KhuVucRepository khuVucRepository;
+
+    @Autowired
     private HangVeRepository hangVeRepository;
 
     @Autowired
@@ -59,10 +62,36 @@ public class BookingService {
         // 3. Kiểm tra ghế
         boolean skipSeatCheck = (request.getDsGhe() == null || request.getDsGhe().isEmpty());
         List<TrangThaiGheTheoSuat> userLocks = new ArrayList<>();
+        KhuVuc finalKhuVuc = null;
+
         if (!skipSeatCheck) {
             userLocks = trangThaiGheTheoSuatRepository.findByMaLichDienAndTaiKhoanMaTaiKhoanAndTrangThai(validMaLichDien, userId, "Đang giữ chỗ");
             if (userLocks.size() < request.getSoLuong()) {
                 throw new RuntimeException("Bạn chưa khóa đủ số lượng ghế trên hệ thống.");
+            }
+        } else {
+            long capacity = hangVe.getTongSoLuong() != null ? hangVe.getTongSoLuong() : 0;
+            
+            if (request.getMaKhuVuc() != null) {
+                finalKhuVuc = khuVucRepository.findById(request.getMaKhuVuc()).orElse(null);
+            } else {
+                List<KhuVuc> kvList = khuVucRepository.findByHangVe_MaHangVe(hangVe.getMaHangVe());
+                if (kvList != null && !kvList.isEmpty()) {
+                    finalKhuVuc = kvList.get(0);
+                }
+            }
+            
+            if (finalKhuVuc != null && finalKhuVuc.getSucChuaKv() != null) {
+                capacity = finalKhuVuc.getSucChuaKv();
+            }
+            
+            java.util.List<String> ignoredStatuses = java.util.Arrays.asList("Đã hủy", "Đã hoàn vé");
+            long veDaBan = (finalKhuVuc != null) ? 
+                veRepository.countByKhuVuc_MaKhuVucAndTrangThaiVeNotIn(finalKhuVuc.getMaKhuVuc(), ignoredStatuses) : 
+                veRepository.countByHangVe_MaHangVeAndTrangThaiVeNotIn(hangVe.getMaHangVe(), ignoredStatuses);
+            
+            if (veDaBan + request.getSoLuong() > capacity) {
+                throw new RuntimeException("Rất tiếc! Số lượng vé vượt quá giới hạn sức chứa còn lại của khu vực này.");
             }
         }
 
@@ -114,11 +143,13 @@ public class BookingService {
             if (!skipSeatCheck && i < userLocks.size()) {
                 TrangThaiGheTheoSuat lock = userLocks.get(i);
                 ve.setGheNgoi(lock.getGheNgoi());
+                ve.setKhuVuc(lock.getGheNgoi() != null ? lock.getGheNgoi().getKhuVuc() : null);
                 ve.setLichDien(lock.getLichDien());
                 lock.setTrangThai("Đã đặt");
                 lock.setThoiGianHetHan(null);
                 trangThaiGheTheoSuatRepository.save(lock);
             } else {
+                ve.setKhuVuc(finalKhuVuc);
                 Long finalMaLichDien = validMaLichDien;
                 ve.setLichDien(suKien.getDanhSachLichDien().stream()
                         .filter(ld -> ld.getMaLichDien().equals(finalMaLichDien))

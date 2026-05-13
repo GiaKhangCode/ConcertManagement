@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <title>Ve'ryGood | Quản Lý Phê Duyệt</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/test.png">
@@ -51,8 +54,17 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
         }
 
         /* === EVENT APPROVAL CARDS === */
@@ -67,9 +79,10 @@
         .event-card.admin-view {
             height: auto;
             border-color: rgba(255, 255, 255, 0.1);
-            position: relative; /* Cần thiết cho overlay định vị chính xác */
+            position: relative;
+            /* Cần thiết cho overlay định vị chính xác */
         }
-        
+
         /* Giao diện Body Card Admin */
         .admin-view .card-body {
             padding: 2rem;
@@ -309,10 +322,29 @@
         }
 
         /* Status badge colors */
-        .status-badge.sapdiendra { background: rgba(255, 200, 0, 0.15); color: #ffc800; border: 1px solid rgba(255, 200, 0, 0.3); }
-        .status-badge.dangdiendra { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
-        .status-badge.daketthuc { background: rgba(150, 150, 150, 0.15); color: #aaa; border: 1px solid rgba(150, 150, 150, 0.3); }
-        .status-badge.dahuy { background: rgba(255, 51, 102, 0.15); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.3); }
+        .status-badge.sapdiendra {
+            background: rgba(255, 200, 0, 0.15);
+            color: #ffc800;
+            border: 1px solid rgba(255, 200, 0, 0.3);
+        }
+
+        .status-badge.dangdiendra {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .status-badge.daketthuc {
+            background: rgba(150, 150, 150, 0.15);
+            color: #aaa;
+            border: 1px solid rgba(150, 150, 150, 0.3);
+        }
+
+        .status-badge.dahuy {
+            background: rgba(255, 51, 102, 0.15);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
 
         /* === PROCESSED STATE === */
         .admin-view.processed {
@@ -333,7 +365,8 @@
             opacity: 0;
             transition: opacity 0.3s;
             border-radius: 16px;
-            pointer-events: none; /* Quan trọng: Để không chặn click vào các nút bên dưới */
+            pointer-events: none;
+            /* Quan trọng: Để không chặn click vào các nút bên dưới */
         }
 
         .processed .status-overlay {
@@ -354,8 +387,17 @@
             transform: translateY(0);
         }
 
-        .msg-approved { background: #00ff88; color: #000; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
-        .msg-rejected { background: #ff3366; color: #fff; box-shadow: 0 0 30px rgba(255, 51, 102, 0.4); }
+        .msg-approved {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+        }
+
+        .msg-rejected {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.4);
+        }
 
         /* === TOAST === */
         .toast {
@@ -373,7 +415,7 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             color: #fff;
             font-weight: 600;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
         .toast.show {
@@ -383,13 +425,23 @@
 
         /* Animations */
         @keyframes drift {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-5%, 10%) scale(1.1); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(-5%, 10%) scale(1.1);
+            }
         }
 
         @media (max-width: 768px) {
-            .approval-grid { grid-template-columns: 1fr; }
-            .admin-hero { padding: 2rem; }
+            .approval-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-hero {
+                padding: 2rem;
+            }
         }
 
         .custom-cursor {
@@ -398,13 +450,16 @@
         }
     </style>
 </head>
+
 <body>
     <div class="custom-cursor"></div>
     <div class="bg-mesh primary-mesh"></div>
     <div class="bg-mesh secondary-mesh"></div>
 
     <header class="navbar">
-        <a href="index.html" style="text-decoration:none; color:inherit;"><div class="logo">Ve'ry<span class="neon-text">Good</span></div></a>
+        <a href="index.html" style="text-decoration:none; color:inherit;">
+            <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
+        </a>
         <div class="nav-center">
             <div class="search-bar">
                 <i class="fa fa-search"></i>
@@ -417,7 +472,7 @@
             <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
             <a href="organizer-promotions.html" style="display:none;" id="promotionsNav" class="nav-btn">Khuyến Mãi</a>
             <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
-            
+
             <div class="account-dropdown" id="accountDropdown" style="display:none;">
                 <button class="btn btn-account">
                     <i class="fa fa-user-circle"></i>
@@ -437,17 +492,21 @@
 
     <main class="container" style="padding-top: 2rem;">
         <!-- Tối giản hóa: Thay Banner lớn bằng tiêu đề và Badge tích hợp -->
-        <div class="admin-page-header fade-up" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem;">
+        <div class="admin-page-header fade-up"
+            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <h1 class="neon-text" style="font-size: 1.8rem; font-family: 'Unbounded'; margin: 0;">KIỂM DUYỆT</h1>
-                <div class="pending-count-badge" id="pendingCounter" style="display: flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary);">
-                    <span class="dot" style="width: 8px; height: 8px; background: var(--accent-secondary); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent-secondary); animation: pulse 2s infinite;"></span>
+                <div class="pending-count-badge" id="pendingCounter"
+                    style="display: flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: var(--accent-secondary);">
+                    <span class="dot"
+                        style="width: 8px; height: 8px; background: var(--accent-secondary); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent-secondary); animation: pulse 2s infinite;"></span>
                     <span id="pendingCountText">Đang quét...</span>
                 </div>
             </div>
-            
+
             <div class="header-actions" style="display: flex; gap: 10px;">
-                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm mới</button>
+                <button class="btn btn-outline small" onclick="location.reload()"><i class="fa fa-sync-alt"></i> Làm
+                    mới</button>
             </div>
         </div>
 
@@ -455,7 +514,9 @@
         <section class="events-section fade-up stagger-1">
             <h2 class="section-title">CHỜ PHÊ DUYỆT</h2>
             <div class="approval-grid" id="approvalGrid">
-                <div class="loading-spinner"><div class="spinner"></div></div>
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </section>
 
@@ -466,7 +527,9 @@
         <section class="events-section fade-up stagger-1">
             <h2 class="section-title">SỰ KIỆN NỔI BẬT (HERO)</h2>
             <div class="approval-grid" id="featureGrid">
-                <div class="loading-spinner"><div class="spinner"></div></div>
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </section>
 
@@ -474,15 +537,19 @@
         <section class="events-section fade-up stagger-1" style="margin-top: 5rem;">
             <h2 class="section-title">YÊU CẦU HOÀN TIỀN (REFUNDS)</h2>
             <div class="approval-grid" id="refundGrid">
-                <div class="loading-spinner"><div class="spinner"></div></div>
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </section>
-        
+
         <!-- Rejected Events Section -->
         <section class="events-section fade-up stagger-1" style="margin-top: 5rem;">
             <h2 class="section-title">SỰ KIỆN ĐÃ TỪ CHỐI (REJECTED)</h2>
             <div class="approval-grid" id="rejectedGrid">
-                <div class="loading-spinner"><div class="spinner"></div></div>
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </section>
     </main>
@@ -532,12 +599,12 @@
         function formatDate(dateStr) {
             if (!dateStr) return 'Chưa xác định';
             try {
-                return new Date(dateStr).toLocaleDateString('vi-VN', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                return new Date(dateStr).toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             } catch (e) {
                 return dateStr;
@@ -568,7 +635,7 @@
             }
 
             let roles = [];
-            try { roles = JSON.parse(rolesStr || '[]'); } catch(e) {}
+            try { roles = JSON.parse(rolesStr || '[]'); } catch (e) { }
 
             if (!roles.includes('ROLE_ADMIN')) {
                 alert('Truy cập bị từ chối. Chỉ dành cho Quản Trị Viên (Admin).');
@@ -588,7 +655,7 @@
                     try {
                         const userData = JSON.parse(currentUser);
                         userNameLabel.textContent = userData.hoTen || userData.name || currentUser;
-                    } catch(e) {
+                    } catch (e) {
                         userNameLabel.textContent = currentUser;
                     }
                 }
@@ -597,7 +664,7 @@
             // Show Admin Navs
             const adminNav = document.getElementById('adminNav');
             if (adminNav) adminNav.style.display = 'inline-flex';
-            
+
             const revenueNav = document.getElementById('revenueNav');
             if (revenueNav) revenueNav.style.display = 'inline-flex';
 
@@ -728,12 +795,20 @@
                             <div class="meta-item"><span class="meta-label">Thời gian</span><span class="meta-value">${formatDate(ev.thoiGianBD)}</span></div>
                             <div class="meta-item"><span class="meta-label">Địa điểm</span><span class="meta-value">${ev.diaDiem || 'Chưa cập nhật'}</span></div>
                         </div>
+                        <div class="status-update-widget" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
+                            <label style="font-size: 0.8rem; color: #a0a5b5;">Trạng thái:</label>
+                            <select id="status-select-${ev.maSuKien}" class="status-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 5px;" ${ev.trangThai === 'Đã hủy' || ev.trangThai === 'Đã kết thúc' ? 'disabled' : ''}>
+                                <option value="${ev.trangThai}" selected>${ev.trangThai}</option>
+                                ${ev.trangThai !== 'Đã hủy' && ev.trangThai !== 'Đã kết thúc' ? '<option value="Đã hủy">Đã hủy</option>' : ''}
+                            </select>
+                            <button class="btn-update-status" onclick="updateEventStatus(${ev.maSuKien})" style="background: #00e5ff; color: #000; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; ${ev.trangThai === 'Đã hủy' || ev.trangThai === 'Đã kết thúc' ? 'opacity: 0.5; cursor: not-allowed; pointer-events: none;' : ''}">Lưu</button>
+                        </div>
                         <div class="card-actions">
-                            <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat ? 'disabled' : ''}>
+                            <button class="admin-btn btn-feature" onclick="setFeatured(${ev.maSuKien})" ${ev.laSuKienNoiBat || ev.trangThai === 'Đã hủy' ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
                                 <i class="fa fa-star"></i> ${ev.laSuKienNoiBat ? 'Đang Nổi Bật' : 'Nổi bật'}
                             </button>
-                            <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none;"><i class="fa fa-edit"></i> Sửa</a>
-                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})"><i class="fa fa-trash"></i> Xóa</button>
+                            <a href="${ev.trangThai === 'Đã hủy' ? '#' : 'admin-create.html?id=' + ev.maSuKien}" class="admin-btn btn-edit" style="text-decoration:none; ${ev.trangThai === 'Đã hủy' ? 'opacity: 0.5; cursor: not-allowed; pointer-events: none;' : ''}"><i class="fa fa-edit"></i> Sửa</a>
+                            <button class="admin-btn btn-delete" onclick="deleteEvent(${ev.maSuKien})" ${ev.trangThai === 'Đã hủy' ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}><i class="fa fa-trash"></i> Xóa</button>
                         </div>
                     </div>
                 </div>`;
@@ -873,6 +948,25 @@
             const countText = document.getElementById('pendingCountText');
             if (countText) countText.textContent = `${remaining} sự kiện chờ duyệt`;
         }
+        async function updateEventStatus(id) {
+            const status = document.getElementById(`status-select-${id}`).value;
+            const token = localStorage.getItem('stellar_token');
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/events/${id}/status?status=${encodeURIComponent(status)}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    showToast('Cập nhật trạng thái thành công!', 'success');
+                    loadApprovedEvents(token);
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Lỗi cập nhật', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối', 'error');
+            }
+        }
     </script>
     <script src="js/script.js"></script>
     <!-- Mascot Companion -->
@@ -881,4 +975,5 @@
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
 </body>
+
 </html>

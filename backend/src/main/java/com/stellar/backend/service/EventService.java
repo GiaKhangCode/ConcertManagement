@@ -10,8 +10,10 @@ import com.stellar.backend.repository.LichDienRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.QuyTacHoanTienRepository;
 import com.stellar.backend.entity.QuyTacHoanTien;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,9 +25,9 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
 
-    // Chỉ hiển thị sự kiện đã được Admin phê duyệt cho khách hàng
+    // Chỉ hiển thị sự kiện đang bán vé / diễn ra cho khách hàng trên trang chủ
     private static final List<String> TRANG_THAI_HIEN_THI = List.of(
-            "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc"
+            "Sắp diễn ra", "Đang diễn ra"
     );
 
     private final SuKienRepository suKienRepository;
@@ -166,6 +168,15 @@ public class EventService {
             }).collect(Collectors.toList()));
         }
 
+        // Map Artists
+        if (sk.getThamGiaList() != null) {
+            dto.setNgheSiList(sk.getThamGiaList().stream().map(tg -> {
+                EventDetailDto.NgheSiDto nsDto = new EventDetailDto.NgheSiDto();
+                nsDto.setTenNgheSi(tg.getNgheSi().getTenNgheSi());
+                return nsDto;
+            }).collect(Collectors.toList()));
+        }
+
         // Map Organizer Info
         if (sk.getNguoiTao() != null) {
             nhaToChucRepository.findByTaiKhoan_MaTaiKhoan(sk.getNguoiTao().getMaTaiKhoan()).ifPresent(ntc -> {
@@ -177,5 +188,30 @@ public class EventService {
         }
 
         return dto;
+    }
+
+    // Cron job chạy mỗi phút để cập nhật trạng thái sự kiện
+    @Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void updateEventStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Chuyển "Sắp diễn ra" thành "Đang diễn ra"
+        List<SuKien> upcomingEvents = suKienRepository.findByTrangThai("Sắp diễn ra");
+        for (SuKien sk : upcomingEvents) {
+            if (!now.isBefore(sk.getThoiGianBD())) { // now >= thoiGianBD
+                sk.setTrangThai("Đang diễn ra");
+                suKienRepository.save(sk);
+            }
+        }
+
+        // 2. Chuyển "Đang diễn ra" thành "Đã kết thúc"
+        List<SuKien> ongoingEvents = suKienRepository.findByTrangThai("Đang diễn ra");
+        for (SuKien sk : ongoingEvents) {
+            if (!now.isBefore(sk.getThoiGianKT())) { // now >= thoiGianKT
+                sk.setTrangThai("Đã kết thúc");
+                suKienRepository.save(sk);
+            }
+        }
     }
 }

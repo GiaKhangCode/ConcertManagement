@@ -1,6 +1,7 @@
 package com.stellar.backend.controller;
 
 import com.stellar.backend.dto.UserProfileResponseDto;
+import com.stellar.backend.dto.UserOrderResponseDto;
 import com.stellar.backend.dto.UserTicketResponseDto;
 import com.stellar.backend.entity.*;
 import com.stellar.backend.repository.*;
@@ -147,25 +148,34 @@ public class UserController {
         
         List<DonMua> orders = donMuaRepository.findByTaiKhoan_MaTaiKhoan(userDetails.getId());
         
-        List<UserTicketResponseDto> result = new ArrayList<>();
+        List<UserOrderResponseDto> result = new ArrayList<>();
         for(DonMua don : orders) {
             List<Ve> veList = veRepository.findByDonMua_MaDonMua(don.getMaDonMua());
-            for(Ve ve : veList) {
-                if ("Đã hủy".equals(ve.getTrangThaiVe())) continue;
+            if (veList.isEmpty()) continue;
 
+            UserOrderResponseDto orderDto = new UserOrderResponseDto();
+            orderDto.setTransactionId(don.getMaDonMua());
+            orderDto.setEventName(don.getSuKien().getTenSuKien());
+            orderDto.setEventId(don.getSuKien().getMaSuKien());
+            orderDto.setTotalPrice(don.getTongTien());
+            orderDto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
+
+            List<UserTicketResponseDto> ticketDtos = new ArrayList<>();
+            for(Ve ve : veList) {
                 UserTicketResponseDto dto = new UserTicketResponseDto();
                 dto.setTicketId(ve.getMaVe());
-                dto.setTransactionId(don.getMaDonMua());
-                dto.setEventName(don.getSuKien().getTenSuKien());
-                dto.setEventId(don.getSuKien().getMaSuKien());
-                dto.setTotalPrice(don.getTongTien().divide(new java.math.BigDecimal(veList.size()), java.math.RoundingMode.HALF_UP));
-                dto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
-                dto.setTicketCount(1);
-                dto.setTierName(ve.getHangVe().getTenHangVe());
-                result.add(dto);
+                dto.setTierName(ve.getHangVe() != null ? ve.getHangVe().getTenHangVe() : "");
+                dto.setZoneName(ve.getKhuVuc() != null ? ve.getKhuVuc().getTenKhuVuc() : "Khu vực chung");
+                dto.setSeatInfo(ve.getGheNgoi() != null ? ve.getGheNgoi().getToaDo() : "Đứng / Tự do");
+                dto.setStatus(ve.getTrangThaiVe());
+                ticketDtos.add(dto);
+            }
+            orderDto.setTickets(ticketDtos);
+            if (!ticketDtos.isEmpty()) {
+                result.add(orderDto);
             }
         }
-        System.out.println("DEBUG: Trả về " + result.size() + " vé. Vé đầu tiên ID: " + (result.isEmpty() ? "N/A" : result.get(0).getTicketId()));
+        System.out.println("DEBUG: Trả về " + result.size() + " đơn mua.");
         return ResponseEntity.ok(result);
     }
 }

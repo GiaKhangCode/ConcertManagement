@@ -75,7 +75,14 @@ public class SuKien {
     @OneToMany(mappedBy = "suKien", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaiTro> danhSachTaiTro;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "suKien", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ThamGia> thamGiaList;
+
     // Getters and Setters
+    public List<ThamGia> getThamGiaList() { return thamGiaList; }
+    public void setThamGiaList(List<ThamGia> thamGiaList) { this.thamGiaList = thamGiaList; }
+
     public List<TaiTro> getDanhSachTaiTro() { return danhSachTaiTro; }
     public void setDanhSachTaiTro(List<TaiTro> danhSachTaiTro) { this.danhSachTaiTro = danhSachTaiTro; }
     public Long getMaSuKien() { return maSuKien; }

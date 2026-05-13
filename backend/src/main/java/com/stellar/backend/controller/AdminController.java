@@ -64,6 +64,9 @@ public class AdminController {
     private com.stellar.backend.service.WalletService walletService;
 
     @Autowired
+    private com.stellar.backend.service.EmailService emailService;
+
+    @Autowired
     private com.stellar.backend.repository.LichSuHoanTienRepository lichSuHoanTienRepository;
 
     @Autowired
@@ -80,6 +83,12 @@ public class AdminController {
 
     @Autowired
     private NhaToChucRepository nhaToChucRepository;
+
+    @Autowired
+    private NgheSiRepository ngheSiRepository;
+
+    @Autowired
+    private ThamGiaRepository thamGiaRepository;
 
     /**
      * Lấy thông tin chi tiết sự kiện để chỉnh sửa (trả về dạng DTO đầy đủ)
@@ -189,6 +198,15 @@ public class AdminController {
                 sDto.setName(tt.getNhaTaiTro().getTenNhaTT());
                 sDto.setRank(tt.getHangTaiTro());
                 return sDto;
+            }).collect(Collectors.toList()));
+        }
+
+        // Map Artists
+        if (sk.getThamGiaList() != null) {
+            dto.setNgheSiList(sk.getThamGiaList().stream().map(tg -> {
+                EventCreateRequestDto.NgheSiDto nsDto = new EventCreateRequestDto.NgheSiDto();
+                nsDto.setTenNgheSi(tg.getNgheSi().getTenNgheSi());
+                return nsDto;
             }).collect(Collectors.toList()));
         }
 
@@ -323,6 +341,31 @@ public class AdminController {
                         tt.setNhaTaiTro(ntt);
                         tt.setHangTaiTro(sDto.getRank() != null ? sDto.getRank() : "Đồng");
                         taiTroRepository.save(tt);
+                    }
+                }
+            }
+
+            // Lưu Nghệ sĩ
+            if (request.getNgheSiList() != null) {
+                for (EventCreateRequestDto.NgheSiDto nsDto : request.getNgheSiList()) {
+                    String nsName = (nsDto.getTenNgheSi() != null) ? nsDto.getTenNgheSi().trim() : "";
+                    if (nsName.isEmpty()) continue;
+
+                    NgheSi ns = ngheSiRepository.findByTenNgheSi(nsName)
+                            .orElseGet(() -> {
+                                NgheSi newNs = new NgheSi();
+                                newNs.setTenNgheSi(nsName);
+                                return ngheSiRepository.save(newNs);
+                            });
+
+                    ThamGiaId tgId = new ThamGiaId(ns.getMaNgheSi(), sk.getMaSuKien());
+                    if (!thamGiaRepository.existsById(tgId)) {
+                        ThamGia tg = new ThamGia();
+                        tg.setId(tgId);
+                        tg.setSuKien(sk);
+                        tg.setNgheSi(ns);
+                        tg.setVaiTroChinh("Ca sĩ");
+                        thamGiaRepository.save(tg);
                     }
                 }
             }
@@ -546,6 +589,34 @@ public class AdminController {
                 }
             }
 
+            // 4. XỬ LÝ NGHỆ SĨ (UPSERT)
+            if (sk.getThamGiaList() != null) {
+                thamGiaRepository.deleteAll(sk.getThamGiaList());
+                sk.getThamGiaList().clear();
+            }
+
+            if (request.getNgheSiList() != null) {
+                for (EventCreateRequestDto.NgheSiDto nsDto : request.getNgheSiList()) {
+                    String nsName = (nsDto.getTenNgheSi() != null) ? nsDto.getTenNgheSi().trim() : "";
+                    if (nsName.isEmpty()) continue;
+
+                    NgheSi ns = ngheSiRepository.findByTenNgheSi(nsName)
+                            .orElseGet(() -> {
+                                NgheSi newNs = new NgheSi();
+                                newNs.setTenNgheSi(nsName);
+                                return ngheSiRepository.save(newNs);
+                            });
+
+                    ThamGiaId tgId = new ThamGiaId(ns.getMaNgheSi(), sk.getMaSuKien());
+                    ThamGia tg = new ThamGia();
+                    tg.setId(tgId);
+                    tg.setSuKien(sk);
+                    tg.setNgheSi(ns);
+                    tg.setVaiTroChinh("Ca sĩ");
+                    thamGiaRepository.save(tg);
+                }
+            }
+
             return ResponseEntity.ok(Map.of("message", "Cập nhật thành công (Upsert)!"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -628,6 +699,15 @@ public class AdminController {
                     soTienHoan,
                     "Hoàn tiền 100% do sự kiện \"" + sk.getTenSuKien() + "\" bị hủy"
                 );
+                
+                // Gửi email thông báo
+                TaiKhoan tk = taiKhoanRepository.findById(maTaiKhoan).orElse(null);
+                if (tk != null && tk.getNguoiDung() != null && tk.getNguoiDung().getEmail() != null) {
+                    String content = "Chào bạn,\n\nSự kiện \"" + sk.getTenSuKien() + "\" đã bị hủy.\n"
+                        + "Chúng tôi đã hoàn lại 100% tiền vé (" + soTienHoan.toString() + " VNĐ) vào Ví điện tử của bạn trên hệ thống.\n\n"
+                        + "Cảm ơn bạn đã sử dụng dịch vụ của Ve'ryGood.";
+                    emailService.sendEmailAndLog(tk, null, tk.getNguoiDung().getEmail(), "Thông báo hủy sự kiện và hoàn tiền", content);
+                }
             } catch (Exception e) {
                 // Log lỗi nhưng không dừng quá trình - không nên rollback toàn bộ vì ví có thể không tồn tại
                 System.err.println("[CANCEL REFUND] Lỗi hoàn tiền cho TK #" + maTaiKhoan + ": " + e.getMessage());
@@ -740,6 +820,30 @@ public class AdminController {
         sk.setLyDoTuChoi(reason);
         suKienRepository.save(sk);
         return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện với lý do: " + reason));
+    }
+
+    /**
+     * Cập nhật trạng thái sự kiện
+     */
+    @PutMapping("/events/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateEventStatus(@PathVariable Long id, @RequestParam String status) {
+        SuKien sk = suKienRepository.findById(id).orElse(null);
+        if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+        
+        if ("Đã hủy".equals(sk.getTrangThai())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện đã bị hủy, không thể thay đổi trạng thái!"));
+        }
+
+        sk.setTrangThai(status);
+        suKienRepository.save(sk);
+        
+        // Nếu chuyển sang Đã hủy, gọi hàm hủy vé hoàn tiền
+        if ("Đã hủy".equals(status)) {
+            cancelAllTicketsAndRefund(id, sk);
+        }
+        
+        return ResponseEntity.ok(Map.of("message", "Đã cập nhật trạng thái sự kiện thành " + status));
     }
 
     /**
@@ -1005,5 +1109,61 @@ public class AdminController {
             "maNhaTT", ntt.getMaNhaTT(),
             "tenNhaTT", ntt.getTenNhaTT()
         )).collect(Collectors.toList()));
+    }
+
+    /**
+     * Lấy danh sách tất cả nghệ sĩ
+     */
+    @GetMapping("/artists")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getAllArtists() {
+        return ResponseEntity.ok(ngheSiRepository.findAll().stream().map(ns -> Map.of(
+            "maNgheSi", ns.getMaNgheSi(),
+            "tenNgheSi", ns.getTenNgheSi()
+        )).collect(Collectors.toList()));
+    }
+
+    /**
+     * Gửi email thông báo cho tất cả người đã mua vé
+     */
+    @PostMapping("/events/{id}/send-email")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> sendEmailToBuyers(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String subject = body.get("subject");
+        String content = body.get("content");
+        if (subject == null || content == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu tiêu đề hoặc nội dung email!"));
+        }
+
+        SuKien sk = suKienRepository.findById(id).orElse(null);
+        if (sk == null) return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+
+        // Check permission
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && (sk.getNguoiTao() == null || !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId()))) {
+            return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền gửi email cho sự kiện này!"));
+        }
+
+        // Lấy danh sách những người đã mua vé
+        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKien(id);
+        java.util.Set<Long> sentUserIds = new java.util.HashSet<>();
+        int count = 0;
+
+        for (DonMua dm : orders) {
+            // Không gửi cho những đơn đã hoàn tiền hoàn toàn
+            if ("Đã hoàn tiền".equals(dm.getTrangThaiThanhToan())) continue;
+
+            TaiKhoan tk = dm.getTaiKhoan();
+            if (tk != null && tk.getNguoiDung() != null && tk.getNguoiDung().getEmail() != null) {
+                if (!sentUserIds.contains(tk.getMaTaiKhoan())) {
+                    emailService.sendEmailAndLog(tk, dm, tk.getNguoiDung().getEmail(), subject, content);
+                    sentUserIds.add(tk.getMaTaiKhoan());
+                    count++;
+                }
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Đã gửi email thành công tới " + count + " khách hàng."));
     }
 }

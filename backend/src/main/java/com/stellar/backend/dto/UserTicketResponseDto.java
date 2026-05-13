@@ -4,29 +4,23 @@ import java.time.LocalDateTime;
 
 public class UserTicketResponseDto {
     private Long ticketId;
-    private Long transactionId;
-    private String eventName;
-    private Long eventId;
     private String tierName;
-    private BigDecimal totalPrice;
-    private LocalDateTime bookingTime;
-    private int ticketCount;
-    
-    public Long getEventId() { return eventId; }
-    public void setEventId(Long eventId) { this.eventId = eventId; }
+    private String zoneName;
+    private String seatInfo;
+    private String status;
     
     public Long getTicketId() { return ticketId; }
     public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
-    public Long getTransactionId() { return transactionId; }
-    public void setTransactionId(Long transactionId) { this.transactionId = transactionId; }
-    public String getEventName() { return eventName; }
-    public void setEventName(String eventName) { this.eventName = eventName; }
+    
     public String getTierName() { return tierName; }
     public void setTierName(String tierName) { this.tierName = tierName; }
-    public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
-    public LocalDateTime getBookingTime() { return bookingTime; }
-    public void setBookingTime(LocalDateTime bookingTime) { this.bookingTime = bookingTime; }
-    public int getTicketCount() { return ticketCount; }
-    public void setTicketCount(int ticketCount) { this.ticketCount = ticketCount; }
+    
+    public String getZoneName() { return zoneName; }
+    public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+    
+    public String getSeatInfo() { return seatInfo; }
+    public void setSeatInfo(String seatInfo) { this.seatInfo = seatInfo; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

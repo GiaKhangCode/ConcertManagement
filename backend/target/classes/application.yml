@@ -16,13 +16,22 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  # Cấu hình Jackson: serialize LocalDateTime thành ISO 8601 string (bắt buộc cho frontend parse)
   jackson:
     serialization:
       write-dates-as-timestamps: false
     deserialization:
       fail-on-unknown-properties: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: lamnginphat@gmail.com
+    password: gmkt emxt fewa ivcb
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: 8081
-

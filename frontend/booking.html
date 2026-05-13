@@ -1210,7 +1210,8 @@
                             if (obj && obj.zoneId) {
                                 const zone = eventZones.find(z => String(z.id || z.maKhuVuc) === String(obj.zoneId));
                                 let tId = zone ? zone.tierId : (tierId || (eventTiers.length > 0 ? (eventTiers[0].id || eventTiers[0].maHangVe) : null));
-                                if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, qty: 0, seats: [] };
+                                let zId = zone ? (zone.id || zone.maKhuVuc) : null;
+                                if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, maKhuVuc: zId, qty: 0, seats: [] };
                                 if (tId) {
                                     tiersToBook[tId].qty++;
                                     tiersToBook[tId].seats.push(sid);
@@ -1223,9 +1224,10 @@
                     Object.keys(nonMapQuantities).forEach(zid => {
                         const q = nonMapQuantities[zid];
                         if (q > 0) {
-                            const zone = eventZones.find(z => String(z.id || z.maKhuVuc) === String(zid));
-                            let tId = zone ? zone.tierId : (tierId || zid); // Nếu không tìm thấy zone, zid có thể chính là tierId
-                            if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, qty: 0, seats: [] };
+                            const zone = eventZones.find(z => String(z.tierId) === String(zid) || String(z.id || z.maKhuVuc) === String(zid));
+                            let tId = zone ? zone.tierId : (tierId || zid);
+                            let zId = zone ? (zone.id || zone.maKhuVuc) : null;
+                            if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, maKhuVuc: zId, qty: 0, seats: [] };
                             if (tId) {
                                 tiersToBook[tId].qty += q;
                             }
@@ -1236,11 +1238,10 @@
                     Object.keys(nonMapQuantities).forEach(zid => {
                         const q = nonMapQuantities[zid];
                         if (q > 0) {
-                            // Cố gắng tìm Tier ID từ Zone ID nếu zid thực tế là Zone ID
-                            const zone = eventZones.find(z => String(z.id || z.maKhuVuc) === String(zid));
-                            let tId = zone ? zone.tierId : (tierId || zid); // Nếu không tìm thấy zone, zid chính là tierId
-                            
-                            if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, qty: 0, seats: [] };
+                            const zone = eventZones.find(z => String(z.tierId) === String(zid) || String(z.id || z.maKhuVuc) === String(zid));
+                            let tId = zone ? zone.tierId : (tierId || zid);
+                            let zId = zone ? (zone.id || zone.maKhuVuc) : null;
+                            if (tId && !tiersToBook[tId]) tiersToBook[tId] = { id: tId, maKhuVuc: zId, qty: 0, seats: [] };
                             if (tId) {
                                 tiersToBook[tId].qty += q;
                             }
@@ -1272,6 +1273,7 @@
                             maSuKien: parseInt(eventId), 
                             maLichDien: parseInt(validMaLichDien),
                             maHangVe: hId, 
+                            maKhuVuc: item.maKhuVuc ? parseInt(item.maKhuVuc) : null,
                             soLuong: item.qty,
                             dsGhe: item.seats,
                             discountCode: (appliedDiscount && appliedDiscount.code) || null

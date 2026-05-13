@@ -29,6 +29,12 @@ public class FinancialController {
     @Autowired
     private SettlementService settlementService;
 
+    @Autowired
+    private com.stellar.backend.repository.LichSuQuyetToanRepository lichSuQuyetToanRepository;
+
+    @Autowired
+    private com.stellar.backend.repository.SuKienRepository suKienRepository;
+
     // --- WALLET ---
     @GetMapping("/wallet")
     @PreAuthorize("isAuthenticated()")
@@ -105,5 +111,45 @@ public class FinancialController {
     @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
     public ResponseEntity<?> getSettlement(@PathVariable Long eventId) {
         return ResponseEntity.ok(settlementService.getEventSettlement(eventId));
+    }
+
+    @PostMapping("/settlement/{eventId}/execute")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
+    public ResponseEntity<?> executeSettlement(@PathVariable Long eventId) {
+        try {
+            Map<String, Object> result = settlementService.executeSettlement(eventId);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/settlement/history")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getSettlementHistory() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        List<com.stellar.backend.entity.LichSuQuyetToan> history;
+        if (isAdmin) {
+            history = lichSuQuyetToanRepository.findAll();
+        } else {
+            history = lichSuQuyetToanRepository.findAll().stream()
+                .filter(q -> q.getNhaToChuc() != null && q.getNhaToChuc().getTaiKhoan() != null && q.getNhaToChuc().getTaiKhoan().getMaTaiKhoan().equals(userDetails.getId()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
+        List<Map<String, Object>> result = history.stream().map(h -> {
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("maQuyetToan", h.getMaQT());
+            map.put("suKien", h.getKyQT());
+            map.put("soTienQuyetToan", h.getSoTienChuyen());
+            map.put("trangThai", h.getTrangThai());
+            map.put("thoiDiemQuyetToan", h.getNgayQuyetToan() != null ? h.getNgayQuyetToan().toString() : "");
+            map.put("noiDung", h.getChungTuThanhToan());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(result);
     }
 }

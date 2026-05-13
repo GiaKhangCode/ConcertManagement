@@ -157,7 +157,7 @@ public class TicketService {
     private void cancelOrderTicketsAndFreeSeats(DonMua dm) {
         List<Ve> ticketsInOrder = veRepository.findByDonMua_MaDonMua(dm.getMaDonMua());
         for (Ve ticket : ticketsInOrder) {
-            ticket.setTrangThaiVe("Đã hủy");
+            ticket.setTrangThaiVe("Đã hoàn vé");
             if (ticket.getGheNgoi() != null) {
                 java.util.Optional<TrangThaiGheTheoSuat> optStatus = trangThaiGheTheoSuatRepository.findByMaGheAndMaLichDien(ticket.getGheNgoi().getMaGhe(), ticket.getLichDien().getMaLichDien());
                 if (optStatus.isPresent()) {
@@ -178,7 +178,7 @@ public class TicketService {
         if (!ve.getDonMua().getTaiKhoan().getMaTaiKhoan().equals(userId)) {
             throw new RuntimeException("Bạn không sở hữu vé này");
         }
-        if ("Đã hủy".equals(ve.getTrangThaiVe())) {
+        if ("Đã hủy".equals(ve.getTrangThaiVe()) || "Đã hoàn vé".equals(ve.getTrangThaiVe())) {
             throw new RuntimeException("Vé này đã được hoàn hoặc hủy trước đó");
         }
 
@@ -221,29 +221,9 @@ public class TicketService {
         lichSuHoanTienRepository.save(lichSuHoan);
 
         // 2. Phần còn lại (100% - refund%) cộng vào ví nhà tổ chức
-        // CHÚ Ý: Chỉ cộng nếu người mua vé KHÁC với nhà tổ chức.
-        // Nếu NTC tự mua vé sự kiện của mình rồi hoàn, không cộng thêm
-        // (tránh nhận 100% do trùng tài khoản).
-        Long customerId = ve.getDonMua().getTaiKhoan().getMaTaiKhoan();
-        Long organizerId = sk.getNguoiTao() != null ? sk.getNguoiTao().getMaTaiKhoan() : null;
-        BigDecimal retainedPct = hundred.subtract(maxTyLe);
-
-        if (retainedPct.compareTo(BigDecimal.ZERO) > 0
-                && organizerId != null
-                && !customerId.equals(organizerId)) {
-            BigDecimal amountToOrganizer = ticketPrice.multiply(retainedPct)
-                    .divide(hundred, 0, RoundingMode.HALF_UP);
-            System.out.println("[REFUND DEBUG] Giữ lại cho NTC (ID=" + organizerId + "): " + amountToOrganizer);
-            walletService.receive(
-                organizerId,
-                amountToOrganizer,
-                "Thu phí hủy vé #" + ticketId + " (" + retainedPct.stripTrailingZeros().toPlainString() + "%)"
-            );
-        } else if (customerId.equals(organizerId)) {
-            System.out.println("[REFUND DEBUG] NTC tự hoàn vé của mình → bỏ qua bước cộng tiền cho NTC.");
-        }
+        // CHÚ Ý: Đã bị xóa theo yêu cầu (không tự động cộng tiền cho nhà tổ chức)
         
-        ve.setTrangThaiVe("Đã hủy");
+        ve.setTrangThaiVe("Đã hoàn vé");
         veRepository.save(ve);
 
         if (ve.getGheNgoi() != null) {
@@ -258,7 +238,7 @@ public class TicketService {
         }
         
         List<Ve> allTickets = veRepository.findByDonMua_MaDonMua(ve.getDonMua().getMaDonMua());
-        boolean allCanceled = allTickets.stream().allMatch(t -> "Đã hủy".equals(t.getTrangThaiVe()));
+        boolean allCanceled = allTickets.stream().allMatch(t -> "Đã hủy".equals(t.getTrangThaiVe()) || "Đã hoàn vé".equals(t.getTrangThaiVe()));
         if (allCanceled) {
             DonMua dm = ve.getDonMua();
             dm.setTrangThaiThanhToan("Đã hoàn tiền");
@@ -280,7 +260,7 @@ public class TicketService {
         List<Ve> ticketsInOrder = veRepository.findByDonMua_MaDonMua(yeuCau.getDonMua().getMaDonMua());
         BigDecimal totalValidPrice = BigDecimal.ZERO;
         for (Ve ticket : ticketsInOrder) {
-            if (!"Đã hủy".equals(ticket.getTrangThaiVe())) {
+            if (!"Đã hủy".equals(ticket.getTrangThaiVe()) && !"Đã hoàn vé".equals(ticket.getTrangThaiVe())) {
                 totalValidPrice = totalValidPrice.add(ticket.getHangVe().getGiaNiemYet());
             }
         }
@@ -311,7 +291,7 @@ public class TicketService {
                         v.getLichDien().getSuKien().getTenSuKien(),
                         v.getLichDien().getThoiGianBatDau().toString(),
                         v.getHangVe().getTenHangVe(),
-                        v.getGheNgoi().getToaDo(),
+                        v.getGheNgoi() != null ? v.getGheNgoi().getToaDo() : "Tự do",
                         v.getGiaBanLai(),
                         v.getDonMua().getTaiKhoan().getTenDangNhap()
                     );
