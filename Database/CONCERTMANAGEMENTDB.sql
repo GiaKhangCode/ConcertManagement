@@ -343,7 +343,7 @@ CREATE TABLE VE
     DaBanLai        NUMBER(1, 0) DEFAULT 0 NOT NULL CHECK (DaBanLai IN (0, 1)),
     GiaBanLai       NUMBER(15, 2) CHECK (GiaBanLai > 0),
     LinkQRCode      VARCHAR2(500),
-    TrangThaiVe     VARCHAR2(50) DEFAULT N'Hiệu lực' NOT NULL CHECK (TrangThaiVe IN (N'Chờ thanh toán', N'Hiệu lực', N'Đã Check-in', N'Đã hủy')),
+    TrangThaiVe     VARCHAR2(50) DEFAULT N'Hiệu lực' NOT NULL CHECK (TrangThaiVe IN (N'Chờ thanh toán', N'Hiệu lực', N'Đã Check-in', N'Đã hủy', N'Đã hoàn vé')),
     ThoiGianDaBan   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     ThoiGianCheckIn TIMESTAMP,
 	  CONSTRAINT CK_VE CHECK (DaBanLai = 0 OR TrangThaiVe <> N'Chờ thanh toán'),

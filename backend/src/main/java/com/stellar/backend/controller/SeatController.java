@@ -90,4 +90,32 @@ public class SeatController {
             return ResponseEntity.badRequest().body(result);
         }
     }
+
+    /**
+     * POST /api/seats/demo-deadlock
+     * Demo Deadlock: Gọi PROC_DEMO_DEADLOCK_SEATS với 2 ghế theo thứ tự cho trước.
+     *
+     * Cách demo:
+     *   Tab A: { "maGhe1": 10, "maGhe2": 11 }
+     *   Tab B: { "maGhe1": 11, "maGhe2": 10 }  ← đảo ngược thứ tự → deadlock
+     *
+     * Sleep time 5 giây được FIX CỨNG trong procedure Oracle.
+     */
+    @PostMapping("/demo-deadlock")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> demoDeadlock(@RequestBody Map<String, Object> request) {
+        try {
+            Long maGhe1 = Long.valueOf(request.get("maGhe1").toString());
+            Long maGhe2 = Long.valueOf(request.get("maGhe2").toString());
+
+            Map<String, Object> result = seatService.demoDeadlock(maGhe1, maGhe2);
+            if ((Boolean) result.get("success")) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(500).body(result);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Lỗi gọi demo deadlock: " + e.getMessage()));
+        }
+    }
 }

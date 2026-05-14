@@ -14,11 +14,11 @@ public class BookingRequestDto {
     public void setMaHangVe(Long maHangVe) { this.maHangVe = maHangVe; }
     public int getSoLuong() { return soLuong; }
     public void setSoLuong(int soLuong) { this.soLuong = soLuong; }
-    
+
     private Long maKhuVuc;
     public Long getMaKhuVuc() { return maKhuVuc; }
     public void setMaKhuVuc(Long maKhuVuc) { this.maKhuVuc = maKhuVuc; }
-    
+
     private java.util.List<String> dsGhe;
     public java.util.List<String> getDsGhe() { return dsGhe; }
     public void setDsGhe(java.util.List<String> dsGhe) { this.dsGhe = dsGhe; }

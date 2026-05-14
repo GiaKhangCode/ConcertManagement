@@ -62,8 +62,12 @@ async function loadTickets() {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (res.ok) {
-            const orders = await res.json();
+            let orders = await res.json();
             console.log("DEBUG: Dữ liệu đơn mua từ server:", orders);
+            
+            // Sắp xếp đơn mua: Mới nhất lên đầu (Dựa trên ID giao dịch tự tăng)
+            orders.sort((a, b) => b.transactionId - a.transactionId);
+            
             document.getElementById('ticketCount').innerText = orders.length + " đơn mua";
             if (orders.length === 0) {
                 ticketListCont.innerHTML = '<p style="color:#a0a5b5; text-align:center;">Bạn chưa có đơn mua nào.</p>';
@@ -185,7 +189,7 @@ document.getElementById('topUpBtn')?.addEventListener('click', async () => {
             alert("Nạp tiền thành công!");
             initProfile();
         }
-    } catch (e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Giao dịch bị gián đoạn"); }
 });
 
 // Tab Switching
@@ -232,7 +236,7 @@ async function saveOrganizerInfo() {
         }
     } catch (e) {
         console.error("Lỗi khi lưu thông tin nhà tổ chức:", e);
-        alert("Lỗi kết nối máy chủ");
+        alert("Giao dịch bị gián đoạn");
     }
 }
 
@@ -326,7 +330,7 @@ document.getElementById('confirmResaleBtn')?.addEventListener('click', async () 
             const data = await res.json();
             alert("Lỗi: " + data.message);
         }
-    } catch (e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Giao dịch bị gián đoạn"); }
 });
 
 document.getElementById('confirmRefundBtn')?.addEventListener('click', async () => {
@@ -350,7 +354,7 @@ document.getElementById('confirmRefundBtn')?.addEventListener('click', async () 
             const data = await res.json();
             alert("Lỗi: " + data.message);
         }
-    } catch (e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Giao dịch bị gián đoạn"); }
 });
 
 function showQRCode(ticketId) {

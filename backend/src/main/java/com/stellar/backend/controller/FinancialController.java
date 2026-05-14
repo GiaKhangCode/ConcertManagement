@@ -129,13 +129,14 @@ public class FinancialController {
     public ResponseEntity<?> getSettlementHistory() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        
+
         List<com.stellar.backend.entity.LichSuQuyetToan> history;
         if (isAdmin) {
             history = lichSuQuyetToanRepository.findAll();
         } else {
             history = lichSuQuyetToanRepository.findAll().stream()
-                .filter(q -> q.getNhaToChuc() != null && q.getNhaToChuc().getTaiKhoan() != null && q.getNhaToChuc().getTaiKhoan().getMaTaiKhoan().equals(userDetails.getId()))
+                .filter(q -> q.getNhaToChuc() != null && q.getNhaToChuc().getTaiKhoan() != null
+                        && q.getNhaToChuc().getTaiKhoan().getMaTaiKhoan().equals(userDetails.getId()))
                 .collect(java.util.stream.Collectors.toList());
         }
 

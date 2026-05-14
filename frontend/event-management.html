@@ -144,6 +144,120 @@
             transition: height 1s ease;
         }
 
+        /* === BIỂU ĐỒ THEO NGÀY === */
+        .day-chart-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 220px;
+            overflow-x: auto;
+            padding: 25px 0 10px 0;
+        }
+
+        .day-bar-item {
+            min-width: 52px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .day-bar-item:hover .day-bar { filter: brightness(1.3); }
+
+        .day-bar-value {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            white-space: nowrap;
+        }
+
+        .day-bar {
+            width: 40px;
+            border-radius: 6px 6px 0 0;
+            background: linear-gradient(180deg, #b06bff, rgba(176,107,255,0.25));
+            transition: height 0.9s cubic-bezier(.16,1,.3,1), filter 0.2s;
+            min-height: 4px;
+        }
+
+        .day-bar-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* === EVENT SELECTOR cho chart theo ngày === */
+        .chart-event-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .chart-event-selector label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .chart-event-selector select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .chart-event-selector select:focus {
+            outline: none;
+            border-color: #b06bff;
+        }
+
+        .chart-event-selector select option {
+            background-color: #141928;
+            color: #fff;
+        }
+
+        /* === MODAL CHI TIẾT SỰ KIỆN === */
+        .event-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .event-stat-row:last-child { border-bottom: none; }
+        .event-stat-label { color: var(--text-muted); font-size: 0.88rem; }
+        .event-stat-value { font-weight: 700; font-size: 0.95rem; color: #fff; }
+
+        .inconsistency-alert {
+            background: rgba(255,107,53,0.12);
+            border: 1px solid rgba(255,107,53,0.4);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-top: 16px;
+            font-size: 0.83rem;
+            color: #ff9a6c;
+            line-height: 1.6;
+        }
+        .inconsistency-alert strong { color: #ffb347; display: block; margin-bottom: 4px; }
+
+        .btn-detail {
+            background: rgba(176,107,255,0.15);
+            color: #b06bff;
+            border: 1px solid rgba(176,107,255,0.4);
+        }
+        .btn-detail:hover {
+            background: rgba(176,107,255,0.3);
+            border-color: #b06bff;
+        }
+
         /* === ACTION BUTTONS (Đồng bộ từ Admin) === */
         .admin-btn {
             padding: 0.6rem 1rem;
@@ -264,6 +378,20 @@
             </div>
         </div>
 
+        <!-- Biểu đồ bán vé theo ngày -->
+        <div class="chart-section fade-up">
+            <h3 class="section-title" style="color:#b06bff; text-shadow:0 0 15px rgba(176,107,255,0.3);">Biểu Đồ Vé Bán Theo Ngày</h3>
+            <div class="chart-event-selector">
+                <label><i class="fa fa-calendar-alt" style="color:#b06bff; margin-right:6px;"></i>Chọn sự kiện:</label>
+                <select id="dayChartEventSelect" onchange="loadTicketsByDay(this.value)">
+                    <option value="">-- Chọn sự kiện để xem --</option>
+                </select>
+            </div>
+            <div class="day-chart-wrapper" id="dayBarChart">
+                <div class="empty-state" style="width:100%;">Chọn sự kiện để xem biểu đồ bán vé theo ngày.</div>
+            </div>
+        </div>
+
         <section class="revenue-section fade-up">
         <section class="revenue-section fade-up">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -373,6 +501,32 @@
         </div>
     </div>
 
+    <!-- Event Detail Modal (for Phantom Read Demo) -->
+    <div id="eventDetailModal" class="modal"
+        style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);">
+        <div class="modal-content"
+            style="background:#141928; margin:5% auto; padding:40px; border:1px solid #b06bff; border-radius:24px; width:90%; max-width:550px; color:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <h3 style="font-family:'Unbounded'; color:#b06bff; margin:0; font-size:1.1rem;"><i class="fa fa-info-circle"></i> CHI TIẾT THỐNG KÊ</h3>
+                <button onclick="document.getElementById('eventDetailModal').style.display='none'"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div id="eventDetailContent" style="display:flex; flex-direction:column; gap:2px;">
+                <!-- Data loaded here -->
+            </div>
+
+            <div id="inconsistencyWarning" class="inconsistency-alert" style="display:none;">
+                <strong><i class="fa fa-exclamation-triangle"></i> Cảnh báo: Dữ liệu không đồng bộ</strong>
+                Hệ thống phát hiện sự thay đổi dữ liệu trong quá trình truy xuất. Số lượng vé hiển thị và tổng doanh thu có thể không khớp nhau do có giao dịch mới vừa được thực hiện.
+            </div>
+
+            <div style="text-align: right; margin-top: 30px;">
+                <button class="btn btn-outline small" style="border-color: #b06bff; color: #b06bff;" onclick="document.getElementById('eventDetailModal').style.display='none'">ĐÓNG</button>
+            </div>
+        </div>
+    </div>
+
     <div class="mascot-companion" id="mascotCompanion">
         <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
         <img src="assets/mascot.png" alt="Stellar Mascot">
@@ -413,6 +567,7 @@
 
             const chart = document.getElementById('barChart');
             const tbody = document.getElementById('revenueTableBody');
+            const daySelect = document.getElementById('dayChartEventSelect');
 
             if (!data.chiTietSuKien || data.chiTietSuKien.length === 0) {
                 chart.innerHTML = '<div class="empty-state">Chưa có dữ liệu sự kiện.</div>';
@@ -423,8 +578,18 @@
             const maxVe = Math.max(...data.chiTietSuKien.map(e => e.soVeBan || 0), 1);
             chart.innerHTML = '';
             tbody.innerHTML = '';
+            
+            // Populate select for day chart
+            const currentVal = daySelect.value;
+            daySelect.innerHTML = '<option value="">-- Chọn sự kiện để xem --</option>';
 
             data.chiTietSuKien.forEach((ev, idx) => {
+                // Populate select
+                const opt = document.createElement('option');
+                opt.value = ev.maSuKien;
+                opt.textContent = ev.tenSuKien;
+                daySelect.appendChild(opt);
+
                 // Biểu đồ dùng số vé bán
                 const h = ((ev.soVeBan || 0) / maxVe) * 180;
                 const bar = document.createElement('div');
@@ -437,7 +602,7 @@
                 chart.appendChild(bar);
                 setTimeout(() => { bar.querySelector('.bar').style.height = h + 'px'; }, 100 + idx * 50);
 
-                // Table — 4 cột (bỏ doanh thu)
+                // Table — 4 cột
                 const tr = document.createElement('tr');
                 const isCancelled = ev.trangThai === 'Đã hủy';
                 const statusClass = ev.trangThai === 'Sắp diễn ra' || ev.trangThai === 'Đang diễn ra' ? 'status-active' : 'status-expired';
@@ -445,13 +610,15 @@
                     <td>
                         <div style="display:flex; align-items:center; gap:10px;">
                             <img src="${ev.anhBiaUrl || 'assets/default-event.png'}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;">
-                            <span>${ev.tenSuKien}</span>
+                            <span style="cursor:pointer; color:var(--accent-secondary); text-decoration:none; font-weight:500;"
+                                  onclick="showEventDetail(${ev.maSuKien})">${ev.tenSuKien}</span>
                         </div>
                     </td>
                     <td><span class="status-pill ${statusClass}">${ev.trangThai}</span></td>
                     <td>${ev.soVeBan || 0}</td>
                     <td>
-                        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                        <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                            <button onclick="showEventDetail(${ev.maSuKien})" class="admin-btn btn-detail"><i class="fa fa-chart-bar"></i> Chi tiết</button>
                             <a href="admin-create.html?id=${ev.maSuKien}" class="admin-btn btn-edit">Chỉnh sửa</a>
                             <button onclick="showSettlement(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ffb86c; color: #ffb86c;">Quyết toán</button>
                             <button onclick="openEmailModal(${ev.maSuKien})" class="admin-btn btn-edit" style="border-color: #ff55ff; color: #ff55ff;"><i class="fa fa-envelope"></i> Gửi Mail</button>
@@ -460,6 +627,107 @@
                 `;
                 tbody.appendChild(tr);
             });
+            
+            if(currentVal) daySelect.value = currentVal;
+        }
+
+        async function loadTicketsByDay(eventId) {
+            if (!eventId) {
+                document.getElementById('dayBarChart').innerHTML = '<div class="empty-state" style="width:100%;">Chọn sự kiện để xem biểu đồ bán vé theo ngày.</div>';
+                return;
+            }
+
+            const chart = document.getElementById('dayBarChart');
+            chart.innerHTML = '<div class="empty-state" style="width:100%;"><i class="fa fa-spinner fa-spin"></i> Đang tải...</div>';
+
+            try {
+                const res = await fetch(`http://localhost:8081/api/organizer/events/${eventId}/tickets-by-day`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stellar_token') }
+                });
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    chart.innerHTML = '<div class="empty-state" style="width:100%;">Sự kiện này chưa có vé bán phát sinh.</div>';
+                    return;
+                }
+
+                const maxVe = Math.max(...data.map(d => d.soVe), 1);
+                chart.innerHTML = '';
+
+                data.forEach((d, idx) => {
+                    const h = (d.soVe / maxVe) * 140;
+                    const bar = document.createElement('div');
+                    bar.className = 'day-bar-item';
+                    bar.onclick = () => showEventDetail(eventId);
+                    // Format date: YYYY-MM-DD -> DD/MM
+                    const dateArr = d.ngay.split('-');
+                    const dateLabel = dateArr[2] + '/' + dateArr[1];
+                    
+                    bar.innerHTML = `
+                        <div class="day-bar-value">${d.soVe}</div>
+                        <div class="day-bar" style="height:0px;"></div>
+                        <div class="day-bar-label">${dateLabel}</div>
+                    `;
+                    bar.title = `Ngày ${dateLabel}: ${d.soVe} vé - ${d.doanhThu.toLocaleString('vi-VN')}đ - Click để xem chi tiết`;
+                    chart.appendChild(bar);
+                    setTimeout(() => { bar.querySelector('.day-bar').style.height = h + 'px'; }, 50 + idx * 30);
+                });
+            } catch (e) {
+                chart.innerHTML = '<div class="empty-state" style="width:100%; color:red;">Lỗi tải dữ liệu.</div>';
+            }
+        }
+
+        async function showEventDetail(eventId) {
+            const modal = document.getElementById('eventDetailModal');
+            const content = document.getElementById('eventDetailContent');
+            const warning = document.getElementById('inconsistencyWarning');
+            
+            modal.style.display = 'block';
+            warning.style.display = 'none';
+            content.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fa fa-spinner fa-spin" style="font-size:1.5rem; color:#b06bff;"></i><p style="margin-top:10px; color:var(--text-muted); font-size:0.85rem;">Đang đồng bộ dữ liệu hệ thống...</p></div>';
+
+            try {
+                const res = await fetch(`http://localhost:8081/api/organizer/events/${eventId}/stats`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stellar_token') }
+                });
+                const d = await res.json();
+                
+                const fmt = (n) => (n || 0).toLocaleString('vi-VN') + 'đ';
+
+                content.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; background:rgba(255,255,255,0.03); padding:15px; border-radius:15px;">
+                        <img src="${d.anhBiaUrl || 'assets/default-event.png'}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;">
+                        <div>
+                            <div style="font-weight:700; color:#fff; font-size:1rem;">${d.tenSuKien}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Mã sự kiện: #${d.maSuKien}</div>
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.02); border-radius:15px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+                        <div class="event-stat-row">
+                            <span class="event-stat-label">Tổng số vé đã bán</span>
+                            <span class="event-stat-value">${d.soVe} vé</span>
+                        </div>
+                        <div class="event-stat-row">
+                            <span class="event-stat-label">Tổng doanh thu hiện tại</span>
+                            <span class="event-stat-value" style="color:#00ff88;">${fmt(d.doanhThu)}</span>
+                        </div>
+                        <div class="event-stat-row">
+                            <span class="event-stat-label">Trạng thái sự kiện</span>
+                            <span class="event-stat-value" style="color:#b06bff;">${d.trangThai}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Logic kiểm tra Phantom Read (Inconsistency) ẩn
+                // Nếu soVe (lần 1) != soVeXacNhan (lần 2), nghĩa là có vé mới lọt vào giữa 2 lần đọc
+                if (d.soVe !== d.soVeXacNhan) {
+                    warning.style.display = 'block';
+                    console.warn("Phantom Read Detected: soVe1=" + d.soVe + ", soVe2=" + d.soVeXacNhan);
+                }
+
+            } catch (e) {
+                content.innerHTML = '<p style="color:red; text-align:center;">Lỗi tải dữ liệu chi tiết.</p>';
+            }
         }
 
         async function showSettlement(eventId) {

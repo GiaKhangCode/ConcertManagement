@@ -273,6 +273,44 @@ public class SeatService {
         return response;
     }
 
+    /**
+     * Demo Deadlock: Gọi stored procedure PROC_DEMO_DEADLOCK_SEATS.
+     * Sleep 5 giây được fix cứng trong Oracle procedure.
+     * TX1 gọi (gheA, gheB), TX2 gọi (gheB, gheA) cùng lúc → Oracle phát hiện deadlock.
+     */
+    @Transactional
+    public Map<String, Object> demoDeadlock(Long maGhe1, Long maGhe2) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Xác thực ghế tồn tại
+            if (!gheNgoiRepository.existsById(maGhe1)) {
+                response.put("success", false);
+                response.put("message", "Ghế 1 (ID: " + maGhe1 + ") không tồn tại.");
+                return response;
+            }
+            if (!gheNgoiRepository.existsById(maGhe2)) {
+                response.put("success", false);
+                response.put("message", "Ghế 2 (ID: " + maGhe2 + ") không tồn tại.");
+                return response;
+            }
+            // Gọi Oracle procedure (sleep 5s hardcoded bên trong)
+            trangThaiGheTheoSuatRepository.demoDeadlockSeats(maGhe1, maGhe2);
+            response.put("success", true);
+            response.put("message", "Procedure đã chạy xong. Nếu 2 tab cùng chạy với thứ tự đảo ngược thì Oracle đã rollback 1 bên.");
+        } catch (Exception e) {
+            // ORA-00060 = Deadlock detected
+            String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+            if (msg.contains("ORA-00060") || msg.toLowerCase().contains("deadlock")) {
+                response.put("success", false);
+                response.put("message", "⚠️ DEADLOCK phát hiện! Oracle đã rollback giao dịch này. (ORA-00060)");
+            } else {
+                response.put("success", false);
+                response.put("message", "Lỗi: " + msg);
+            }
+        }
+        return response;
+    }
+
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void unlockExpiredSeats() {
