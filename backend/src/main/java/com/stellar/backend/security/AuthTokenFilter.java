@@ -26,13 +26,24 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            System.out.println("=== KIỂM TRA REQUEST BẮT ĐẦU ===");
+            System.out.println("API đang gọi: " + request.getRequestURI());
+            System.out.println("Token nhận được: " + (jwt != null ? "CÓ TOKEN" : "NULL"));
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                // IN RA QUYỀN THỰC TẾ SPRING BOOT ĐANG THẤY
+                System.out.println("User: " + username + " | Quyền: " + userDetails.getAuthorities());
+
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println("=> Xác thực thành công, cho phép đi tiếp!");
+            } else {
+                System.out.println("=> CẢNH BÁO: Token không hợp lệ hoặc bị rỗng!");
             }
         } catch (Exception e) {
             System.err.println("Cannot set user authentication: " + e.getMessage());

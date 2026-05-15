@@ -1,6 +1,9 @@
 package com.stellar.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class CheckInRequest {
+    @JsonProperty("qrCode")
     private String qrCode; // Có thể là mã vé (MaVe) hoặc chuỗi token QR
     private String deviceName;
 

@@ -22,4 +22,10 @@ public interface VeRepository extends JpaRepository<Ve, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT v FROM Ve v WHERE v.daBanLai = 1 AND v.giaBanLai IS NOT NULL")
     List<Ve> findActiveResales();
+    
+    // Lấy lịch sử soát vé của RIÊNG nhân viên đang đăng nhập
+    @org.springframework.data.jpa.repository.Query("SELECT nk.ve FROM NhatKySoatVe nk WHERE nk.ve.trangThaiVe = 'Đã check-in' " +
+            "AND nk.taiKhoan.maTaiKhoan = :staffId " +
+            "ORDER BY nk.thoiGianQuetMa DESC")
+    List<Ve> findLichSuTheoNhanVien(@org.springframework.data.repository.query.Param("staffId") Long staffId);
 }

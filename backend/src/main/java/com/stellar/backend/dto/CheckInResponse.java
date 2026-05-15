@@ -1,6 +1,7 @@
 package com.stellar.backend.dto;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class CheckInResponse {
     private boolean success;
@@ -9,11 +10,20 @@ public class CheckInResponse {
     private String eventName;
     private String attendeeName;
     private String seatInfo;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime checkInTime;
 
     public CheckInResponse(boolean success, String message) {
         this.success = success;
         this.message = message;
+    }
+
+    public CheckInResponse(boolean success, String message, String eventName, String attendeeName, String ticketId) {
+        this.success = success;
+        this.message = message;
+        this.eventName = eventName;
+        this.attendeeName = attendeeName;
+        this.ticketId = ticketId;
     }
 
     // Getters và Setters

@@ -351,13 +351,55 @@ public class TicketService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<CheckInResponse> getStaffScanHistory(Long staffId) {
+        // Truy vấn lịch sử quét vé của staffId (chỉ lấy các lượt quét thành công = 1)
+        return nhatKySoatVeRepository.findByTaiKhoan_MaTaiKhoanAndTrangThaiSoatVeOrderByThoiGianQuetMaDesc(staffId, 1)
+                .stream()
+                .map(nk -> {
+                    Ve t = nk.getVe();
+                    if (t == null) return null;
+
+                    String attendeeName = "Khách hàng";
+                    if (t.getDonMua() != null && t.getDonMua().getTaiKhoan() != null && t.getDonMua().getTaiKhoan().getNguoiDung() != null) {
+                        attendeeName = t.getDonMua().getTaiKhoan().getNguoiDung().getHoTen();
+                    }
+                    
+                    String eventName = "Sự kiện";
+                    if (t.getLichDien() != null && t.getLichDien().getSuKien() != null) {
+                        eventName = t.getLichDien().getSuKien().getTenSuKien();
+                    } else if (t.getHangVe() != null && t.getHangVe().getSuKien() != null) {
+                        eventName = t.getHangVe().getSuKien().getTenSuKien();
+                    }
+                    
+                    CheckInResponse res = new CheckInResponse(
+                            true, 
+                            "Checked", 
+                            eventName, 
+                            attendeeName,
+                            String.valueOf(t.getMaVe())
+                    );
+                    res.setCheckInTime(nk.getThoiGianQuetMa());
+                    res.setSeatInfo(t.getGheNgoi() != null ? t.getGheNgoi().getToaDo() : "Vé đứng/Tự do");
+                    return res;
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     private void logCheckInHistory(Long staffId, Ve ve, Integer status, String deviceName) {
+        System.out.println("DEBUG: Saving scan log for staffId: " + staffId + " and Ticket: " + ve.getMaVe());
         TaiKhoan staff = taiKhoanRepository.findById(staffId).orElse(null);
+        if (staff == null) {
+            System.out.println("DEBUG ERROR: Staff (TaiKhoan) not found with ID: " + staffId);
+            return;
+        }
         NhatKySoatVe log = new NhatKySoatVe();
         log.setTaiKhoan(staff);
         log.setVe(ve);
         log.setTrangThaiSoatVe(status);
         log.setThietBiQuet(deviceName != null ? deviceName : "Unknown Device");
         nhatKySoatVeRepository.save(log);
+        System.out.println("DEBUG: Scan log saved successfully to NHAT_KY_SOAT_VE");
     }
 }
