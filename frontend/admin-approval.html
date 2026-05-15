@@ -877,7 +877,7 @@
                     const data = await res.json();
                     showToast(data.message || 'Lỗi phê duyệt', 'error');
                 }
-            } catch (e) { showToast('Lỗi kết nối', 'error'); }
+            } catch (e) { showToast('giao dịch bị gián đoạn', 'error'); }
         }
 
         async function rejectEvent(id) {
@@ -897,7 +897,7 @@
                 } else {
                     showToast('Lỗi từ chối', 'error');
                 }
-            } catch (e) { showToast('Lỗi kết nối', 'error'); }
+            } catch (e) { showToast('giao dịch bị gián đoạn', 'error'); }
         }
 
 
@@ -915,7 +915,7 @@
                 } else {
                     showToast('Lỗi khi xóa', 'error');
                 }
-            } catch (e) { showToast('Lỗi kết nối', 'error'); }
+            } catch (e) { showToast('giao dịch bị gián đoạn', 'error'); }
         }
 
         async function setFeatured(id) {
@@ -931,7 +931,7 @@
                 } else {
                     showToast('Lỗi cài đặt', 'error');
                 }
-            } catch (e) { showToast('Lỗi kết nối', 'error'); }
+            } catch (e) { showToast('giao dịch bị gián đoạn', 'error'); }
         }
 
         function markCardProcessed(id, action) {
@@ -964,7 +964,7 @@
                     showToast(data.message || 'Lỗi cập nhật', 'error');
                 }
             } catch (e) {
-                showToast('Lỗi kết nối', 'error');
+                showToast('giao dịch bị gián đoạn', 'error');
             }
         }
     </script>

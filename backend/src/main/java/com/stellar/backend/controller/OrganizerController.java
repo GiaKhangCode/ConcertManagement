@@ -2,20 +2,24 @@ package com.stellar.backend.controller;
 
 import com.stellar.backend.dto.RevenueResponseDto;
 import com.stellar.backend.entity.SuKien;
-import com.stellar.backend.entity.Ve;
 import com.stellar.backend.repository.DonMuaRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.VeRepository;
 import com.stellar.backend.security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.sql.CallableStatement;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -30,6 +34,9 @@ public class OrganizerController {
 
     @Autowired
     private DonMuaRepository donMuaRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     // Chỉ tính vé có trạng thái "Hiệu lực" hoặc "Đã check-in" là vé đã bán hợp lệ
     private static final List<String> TRANG_THAI_VE_HOP_LE = List.of("Hiệu lực", "Đã check-in");
@@ -88,6 +95,119 @@ public class OrganizerController {
             return ResponseEntity.internalServerError().body(
                 java.util.Map.of("message", "Lỗi tải dữ liệu doanh thu: " + e.getMessage())
             );
+        }
+    }
+
+    /**
+     * Lấy dữ liệu vé bán theo ngày của một sự kiện (dùng cho biểu đồ bar chart).
+     * Trả về danh sách [{ngay, soVe, doanhThu}] cho từng ngày có phát sinh giao dịch.
+     */
+    @GetMapping("/events/{id}/tickets-by-day")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getTicketsByDay(@PathVariable Long id) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+
+            SuKien sk = suKienRepository.findById(id).orElse(null);
+            if (sk == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+            }
+            // Kiểm tra quyền sở hữu
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && (sk.getNguoiTao() == null ||
+                    !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId()))) {
+                return ResponseEntity.status(403).body(Map.of("message", "Không có quyền!"));
+            }
+
+            List<Object[]> rows = veRepository.countTicketsByDay(id);
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Object[] row : rows) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("ngay", row[0] != null ? row[0].toString().substring(0, 10) : "");
+                item.put("soVe", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+                item.put("doanhThu", row[2] != null ? row[2] : BigDecimal.ZERO);
+                result.add(item);
+            }
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Lỗi tải dữ liệu: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Lấy thống kê chi tiết số vé và doanh thu của một sự kiện.
+     * Nội bộ gọi Oracle procedure PROC_GET_EVENT_TICKET_STATS để đảm bảo tính
+     * nhất quán dữ liệu giữa số vé đếm được và doanh thu tương ứng.
+     *
+     * Response fields:
+     *   soVe        — số vé từ lần đọc đầu (snapshot đầu tiên)
+     *   doanhThu    — doanh thu từ lần đọc cuối (sau khi xử lý nghiệp vụ)
+     *   soVeXacNhan — số vé từ lần đọc cuối (để frontend kiểm tra tính nhất quán)
+     *   doanhThuGoc — doanh thu từ lần đọc đầu
+     */
+    @GetMapping("/events/{id}/stats")
+    @PreAuthorize("hasRole('ORGANIZER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getEventStats(@PathVariable Long id) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+                    .getContext().getAuthentication().getPrincipal();
+
+            SuKien sk = suKienRepository.findById(id).orElse(null);
+            if (sk == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Sự kiện không tồn tại!"));
+            }
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin && (sk.getNguoiTao() == null ||
+                    !sk.getNguoiTao().getMaTaiKhoan().equals(userDetails.getId()))) {
+                return ResponseEntity.status(403).body(Map.of("message", "Không có quyền!"));
+            }
+
+            // Gọi Oracle procedure với OUT parameters qua JdbcTemplate
+            long[] soVe1     = {0L};
+            long[] doanhThu1 = {0L};
+            long[] soVe2     = {0L};
+            long[] doanhThu2 = {0L};
+
+            jdbcTemplate.execute((java.sql.Connection con) -> {
+                try (CallableStatement cs = con.prepareCall(
+                        "{CALL PROC_GET_EVENT_TICKET_STATS(?, ?, ?, ?, ?)}")) {
+                    cs.setLong(1, id);
+                    cs.registerOutParameter(2, Types.NUMERIC);  // p_so_ve_1
+                    cs.registerOutParameter(3, Types.NUMERIC);  // p_doanh_thu_1
+                    cs.registerOutParameter(4, Types.NUMERIC);  // p_so_ve_2
+                    cs.registerOutParameter(5, Types.NUMERIC);  // p_doanh_thu_2
+                    cs.execute();
+                    soVe1[0]     = cs.getLong(2);
+                    doanhThu1[0] = cs.getLong(3);
+                    soVe2[0]     = cs.getLong(4);
+                    doanhThu2[0] = cs.getLong(5);
+                }
+                return null;
+            });
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("maSuKien",    id);
+            response.put("tenSuKien",   sk.getTenSuKien());
+            response.put("trangThai",   sk.getTrangThai());
+            response.put("anhBiaUrl",   sk.getAnhBiaUrl());
+            // Số vé hiển thị (snapshot đầu tiên) — có thể lệch với doanh thu (snapshot cuối)
+            response.put("soVe",        soVe1[0]);
+            response.put("doanhThu",    doanhThu2[0]);
+            // Dữ liệu snapshot cuối để frontend so sánh
+            response.put("soVeXacNhan", soVe2[0]);
+            response.put("doanhThuGoc", doanhThu1[0]);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Lỗi tải thống kê: " + e.getMessage()));
         }
     }
 

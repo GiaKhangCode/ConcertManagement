@@ -1,3 +1,4 @@
+
 // Custom cursor
 const cursor = document.querySelector('.custom-cursor');
 let interactables = document.querySelectorAll('a, button, input, .event-card');
@@ -436,8 +437,7 @@ async function loadResaleTickets() {
             
             container.innerHTML = listings.map(l => `
                 <article class="event-card">
-                    <div class="card-image" style="background: linear-gradient(135deg, #6272a4, #8be9fd); height: 160px; display:flex; align-items:center; justify-content:center;">
-                        <i class="fa fa-sync-alt" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <div class="card-image" style="background-image: url('${l.image}'); background-size: cover; background-position: center; height: 160px; display:flex; align-items:center; justify-content:center; background-color: rgba(255,255,255,0.05);">
                         <div class="status-badge live">VÉ SANG NHƯỢNG</div>
                     </div>
                     <div class="card-body">
@@ -482,6 +482,6 @@ async function buyResale(resaleId) {
             const data = await res.json();
             alert("❌ Lỗi: " + data.message);
         }
-    } catch (e) { alert("Lỗi kết nối"); }
+    } catch (e) { alert("Giao dịch bị gián đoạn"); }
 }
 

@@ -172,7 +172,7 @@ async function saveCampaign() {
         }
     } catch (e) {
         console.error(e);
-        alert("Lỗi kết nối");
+        alert("giao dịch bị gián đoạn");
     }
 }
 
@@ -215,7 +215,7 @@ async function saveCode() {
         }
     } catch (e) {
         console.error(e);
-        alert("Lỗi kết nối");
+        alert("giao dịch bị gián đoạn");
     }
 }
 

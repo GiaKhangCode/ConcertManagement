@@ -679,7 +679,7 @@
 
             } catch(e) {
                 console.error("Lỗi khởi tạo:", e);
-                document.getElementById('userWalletBalance').innerText = "Lỗi kết nối";
+                document.getElementById('userWalletBalance').innerText = "giao dịch bị gián đoạn";
             }
         }
 
@@ -1170,7 +1170,7 @@
                 }
             } catch (e) {
                 infoEl.style.color = '#ff4d4d';
-                infoEl.innerText = "❌ Lỗi kết nối server";
+                infoEl.innerText = "❌ giao dịch bị gián đoạn server";
             }
         }
 

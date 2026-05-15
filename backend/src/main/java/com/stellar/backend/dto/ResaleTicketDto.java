@@ -10,8 +10,9 @@ public class ResaleTicketDto {
     private String viTri;
     private BigDecimal giaBanLai;
     private String nguoiBan;
+    private String image;
 
-    public ResaleTicketDto(Long maVe, String tenSuKien, String thoiGian, String hangGhe, String viTri, BigDecimal giaBanLai, String nguoiBan) {
+    public ResaleTicketDto(Long maVe, String tenSuKien, String thoiGian, String hangGhe, String viTri, BigDecimal giaBanLai, String nguoiBan, String image) {
         this.maVe = maVe;
         this.tenSuKien = tenSuKien;
         this.thoiGian = thoiGian;
@@ -19,6 +20,7 @@ public class ResaleTicketDto {
         this.viTri = viTri;
         this.giaBanLai = giaBanLai;
         this.nguoiBan = nguoiBan;
+        this.image = image;
     }
 
     // Getters and Setters
@@ -36,4 +38,6 @@ public class ResaleTicketDto {
     public void setGiaBanLai(BigDecimal giaBanLai) { this.giaBanLai = giaBanLai; }
     public String getNguoiBan() { return nguoiBan; }
     public void setNguoiBan(String nguoiBan) { this.nguoiBan = nguoiBan; }
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
 }

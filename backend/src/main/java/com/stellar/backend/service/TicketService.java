@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
+
     @Autowired
     private VeRepository veRepository;
 
@@ -74,39 +75,65 @@ public class TicketService {
             throw new RuntimeException("Vé này không được niêm yết bán lại");
         }
 
-        BigDecimal price = ve.getGiaBanLai();
         Long sellerId = ve.getDonMua().getTaiKhoan().getMaTaiKhoan();
-
         if (buyerId.equals(sellerId)) {
             throw new RuntimeException("Bạn không thể mua lại vé của chính mình");
         }
 
-        // Buyer pays
+        // ─────────────────────────────────────────────────────────────
+        // Demo NON-REPEATABLE READ — delay xảy ra BÊN TRONG Oracle function
+        //
+        // Gọi FUNC_DEMO_NRR_TICKET_PRICE(:ticketId) — function này:
+        //   1. Đọc GiaBanLai lần 1 (ghi log DBMS_OUTPUT)
+        //   2. DBMS_SESSION.SLEEP(7) — ngủ 7 giây tại DB
+        //   3. Đọc GiaBanLai lần 2 — thấy thay đổi nếu TX khác đã UPDATE
+        //   4. Trả về giá lần 2
+        //
+        // Cách demo:
+        //   Tab A: bấm "Mua vé bán lại" → function bắt đầu đọc + sleep ở DB
+        //   Tab B: trong lúc Tab A đang sleep, chỉnh lại GiaBanLai trên trang quản lý
+        //   → Tab A nhận về giá mới (khác giá lần 1) → Non-Repeatable Read!
+        // ─────────────────────────────────────────────────────────────
+        BigDecimal priceRead1 = ve.getGiaBanLai(); // Giá đọc lần 1 (từ entity cache)
+
+        // Gọi Oracle function — DBMS_SESSION.SLEEP(7) diễn ra ở DB level
+        BigDecimal priceRead2 = veRepository.demoNrrTicketPrice(ticketId);
+
+        if (priceRead2 == null) {
+            throw new RuntimeException("Vé này đã bị hủy niêm yết trong lúc bạn xử lý!");
+        }
+
+        if (priceRead1.compareTo(priceRead2) != 0) {
+            System.out.println("[NRR] *** NON-REPEATABLE READ! Giá thay đổi: "
+                    + priceRead1 + " → " + priceRead2 + " ***");
+        }
+        // ─────────────────────────────────────────────────────────────
+
+        BigDecimal price = priceRead2; // Dùng giá đọc lần 2 (sau sleep)
+
+        // Buyer pays (gọi procedure PROC_DEMO_WALLET_PAY — thêm delay ở DB)
         walletService.pay(buyerId, price, "Mua vé bán lại #" + ve.getMaVe());
-        
-        // Seller receives
         walletService.receive(sellerId, price, "Tiền bán lại vé #" + ve.getMaVe());
 
-        // Update ticket status
-        ve.setDaBanLai(0);
-        ve.setGiaBanLai(null);
-        
-        // Create new DonMua for buyer to transfer ownership
+        // Refresh vé từ DB (phòng trường hợp entity bị stale)
+        Ve veFresh = veRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Vé không còn tồn tại"));
+        veFresh.setDaBanLai(0);
+        veFresh.setGiaBanLai(null);
+
         TaiKhoan buyerAccount = taiKhoanRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Người mua không tồn tại"));
 
         DonMua newOrder = new DonMua();
         newOrder.setTaiKhoan(buyerAccount);
-        newOrder.setSuKien(ve.getLichDien().getSuKien());
+        newOrder.setSuKien(veFresh.getLichDien().getSuKien());
         newOrder.setTongTien(price);
         newOrder.setTrangThaiThanhToan("Đã thanh toán");
         newOrder.setPhuongThucThanhToan("Stellar Pay (Mua lại)");
-        
         donMuaRepository.save(newOrder);
 
-        // Transfer ticket ownership to new order
-        ve.setDonMua(newOrder);
-        veRepository.save(ve);
+        veFresh.setDonMua(newOrder);
+        veRepository.save(veFresh);
     }
 
     private BigDecimal calculateRefundPercentage(SuKien sk, LocalDateTime thoiDiemYeuCau) {
@@ -193,7 +220,7 @@ public class TicketService {
         yeuCau.setNoiDung(reason + " | Vé #" + ticketId);
         yeuCau.setTrangThaiXuLy("Đã xử lý");
         yeuCauHoTroRepository.save(yeuCau);
-        
+
         BigDecimal ticketPrice = ve.getHangVe().getGiaNiemYet();
         BigDecimal hundred = new BigDecimal(100);
         BigDecimal amountToRefund = ticketPrice.multiply(maxTyLe)
@@ -266,7 +293,7 @@ public class TicketService {
         }
 
         if (totalValidPrice.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal amount = totalValidPrice.multiply(maxTyLe).divide(new BigDecimal(100)); 
+            BigDecimal amount = totalValidPrice.multiply(maxTyLe).divide(new BigDecimal(100));
             walletService.receive(yeuCau.getTaiKhoan().getMaTaiKhoan(), amount, "Hoàn tiền cho yêu cầu #" + yeuCau.getMaYeuCau() + " (" + maxTyLe + "%)");
         }
 
@@ -285,7 +312,11 @@ public class TicketService {
         System.out.println("DEBUG: Found " + tickets.size() + " resale tickets in DB");
         return tickets.stream()
                 .map(v -> {
-                    System.out.println("DEBUG: Mapping ticket ID " + v.getMaVe() + " - Resale Price: " + v.getGiaBanLai());
+                    String thumbnailUrl = v.getLichDien().getSuKien().getAnhThumbnailUrl();
+                    if (thumbnailUrl == null || thumbnailUrl.isEmpty()) {
+                        thumbnailUrl = "https://via.placeholder.com/640x480.png?text=No+Thumbnail";
+                    }
+                    
                     return new ResaleTicketDto(
                         v.getMaVe(),
                         v.getLichDien().getSuKien().getTenSuKien(),
@@ -293,7 +324,8 @@ public class TicketService {
                         v.getHangVe().getTenHangVe(),
                         v.getGheNgoi() != null ? v.getGheNgoi().getToaDo() : "Tự do",
                         v.getGiaBanLai(),
-                        v.getDonMua().getTaiKhoan().getTenDangNhap()
+                        v.getDonMua().getTaiKhoan().getTenDangNhap(),
+                        thumbnailUrl
                     );
                 })
                 .collect(Collectors.toList());
