@@ -206,6 +206,7 @@ public class AdminController {
             dto.setNgheSiList(sk.getThamGiaList().stream().map(tg -> {
                 EventCreateRequestDto.NgheSiDto nsDto = new EventCreateRequestDto.NgheSiDto();
                 nsDto.setTenNgheSi(tg.getNgheSi().getTenNgheSi());
+                nsDto.setAnhDaiDienURL(tg.getNgheSi().getAnhDaiDienURL());
                 return nsDto;
             }).collect(Collectors.toList()));
         }
@@ -357,6 +358,11 @@ public class AdminController {
                                 newNs.setTenNgheSi(nsName);
                                 return ngheSiRepository.save(newNs);
                             });
+
+                    if (nsDto.getAnhDaiDienURL() != null && !nsDto.getAnhDaiDienURL().trim().isEmpty()) {
+                        ns.setAnhDaiDienURL(nsDto.getAnhDaiDienURL().trim());
+                        ngheSiRepository.save(ns);
+                    }
 
                     ThamGiaId tgId = new ThamGiaId(ns.getMaNgheSi(), sk.getMaSuKien());
                     if (!thamGiaRepository.existsById(tgId)) {
@@ -606,6 +612,11 @@ public class AdminController {
                                 newNs.setTenNgheSi(nsName);
                                 return ngheSiRepository.save(newNs);
                             });
+
+                    if (nsDto.getAnhDaiDienURL() != null && !nsDto.getAnhDaiDienURL().trim().isEmpty()) {
+                        ns.setAnhDaiDienURL(nsDto.getAnhDaiDienURL().trim());
+                        ngheSiRepository.save(ns);
+                    }
 
                     ThamGiaId tgId = new ThamGiaId(ns.getMaNgheSi(), sk.getMaSuKien());
                     ThamGia tg = new ThamGia();

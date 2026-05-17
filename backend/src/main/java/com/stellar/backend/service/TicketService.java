@@ -118,8 +118,7 @@ public class TicketService {
         // Refresh vé từ DB (phòng trường hợp entity bị stale)
         Ve veFresh = veRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Vé không còn tồn tại"));
-        veFresh.setDaBanLai(0);
-        veFresh.setGiaBanLai(null);
+        // DB Trigger TRG_VE_BIUD_TINHTONGTIEN sẽ tự động xử lý giá và reset DaBanLai, GiaBanLai
 
         TaiKhoan buyerAccount = taiKhoanRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Người mua không tồn tại"));
@@ -127,7 +126,7 @@ public class TicketService {
         DonMua newOrder = new DonMua();
         newOrder.setTaiKhoan(buyerAccount);
         newOrder.setSuKien(veFresh.getLichDien().getSuKien());
-        newOrder.setTongTien(price);
+        newOrder.setTongTien(BigDecimal.ZERO); // DB Trigger sẽ tự động cộng giá bán lại vào
         newOrder.setTrangThaiThanhToan("Đã thanh toán");
         newOrder.setPhuongThucThanhToan("Stellar Pay (Mua lại)");
         donMuaRepository.save(newOrder);

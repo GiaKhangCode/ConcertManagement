@@ -29,16 +29,16 @@ function setupAutocomplete(selectId, placeholder = "Tìm kiếm...") {
     // Tạo input giả để tìm kiếm và hiển thị giá trị đã chọn
     const wrapper = document.createElement('div');
     wrapper.className = 'autocomplete-input-wrapper';
-    
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'form-input';
     input.placeholder = placeholder;
     input.autocomplete = 'off';
-    
+
     const icon = document.createElement('i');
     icon.className = 'fa fa-chevron-down';
-    
+
     wrapper.appendChild(input);
     wrapper.appendChild(icon);
     container.appendChild(wrapper);
@@ -59,7 +59,7 @@ function setupAutocomplete(selectId, placeholder = "Tìm kiếm...") {
             value: opt.value,
             element: opt
         })).filter(opt => opt.value !== "");
-        
+
         // Cập nhật giá trị hiển thị ban đầu nếu có
         if (select.selectedIndex >= 0 && select.value !== "") {
             input.value = select.options[select.selectedIndex].text;
@@ -70,7 +70,7 @@ function setupAutocomplete(selectId, placeholder = "Tìm kiếm...") {
 
     const renderResults = (filter = "") => {
         results.innerHTML = "";
-        const filtered = options.filter(opt => 
+        const filtered = options.filter(opt =>
             opt.text.toLowerCase().includes(filter.toLowerCase())
         );
 
@@ -155,27 +155,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             let html = '<option value="">-- [ Chọn địa điểm tổ chức ] --</option>';
             list.forEach(d => { html += `<option value="${d.maDiaDiem}">${d.tenDiaDiem} (Sức chứa: ${d.sucChua}) - ${d.tinhThanh}</option>`; });
             document.getElementById('maDiaDiem').innerHTML = html;
-            
+
             // Khởi tạo autocomplete cho maDiaDiem sau khi đã tải xong data
             setupAutocomplete('maDiaDiem', "Tìm kiếm địa điểm...");
         }
 
         // Khởi tạo autocomplete cho Phân loại sự kiện
         setupAutocomplete('phanLoai', "-- [ Chọn thể loại ] --");
-        
+
         // Kiểm tra thông tin nhà tổ chức
         const profRes = await fetch('http://localhost:8081/api/user/profile', { headers: { 'Authorization': 'Bearer ' + token } });
         if (profRes.ok) {
             const profile = await safeParseJson(profRes, "Tải thông tin cá nhân");
             const isOrganizer = profile.roles && profile.roles.includes('ROLE_ORGANIZER');
             const isAdmin = profile.roles && profile.roles.includes('ROLE_ADMIN');
-            
+
             if (isOrganizer && !isAdmin && !profile.organizationName) {
                 alert("⚠️ Bạn cần thiết lập thông tin nhà tổ chức trước khi tạo sự kiện!");
                 window.location.href = "profile.html";
                 return;
             }
-            
+
             // Hiển thị form nếu hợp lệ
             document.getElementById('main-admin-container').style.display = 'block';
         }
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.artistOptionsHTML = artists.map(a => `<option value="${a.tenNgheSi}">${a.tenNgheSi}</option>`).join('');
         }
 
-    } catch (e) { 
+    } catch (e) {
         console.error("Lỗi khởi tạo:", e);
         // Nếu lỗi API vẫn cho hiện để không bị kẹt trang trắng (hoặc có thể xử lý khác tùy UI)
         document.getElementById('main-admin-container').style.display = 'block';
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pSelect.onchange = async () => {
             wSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
             wSelect.disabled = true;
-            
+
             // Dispatch event để autocomplete của ward biết là options đã bị xóa
             wSelect.dispatchEvent(new Event('change'));
 
@@ -280,14 +280,14 @@ function normalizeDateTime(val) {
 async function loadEventData(id, token) {
     try {
         // Thêm timestamp để tránh browser cache dữ liệu cũ
-        const res = await fetch(`http://localhost:8081/api/admin/events/${id}?t=${Date.now()}`, { 
+        const res = await fetch(`http://localhost:8081/api/admin/events/${id}?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token },
-            cache: 'no-store' 
+            cache: 'no-store'
         });
         if (!res.ok) throw new Error("Không thể tải dữ liệu.");
         const data = await safeParseJson(res, "Tải dữ liệu sự kiện để sửa");
         document.getElementById('tenSuKien').value = data.tenSuKien || '';
-        
+
         // Gán địa điểm và kích hoạt sự kiện để autocomplete cập nhật UI
         const maDiaDiemEl = document.getElementById('maDiaDiem');
         if (maDiaDiemEl) {
@@ -297,7 +297,7 @@ async function loadEventData(id, token) {
 
         document.getElementById('eventPoster').value = data.anhBiaUrl || '';
         document.getElementById('eventThumbnail').value = data.anhThumbnailUrl || '';
-        
+
         // Gán phân loại và kích hoạt sự kiện
         const phanLoaiEl = document.getElementById('phanLoai');
         if (phanLoaiEl) {
@@ -367,7 +367,7 @@ async function loadEventData(id, token) {
                 if (seatmapData && seatmapData.duLieuCanvas && typeof canvas !== 'undefined') {
                     document.getElementById('enableStageBuilder').checked = true;
                     toggleStageBuilder();
-                    canvas.loadFromJSON(seatmapData.duLieuCanvas, function() {
+                    canvas.loadFromJSON(seatmapData.duLieuCanvas, function () {
                         canvas.getObjects().forEach(obj => {
                             if (obj.stroke === '#ffffff11') canvas.sendToBack(obj);
                         });
@@ -385,7 +385,7 @@ async function loadEventData(id, token) {
 // =============================================
 function addLichDien(data = null) {
     lichDienCount++;
-    const id = `ld_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const id = `ld_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const maLichDien = data?.maLichDien || '';
     document.getElementById('lichDienContainer').insertAdjacentHTML('beforeend', `
         <div class="dynamic-box" id="${id}" data-ma-lich-dien="${maLichDien}">
@@ -410,7 +410,7 @@ function addLichDien(data = null) {
 
     // Khởi tạo flatpickr cho 2 input vừa tạo, SAU KHI element đã có trong DOM
     const fpStart = flatpickr(`#ld_start_${id}`, { enableTime: true, altInput: true, altFormat: "d/m/Y H:i", dateFormat: "Y-m-d\\TH:i", time_24hr: true });
-    const fpEnd   = flatpickr(`#ld_end_${id}`,   { enableTime: true, altInput: true, altFormat: "d/m/Y H:i", dateFormat: "Y-m-d\\TH:i", time_24hr: true });
+    const fpEnd = flatpickr(`#ld_end_${id}`, { enableTime: true, altInput: true, altFormat: "d/m/Y H:i", dateFormat: "Y-m-d\\TH:i", time_24hr: true });
 
     // Nếu có dữ liệu cũ (chế độ edit), dùng setDate() thay vì gán value
     if (data?.thoiGianBatDau) fpStart.setDate(normalizeDateTime(data.thoiGianBatDau), true);
@@ -420,7 +420,7 @@ function addLichDien(data = null) {
 
 function addHangVe(data = null) {
     hangVeCount++;
-    const hvId = `hv_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const hvId = `hv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const kvContId = `kv_cont_${hvId}`;
     const maHangVe = data?.maHangVe || '';
     document.getElementById('hangVeContainer').insertAdjacentHTML('beforeend', `
@@ -457,7 +457,7 @@ function addHangVe(data = null) {
 }
 
 function addKhuVuc(containerId, data = null) {
-    const id = `kv_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const id = `kv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const capacity = data?.sucChuaKv || 0;
     const maKhuVuc = data?.maKhuVuc || '';
     document.getElementById(containerId).insertAdjacentHTML('beforeend', `
@@ -522,7 +522,7 @@ function addRefundRule(data = null) {
 // SPONSOR BUILDERS
 // =============================================
 function addSponsorRow(data = null) {
-    const id = `sp_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const id = `sp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const html = `
         <div class="dynamic-box" id="${id}" style="border-left-color: #50fa7b; background: rgba(80, 250, 123, 0.05); padding: 20px;">
             <button class="remove-btn" type="button" onclick="removeEl('${id}')"><i class="fa fa-times-circle"></i></button>
@@ -573,7 +573,7 @@ function toggleArtistMode(rowId, mode) {
 }
 
 function addArtistRow(data = null) {
-    const id = `art_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+    const id = `art_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     // Mặc định hiển thị select nếu không có data hoặc data đã có mã nghệ sĩ, còn lại là new
     const isNew = data && !data.maNgheSi && data.tenNgheSi;
     const initialMode = isNew ? 'new' : 'existing';
@@ -595,8 +595,16 @@ function addArtistRow(data = null) {
             </div>
 
             <div class="art-new-section" style="display: ${initialMode === 'new' ? 'block' : 'none'};">
-                <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Tên Nghệ Sĩ Mới</label>
-                <input type="text" class="form-input art-name" placeholder="VD: Sơn Tùng M-TP..." value="${isNew ? data.tenNgheSi : ''}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">Tên Nghệ Sĩ Mới</label>
+                        <input type="text" class="form-input art-name" placeholder="VD: Sơn Tùng M-TP..." value="${isNew ? data.tenNgheSi : ''}">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; color: #ff55ff; margin-bottom: 5px; display: block;">URL Ảnh Đại Diện (Tuỳ chọn)</label>
+                        <input type="text" class="form-input art-avatar" placeholder="https://example.com/avatar.jpg" value="${isNew && data.anhDaiDienURL ? data.anhDaiDienURL : ''}">
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -714,7 +722,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
             return;
         }
-        
+
         const rules = [];
         document.querySelectorAll('.rule-item').forEach(el => {
             const hours = parseInt(el.querySelector('.rule-hours').value) || 0;
@@ -723,14 +731,14 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
                 rules.push({ hoursBefore: hours, percentage: percent });
             }
         });
-        
+
         if (rules.length === 0) {
             alert("Vui lòng thêm ít nhất 1 quy tắc hoàn tiền!");
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i class="fa fa-check-circle" style="margin-right:15px;"></i>${isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN VÀ LƯU SỰ KIỆN'}`;
             return;
         }
-        
+
         refundPolicy = { name: policyName, rules };
     }
 
@@ -753,7 +761,9 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         ngheSiList: Array.from(document.querySelectorAll('#artistsContainer .dynamic-box')).map(node => {
             const mode = node.dataset.mode;
             const tenNs = mode === 'existing' ? node.querySelector('.art-select').value.trim() : node.querySelector('.art-name').value.trim();
-            return { tenNgheSi: tenNs };
+            const avatarNode = node.querySelector('.art-avatar');
+            const anhDaiDienURL = (mode === 'new' && avatarNode) ? avatarNode.value.trim() : null;
+            return { tenNgheSi: tenNs, anhDaiDienURL: anhDaiDienURL };
         }).filter(ns => ns.tenNgheSi)
     };
 
@@ -764,7 +774,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
         if (document.getElementById('btnNewLoc').classList.contains('active')) {
             const pSel = document.getElementById('province');
             const wSel = document.getElementById('ward');
-            
+
             if (!pSel.value || !wSel.value) {
                 alert("Vui lòng chọn Tỉnh/Thành và Phường/Xã!");
                 submitBtn.disabled = false;
@@ -806,7 +816,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
             const listRes = await fetch('http://localhost:8081/api/admin/locations', { headers: { 'Authorization': 'Bearer ' + token } });
             const listText = await listRes.text();
             let list = [];
-            try { list = JSON.parse(listText); } catch(e) { console.error("Lỗi parse list địa điểm sau tạo:", listText); }
+            try { list = JSON.parse(listText); } catch (e) { console.error("Lỗi parse list địa điểm sau tạo:", listText); }
             const createdLoc = list.find(l => l.tenDiaDiem === locPayload.tenDiaDiem);
             if (createdLoc) {
                 maDiaDiemFinal = createdLoc.maDiaDiem;
@@ -829,7 +839,7 @@ document.getElementById('createEventForm').addEventListener('submit', async (e) 
 
         if (response.ok) {
             const savedId = isEdit ? existingId : data.eventId;
-            
+
             // LƯU SƠ ĐỒ SÂN KHẤU NẾU CÓ BẬT VÀ CÓ DỮ LIỆU
             const stageData = typeof getStageBuilderData === 'function' ? getStageBuilderData() : null;
             if (stageData) {

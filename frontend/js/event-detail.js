@@ -64,6 +64,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('organizerEmail').innerText = ev.organizer.email;
         }
 
+        // Hiển thị Nghệ sĩ
+        const artistsSect = document.getElementById('artistsSection');
+        const artistsList = document.getElementById('artistsList');
+        if (ev.ngheSiList && ev.ngheSiList.length > 0) {
+            if(artistsSect) artistsSect.style.display = 'block';
+            if(artistsList) {
+                artistsList.innerHTML = ev.ngheSiList.map(ns => `
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 120px;">
+                        <img src="${ns.anhDaiDienURL || 'https://via.placeholder.com/100?text=Artist'}" alt="${ns.tenNgheSi}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #bc00ff; box-shadow: 0 0 15px rgba(188, 0, 255, 0.4);">
+                        <div style="color: #fff; font-weight: bold; text-align: center; font-size: 0.9rem;">${ns.tenNgheSi}</div>
+                    </div>
+                `).join('');
+            }
+        }
         
         // Hiển thị Nhà tài trợ
         const sponsorsSect = document.getElementById('sponsorsSection');

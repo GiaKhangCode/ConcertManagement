@@ -173,6 +173,7 @@ public class EventService {
             dto.setNgheSiList(sk.getThamGiaList().stream().map(tg -> {
                 EventDetailDto.NgheSiDto nsDto = new EventDetailDto.NgheSiDto();
                 nsDto.setTenNgheSi(tg.getNgheSi().getTenNgheSi());
+                nsDto.setAnhDaiDienURL(tg.getNgheSi().getAnhDaiDienURL());
                 return nsDto;
             }).collect(Collectors.toList()));
         }

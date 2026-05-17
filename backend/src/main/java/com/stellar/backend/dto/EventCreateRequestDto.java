@@ -160,8 +160,12 @@ public class EventCreateRequestDto {
 
     public static class NgheSiDto {
         private String tenNgheSi;
+        private String anhDaiDienURL;
         
         public String getTenNgheSi() { return tenNgheSi; }
         public void setTenNgheSi(String tenNgheSi) { this.tenNgheSi = tenNgheSi; }
+        
+        public String getAnhDaiDienURL() { return anhDaiDienURL; }
+        public void setAnhDaiDienURL(String anhDaiDienURL) { this.anhDaiDienURL = anhDaiDienURL; }
     }
 }

@@ -151,7 +151,7 @@ public class UserController {
         List<UserOrderResponseDto> result = new ArrayList<>();
         for(DonMua don : orders) {
             List<Ve> veList = veRepository.findByDonMua_MaDonMua(don.getMaDonMua());
-            if (veList.isEmpty()) continue;
+          
 
             UserOrderResponseDto orderDto = new UserOrderResponseDto();
             orderDto.setTransactionId(don.getMaDonMua());
@@ -171,9 +171,8 @@ public class UserController {
                 ticketDtos.add(dto);
             }
             orderDto.setTickets(ticketDtos);
-            if (!ticketDtos.isEmpty()) {
-                result.add(orderDto);
-            }
+            result.add(orderDto);
+            
         }
         System.out.println("DEBUG: Trả về " + result.size() + " đơn mua.");
         return ResponseEntity.ok(result);

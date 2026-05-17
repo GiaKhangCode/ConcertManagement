@@ -412,7 +412,7 @@ CREATE TABLE NHAT_KY_THONG_BAO
     MaTaiKhoan   NUMBER REFERENCES TAI_KHOAN (MaTaiKhoan),
     KenhGui      NVARCHAR2(50) NOT NULL CHECK (KenhGui IN ('EMAIL', 'SMS', 'ZALO')),
     NoiDung      CLOB,
-    TrangThai    NVARCHAR2(50) DEFAULT N'Đã gửi' NOT NULL CHECK (TrangThai IN (N'Đã gửi', N'Thất bại', N'Đã nhận', N'Đã xem')),
+    TrangThai    NVARCHAR2(50) DEFAULT N'Đã gửi' NOT NULL CHECK (TrangThai IN (N'Đã gửi', N'Thất bại', N'Đã nhận', N'Đã xem', N'Thành công')),
     ThoiDiemGui  TIMESTAMP NOT NULL,
     ThoiDiemNhan TIMESTAMP,
     CONSTRAINT CK_TDNHAN CHECK (ThoiDiemNhan >= ThoiDiemGui)
@@ -1065,15 +1065,32 @@ DECLARE
     v_GiaMoi NUMBER := 0;
 BEGIN
     PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate := TRUE;
-    IF DELETING OR UPDATING THEN
-        SELECT GiaNiemYet INTO v_GiaCu FROM HANG_VE WHERE MaHangVe = :OLD.MaHangVe;
-        UPDATE DON_MUA SET TongTien = TongTien - v_GiaCu WHERE MaDonMua = :OLD.MaDonMua;
-    END IF;
-
-    IF INSERTING OR UPDATING THEN
-        SELECT GiaNiemYet INTO v_GiaMoi FROM HANG_VE WHERE MaHangVe = :NEW.MaHangVe;
+    
+    -- Xử lý trường hợp mua lại vé (chuyển vé sang đơn mua mới)
+    IF UPDATING AND :NEW.MaDonMua <> :OLD.MaDonMua AND :NEW.GiaBanLai IS NOT NULL AND :NEW.GiaBanLai > 0 THEN
+        v_GiaMoi := :NEW.GiaBanLai;
+        
+        -- Chỉ cộng tiền vào đơn mua mới
         UPDATE DON_MUA SET TongTien = TongTien + v_GiaMoi WHERE MaDonMua = :NEW.MaDonMua;
+        
+        -- Đặt lại trạng thái vé
+        :NEW.DaBanLai := 0;
+        :NEW.GiaBanLai := NULL;
+        
+        -- KHÔNG trừ tiền của đơn mua cũ để giữ nguyên doanh thu quyết toán
+    ELSE
+        -- Logic cũ cho các trường hợp thêm/xóa/sửa bình thường
+        IF DELETING OR UPDATING THEN
+            SELECT GiaNiemYet INTO v_GiaCu FROM HANG_VE WHERE MaHangVe = :OLD.MaHangVe;
+            UPDATE DON_MUA SET TongTien = TongTien - v_GiaCu WHERE MaDonMua = :OLD.MaDonMua;
+        END IF;
+
+        IF INSERTING OR UPDATING THEN
+            SELECT GiaNiemYet INTO v_GiaMoi FROM HANG_VE WHERE MaHangVe = :NEW.MaHangVe;
+            UPDATE DON_MUA SET TongTien = TongTien + v_GiaMoi WHERE MaDonMua = :NEW.MaDonMua;
+        END IF;
     END IF;
+    
     PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate := FALSE;
 EXCEPTION
     WHEN OTHERS THEN
@@ -1374,6 +1391,7 @@ BEGIN
             FROM DON_MUA DM JOIN SU_KIEN SK ON DM.MaSuKien = SK.MaSuKien
             WHERE SK.MaNhaToChuc = :NEW.MaNhaToChuc
               AND DM.TrangThaiThanhToan = N'Đã thanh toán'
+              AND DM.PhuongThucThanhToan NOT LIKE N'%Mua lại%'
               AND 'Tháng ' || TO_CHAR(DM.ThoiDiemMua, 'FMMM/YYYY') = :NEW.KyQT;
         END IF;
     END IF;
