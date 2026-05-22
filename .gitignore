@@ -1,0 +1,69 @@
+
+# =========================
+# Java / Maven / Spring Boot
+# =========================
+target/
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper generated files
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# Node.js / Frontend
+# =========================
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+application-local.yml
+application-local.properties
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-local.properties
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.iml
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
