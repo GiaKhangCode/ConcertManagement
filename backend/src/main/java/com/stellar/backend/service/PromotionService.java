@@ -18,43 +18,59 @@ public class PromotionService {
     private MaGiamGiaRepository maGiamGiaRepository;
 
     @Autowired
+    private ChienDichKhuyenMaiRepository chienDichRepository;
+
+    @Autowired
     private ApDungRepository apDungRepository;
 
-    public MaGiamGia validateCode(String code, Long maSuKien) {
-        Optional<MaGiamGia> mggOpt = maGiamGiaRepository.findByMaGiamGia(code);
-        
-        if (mggOpt.isEmpty()) {
-            throw new RuntimeException("Mã giảm giá không tồn tại!");
-        }
-
-        MaGiamGia mgg = mggOpt.get();
-        ChienDichKhuyenMai chienDich = mgg.getChienDich();
-
-        // Kiểm tra sự kiện
-        if (!chienDich.getSuKien().getMaSuKien().equals(maSuKien)) {
-            throw new RuntimeException("Mã giảm giá không áp dụng cho sự kiện này!");
-        }
-
-        // Kiểm tra thời gian chiến dịch
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void updatePromotionStatuses() {
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(chienDich.getThoiDiemBD())) {
-            throw new RuntimeException("Chiến dịch khuyến mãi chưa bắt đầu!");
-        }
-        if (now.isAfter(chienDich.getThoiDiemKT())) {
-            throw new RuntimeException("Chiến dịch khuyến mãi đã kết thúc!");
+
+        // 1. Chuyển "Sắp diễn ra" thành "Đang diễn ra"
+        java.util.List<ChienDichKhuyenMai> upcoming = chienDichRepository.findByTrangThai("Chưa diễn ra");
+        for (ChienDichKhuyenMai cd : upcoming) {
+            if (cd.getThoiDiemBD() != null && !now.isBefore(cd.getThoiDiemBD())) {
+                cd.setTrangThai("Đang diễn ra");
+                chienDichRepository.save(cd);
+            }
         }
 
-        // Kiểm tra trạng thái chiến dịch
-        if (!"Đang diễn ra".equals(chienDich.getTrangThai())) {
-            throw new RuntimeException("Chiến dịch khuyến mãi hiện đang " + chienDich.getTrangThai() + "!");
+        // 2. Chuyển "Đang diễn ra" thành "Đã kết thúc"
+        java.util.List<ChienDichKhuyenMai> ongoing = chienDichRepository.findByTrangThai("Đang diễn ra");
+        for (ChienDichKhuyenMai cd : ongoing) {
+            if (cd.getThoiDiemKT() != null && !now.isBefore(cd.getThoiDiemKT())) {
+                cd.setTrangThai("Đã kết thúc");
+                chienDichRepository.save(cd);
+            }
+        }
+    }
+
+    public MaGiamGia validateCode(String code, Long maSuKien) {
+        Integer resultCode = maGiamGiaRepository.callFnCheckMaGiamGiaHopLe(code, maSuKien);
+
+        if (resultCode == null) {
+            throw new RuntimeException("Lỗi hệ thống khi xác minh mã giảm giá!");
         }
 
-        // Kiểm tra lượt dùng
-        if (mgg.getSoLuotDaSuDung() >= mgg.getLuotDungToiDa()) {
-            throw new RuntimeException("Mã giảm giá đã hết lượt sử dụng!");
+        switch (resultCode) {
+            case 1:
+                return maGiamGiaRepository.findByMaGiamGia(code)
+                    .orElseThrow(() -> new RuntimeException("Mã giảm giá không tồn tại!"));
+            case -1:
+                throw new RuntimeException("Chiến dịch khuyến mãi chưa bắt đầu!");
+            case -2:
+                throw new RuntimeException("Chiến dịch khuyến mãi đã kết thúc!");
+            case -3:
+                throw new RuntimeException("Mã giảm giá đã hết lượt sử dụng!");
+            case -4:
+                throw new RuntimeException("Mã giảm giá không áp dụng cho sự kiện này!");
+            case 0:
+                throw new RuntimeException("Chiến dịch khuyến mãi hiện đang tạm dừng hoặc bị hủy!");
+            default:
+                throw new RuntimeException("Mã giảm giá không hợp lệ (Mã lỗi: " + resultCode + ")");
         }
-
-        return mgg;
     }
 
     public BigDecimal calculateDiscountAmount(MaGiamGia mgg, BigDecimal totalAmount) {

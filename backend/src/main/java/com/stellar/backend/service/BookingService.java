@@ -18,6 +18,9 @@ public class BookingService {
     private DonMuaRepository donMuaRepository;
 
     @Autowired
+    private GiaoDichRepository giaoDichRepository;
+
+    @Autowired
     private WalletService walletService;
 
     @Autowired
@@ -40,6 +43,9 @@ public class BookingService {
 
     @Autowired
     private PromotionService promotionService;
+
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     @Transactional
     public DonMua processBooking(Long userId, BookingRequestDto request) throws Exception {
@@ -70,8 +76,6 @@ public class BookingService {
                 throw new RuntimeException("Bạn chưa khóa đủ số lượng ghế trên hệ thống.");
             }
         } else {
-            long capacity = hangVe.getTongSoLuong() != null ? hangVe.getTongSoLuong() : 0;
-            
             if (request.getMaKhuVuc() != null) {
                 finalKhuVuc = khuVucRepository.findById(request.getMaKhuVuc()).orElse(null);
             } else {
@@ -81,16 +85,10 @@ public class BookingService {
                 }
             }
             
-            if (finalKhuVuc != null && finalKhuVuc.getSucChuaKv() != null) {
-                capacity = finalKhuVuc.getSucChuaKv();
-            }
+            Long khuVucIdForCount = (finalKhuVuc != null) ? finalKhuVuc.getMaKhuVuc() : null;
+            Long soVeConLai = hangVeRepository.callFnLaySoVeConLai(hangVe.getMaHangVe(), khuVucIdForCount);
             
-            java.util.List<String> ignoredStatuses = java.util.Arrays.asList("Đã hủy", "Đã hoàn vé");
-            long veDaBan = (finalKhuVuc != null) ? 
-                veRepository.countByKhuVuc_MaKhuVucAndTrangThaiVeNotIn(finalKhuVuc.getMaKhuVuc(), ignoredStatuses) : 
-                veRepository.countByHangVe_MaHangVeAndTrangThaiVeNotIn(hangVe.getMaHangVe(), ignoredStatuses);
-            
-            if (veDaBan + request.getSoLuong() > capacity) {
+            if (soVeConLai == null || request.getSoLuong() > soVeConLai) {
                 throw new RuntimeException("Rất tiếc! Số lượng vé vượt quá giới hạn sức chứa còn lại của khu vực này.");
             }
         }
@@ -119,45 +117,94 @@ public class BookingService {
             if (tongTien.compareTo(BigDecimal.ZERO) < 0) tongTien = BigDecimal.ZERO;
         }
 
-        // 6. Thanh toán qua ví
-        walletService.pay(userId, tongTien, "Thanh toán đặt vé cho sự kiện: " + suKien.getTenSuKien());
+        // 6. Cấu hình Thanh toán
+        String paymentMethod = request.getPaymentMethod();
+        boolean isWallet = false;
+        
+        if (paymentMethod == null || paymentMethod.isEmpty() || paymentMethod.equals("WALLET")) {
+            paymentMethod = "Ví cá nhân"; // Trùng khớp với logic trong DB
+            isWallet = true;
+        } else {
+            if (paymentMethod.equals("MOMO")) paymentMethod = "Ví MoMo";
+            if (paymentMethod.equals("BANK")) paymentMethod = "Thẻ Ngân hàng";
+        }
 
-        // 7. Lưu đơn mua (Ban đầu đặt 0 để Trigger Database tự tính)
+        // 7. Lưu đơn mua (LUÔN luôn khởi tạo ở trạng thái Chờ thanh toán)
         DonMua donMua = new DonMua();
         donMua.setTaiKhoan(taiKhoan);
         donMua.setSuKien(suKien);
-        donMua.setTongTien(BigDecimal.ZERO);
-        donMua.setTrangThaiThanhToan("Đã thanh toán");
-        donMua.setPhuongThucThanhToan("Ví cá nhân (Ve'ryGood Pay)");
+        donMua.setTongTien(BigDecimal.ZERO); // Sẽ được tính lại bởi trigger DB
+        donMua.setTrangThaiThanhToan("Chờ thanh toán");
+        donMua.setPhuongThucThanhToan(paymentMethod);
         DonMua savedDonMua = donMuaRepository.save(donMua);
 
-        // 8. Lưu vé
-        List<Ve> veList = new ArrayList<>();
-        for (int i = 0; i < request.getSoLuong(); i++) {
-            Ve ve = new Ve();
-            ve.setDonMua(savedDonMua);
-            ve.setHangVe(hangVe);
-            ve.setDaBanLai(0);
-            ve.setTrangThaiVe("Hiệu lực");
+        // 8. Lưu vé qua SP_TAO_VE_HANG_LOAT (LUÔN tạo vé Chờ thanh toán)
+        int isSkipCheck = skipSeatCheck ? 1 : 0;
+        Long khuVucId = (finalKhuVuc != null) ? finalKhuVuc.getMaKhuVuc() : null;
+        
+        veRepository.callSpTaoVeHangLoat(
+            savedDonMua.getMaDonMua(),
+            userId,
+            suKien.getMaSuKien(),
+            validMaLichDien,
+            hangVe.getMaHangVe(),
+            khuVucId,
+            request.getSoLuong(),
+            isSkipCheck,
+            "Chờ thanh toán",
+            "Đang giữ chỗ"
+        );
 
-            if (!skipSeatCheck && i < userLocks.size()) {
-                TrangThaiGheTheoSuat lock = userLocks.get(i);
-                ve.setGheNgoi(lock.getGheNgoi());
-                ve.setKhuVuc(lock.getGheNgoi() != null ? lock.getGheNgoi().getKhuVuc() : null);
-                ve.setLichDien(lock.getLichDien());
-                lock.setTrangThai("Đã đặt");
-                lock.setThoiGianHetHan(null);
-                trangThaiGheTheoSuatRepository.save(lock);
-            } else {
-                ve.setKhuVuc(finalKhuVuc);
-                Long finalMaLichDien = validMaLichDien;
-                ve.setLichDien(suKien.getDanhSachLichDien().stream()
-                        .filter(ld -> ld.getMaLichDien().equals(finalMaLichDien))
-                        .findFirst().orElse(suKien.getDanhSachLichDien().isEmpty() ? null : suKien.getDanhSachLichDien().get(0)));
+        // 9. Xử lý thanh toán qua Procedure tương ứng
+        if (isWallet) {
+            String walletPassword = request.getWalletPassword();
+            if (walletPassword == null || walletPassword.isEmpty()) {
+                walletPassword = "123456"; // Mặc định nếu Frontend chưa kịp gửi
             }
-            veList.add(ve);
+
+            jakarta.persistence.StoredProcedureQuery query = entityManager.createStoredProcedureQuery("SP_THANH_TOAN_VI");
+            query.registerStoredProcedureParameter("p_MaDonMua", Long.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_MaTaiKhoan", Long.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_MaKhauThanhToan", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_KetQua", String.class, jakarta.persistence.ParameterMode.OUT);
+
+            query.setParameter("p_MaDonMua", savedDonMua.getMaDonMua());
+            query.setParameter("p_MaTaiKhoan", userId);
+            query.setParameter("p_MaKhauThanhToan", walletPassword);
+
+            query.execute();
+            String result = (String) query.getOutputParameterValue("p_KetQua");
+            
+            if (result == null || result.startsWith("Lỗi") || result.startsWith("Không đủ") || result.contains("Thất Bại")) {
+                throw new RuntimeException(result != null ? result : "Lỗi hệ thống khi thanh toán ví");
+            }
+            System.out.println("Wallet Payment Result: " + result);
+
+        } else {
+            // Giả lập Webhook cho cổng ngoài (MOMO/BANK)
+            String transactionId = "MOCK_" + System.currentTimeMillis();
+            jakarta.persistence.StoredProcedureQuery query = entityManager.createStoredProcedureQuery("SP_XAC_NHAN_TT_NGOAI");
+            query.registerStoredProcedureParameter("p_MaDonMua", Long.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_MaGiaoDichCongTT", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_SoTienThucNhan", BigDecimal.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_PhuongThuc", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_TrangThaiGiaoDich", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_MaLoi", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_DuLieuPhanHoi", String.class, jakarta.persistence.ParameterMode.IN);
+            query.registerStoredProcedureParameter("p_KetQua", String.class, jakarta.persistence.ParameterMode.OUT);
+
+            query.setParameter("p_MaDonMua", savedDonMua.getMaDonMua());
+            query.setParameter("p_MaGiaoDichCongTT", transactionId);
+            query.setParameter("p_SoTienThucNhan", tongTien);
+            query.setParameter("p_PhuongThuc", paymentMethod);
+            query.setParameter("p_TrangThaiGiaoDich", "Thành công");
+            query.setParameter("p_MaLoi", "");
+            query.setParameter("p_DuLieuPhanHoi", "{\"status\":200, \"mock\":\"true\"}");
+
+            query.execute();
+            String result = (String) query.getOutputParameterValue("p_KetQua");
+            System.out.println("Mock Webhook Result: " + result);
         }
-        veRepository.saveAll(veList);
 
         // 9. Áp dụng khuyến mãi
         if (appliedMgg != null) {

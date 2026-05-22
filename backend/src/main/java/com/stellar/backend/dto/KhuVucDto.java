@@ -21,4 +21,8 @@ public class KhuVucDto {
 
     public Integer getCapacity() { return capacity; }
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
+
+    private Long soVeConLai;
+    public Long getSoVeConLai() { return soVeConLai; }
+    public void setSoVeConLai(Long soVeConLai) { this.soVeConLai = soVeConLai; }
 }

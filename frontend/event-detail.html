@@ -286,6 +286,7 @@
         <div class="nav-links">
             <a href="index.html" class="nav-btn">Trang Chủ</a>
             <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="admin-analytics.html" style="display:none;" id="adminAnalyticsNav" class="nav-btn">Báo Cáo Thống Kê</a>
             <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
             <a href="organizer-promotions.html" style="display:none;" id="promotionsNav" class="nav-btn">Khuyến Mãi</a>
             <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
@@ -408,6 +409,32 @@
             </div>
         </section>
     </main>
+
+    <!-- Slider Captcha Modal -->
+    <div id="captchaModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background: #fff; color: #333; width: 350px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #000; font-family: 'Be Vietnam Pro', sans-serif;">Xác Minh Người Dùng</h3>
+                <div>
+                    <i class="fa fa-sync-alt" style="cursor: pointer; margin-right: 15px; color: #666; font-size: 1.1rem;" onclick="initCaptcha()"></i>
+                    <i class="fa fa-times" style="cursor: pointer; color: #666; font-size: 1.1rem;" onclick="closeCaptcha()"></i>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #666; margin-top: 0; margin-bottom: 15px;">Kéo mũi tên qua phải để hoàn thiện bức hình, giúp hệ thống xác minh bạn là người mua thực sự.</p>
+            
+            <div style="position: relative; width: 310px; height: 180px; background: #eee; border-radius: 8px; overflow: hidden; margin-bottom: 15px;">
+                <canvas id="captchaBg" width="310" height="180" style="position: absolute; left: 0; top: 0; border-radius: 8px;"></canvas>
+                <canvas id="captchaPiece" width="310" height="180" style="position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none;"></canvas>
+            </div>
+            
+            <div style="position: relative; width: 310px; height: 40px; background: #f0f0f0; border-radius: 20px; border: 1px solid #ddd;">
+                <div id="sliderTrack" style="position: absolute; left: 0; top: 0; height: 100%; background: rgba(0, 243, 255, 0.2); border-radius: 20px 0 0 20px; width: 0;"></div>
+                <div id="sliderBtn" style="position: absolute; left: 0; top: -1px; width: 50px; height: 42px; background: #2f80ed; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: grab; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 1.2rem; transition: background 0.2s;">
+                    <i class="fa fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Mascot Companion -->
     <div class="mascot-companion" id="mascotCompanion">

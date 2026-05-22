@@ -29,4 +29,8 @@ public class UserOrderResponseDto {
 
     public List<UserTicketResponseDto> getTickets() { return tickets; }
     public void setTickets(List<UserTicketResponseDto> tickets) { this.tickets = tickets; }
+
+    private String paymentMethod;
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

@@ -276,15 +276,9 @@ public class SeatService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void unlockExpiredSeats() {
-        List<TrangThaiGheTheoSuat> expiredLocks = trangThaiGheTheoSuatRepository.findByTrangThaiAndThoiGianHetHanBefore("Đang giữ chỗ", LocalDateTime.now());
-        if (!expiredLocks.isEmpty()) {
-            for (TrangThaiGheTheoSuat lock : expiredLocks) {
-                lock.setTrangThai("Còn trống");
-                lock.setTaiKhoan(null);
-                lock.setThoiGianHetHan(null);
-            }
-            trangThaiGheTheoSuatRepository.saveAll(expiredLocks);
-            System.out.println("Đã nhả " + expiredLocks.size() + " ghế hết hạn giữ chỗ.");
-        }
+        // Tối ưu hóa bằng Stored Procedure (Đề xuất 3)
+        // Chạy thẳng dưới DB thay vì load danh sách về Java
+        trangThaiGheTheoSuatRepository.callSpUnlockExpiredSeats();
+        System.out.println("Đã chạy SP_UNLOCK_EXPIRED_SEATS định kỳ để dọn dẹp ghế hết hạn.");
     }
 }

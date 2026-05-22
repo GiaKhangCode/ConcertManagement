@@ -94,6 +94,16 @@ public class PromotionController {
         SuKien sk = suKienRepository.findById(campaign.getSuKien().getMaSuKien())
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại!"));
         campaign.setSuKien(sk);
+        
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        if (campaign.getThoiDiemBD() != null && now.isBefore(campaign.getThoiDiemBD())) {
+            campaign.setTrangThai("Chưa diễn ra");
+        } else if (campaign.getThoiDiemKT() != null && now.isAfter(campaign.getThoiDiemKT())) {
+            campaign.setTrangThai("Đã kết thúc");
+        } else {
+            campaign.setTrangThai("Đang diễn ra");
+        }
+        
         ChienDichKhuyenMai saved = chienDichRepository.save(campaign);
         return ResponseEntity.ok(saved);
     }
@@ -134,19 +144,17 @@ public class PromotionController {
         return ResponseEntity.ok(Map.of("message", "Xóa mã giảm giá thành công!"));
     }
     
+    @Autowired
+    private com.stellar.backend.service.PromotionService promotionService;
+
     @PostMapping("/validate")
     public ResponseEntity<?> validateCode(@RequestBody Map<String, Object> request) {
         String code = (String) request.get("code");
         Long maSuKien = Long.valueOf(request.get("maSuKien").toString());
         
         try {
-            MaGiamGia mgg = maGiamGiaRepository.findByMaGiamGia(code)
-                    .orElseThrow(() -> new RuntimeException("Mã không tồn tại!"));
-            
-            if (mgg.getChienDich() == null || mgg.getChienDich().getSuKien() == null || 
-                !mgg.getChienDich().getSuKien().getMaSuKien().equals(maSuKien)) {
-                 return ResponseEntity.badRequest().body(Map.of("message", "Mã không áp dụng cho sự kiện này!"));
-            }
+            // Sử dụng PromotionService để kích hoạt SQL Function FN_Check_Ma_Giam_Gia_Hop_Le
+            MaGiamGia mgg = promotionService.validateCode(code, maSuKien);
             
             // Trả về thông tin cơ bản để frontend hiển thị
             return ResponseEntity.ok(Map.of(

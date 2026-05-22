@@ -360,6 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if(adminNav && roles.includes('ROLE_ADMIN')) {
                 adminNav.style.display = 'inline-flex';
             }
+            const adminAnalyticsNav = document.getElementById('adminAnalyticsNav');
+            if(adminAnalyticsNav && roles.includes('ROLE_ADMIN')) {
+                adminAnalyticsNav.style.display = 'inline-flex';
+            }
         } catch(e) {}
     }
 });
@@ -436,8 +440,7 @@ async function loadResaleTickets() {
             
             container.innerHTML = listings.map(l => `
                 <article class="event-card">
-                    <div class="card-image" style="background: linear-gradient(135deg, #6272a4, #8be9fd); height: 160px; display:flex; align-items:center; justify-content:center;">
-                        <i class="fa fa-sync-alt" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <div class="card-image" style="background-image: url('${l.anhThumbnailUrl}'); background-position: center; background-size: cover; height: 160px; display:flex; align-items:center; justify-content:center; transition: transform 0.5s;">
                         <div class="status-badge live">VÉ SANG NHƯỢNG</div>
                     </div>
                     <div class="card-body">

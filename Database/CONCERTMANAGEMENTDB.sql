@@ -1057,6 +1057,7 @@ BEGIN
 END;
 /
 
+
 CREATE OR REPLACE TRIGGER TRG_VE_BIUD_TINHTONGTIEN
     BEFORE INSERT OR UPDATE OF MaDonMua, MaHangVe OR DELETE ON VE
     FOR EACH ROW
@@ -1081,6 +1082,49 @@ EXCEPTION
         RAISE;
 END;
 /
+
+-- PHIÊN BẢN 2: DO ANTIGRAVITY GỢI Ý
+-- CREATE OR REPLACE TRIGGER TRG_VE_BIUD_TINHTONGTIEN
+--     BEFORE INSERT OR UPDATE OF MaDonMua, MaHangVe OR DELETE ON VE
+--     FOR EACH ROW
+-- DECLARE
+--     v_GiaCu NUMBER := 0;
+--     v_GiaMoi NUMBER := 0;
+-- BEGIN
+--     PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate := TRUE;
+--
+--     -- Xử lý trường hợp mua lại vé (chuyển vé sang đơn mua mới)
+--     IF UPDATING AND :NEW.MaDonMua <> :OLD.MaDonMua AND :NEW.GiaBanLai IS NOT NULL AND :NEW.GiaBanLai > 0 THEN
+--         v_GiaMoi := :NEW.GiaBanLai;
+--
+--         -- Chỉ cộng tiền vào đơn mua mới
+--         UPDATE DON_MUA SET TongTien = TongTien + v_GiaMoi WHERE MaDonMua = :NEW.MaDonMua;
+--
+--         -- Đặt lại trạng thái vé
+--         :NEW.DaBanLai := 0;
+--         :NEW.GiaBanLai := NULL;
+--
+--         -- KHÔNG trừ tiền của đơn mua cũ để giữ nguyên doanh thu quyết toán
+--     ELSE
+--         -- Logic cũ cho các trường hợp thêm/xóa/sửa bình thường
+--         IF DELETING OR UPDATING THEN
+--             SELECT GiaNiemYet INTO v_GiaCu FROM HANG_VE WHERE MaHangVe = :OLD.MaHangVe;
+--             UPDATE DON_MUA SET TongTien = TongTien - v_GiaCu WHERE MaDonMua = :OLD.MaDonMua;
+--         END IF;
+--
+--         IF INSERTING OR UPDATING THEN
+--             SELECT GiaNiemYet INTO v_GiaMoi FROM HANG_VE WHERE MaHangVe = :NEW.MaHangVe;
+--             UPDATE DON_MUA SET TongTien = TongTien + v_GiaMoi WHERE MaDonMua = :NEW.MaDonMua;
+--         END IF;
+--     END IF;
+--
+--     PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate := FALSE;
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         PKG_BAO_MAT_DON_MUA.g_ChoPhepUpdate := FALSE;
+--         RAISE;
+-- END;
+-- /
 
 CREATE OR REPLACE TRIGGER TRG_HANG_VE_BU_TINHTONGTIEN
     BEFORE UPDATE OF GiaNiemYet ON HANG_VE
@@ -1108,6 +1152,7 @@ EXCEPTION
 END;
 /
 
+
 CREATE OR REPLACE TRIGGER TRG_AP_DUNG_BIUD_TINHTONGTIEN
     BEFORE INSERT OR UPDATE OF SoTienGiamThucTe, MaDonMua OR DELETE ON AP_DUNG
     FOR EACH ROW
@@ -1131,6 +1176,9 @@ EXCEPTION
         RAISE;
 END;
 /
+
+
+
 
 -- Sức chứa địa điểm
 CREATE OR REPLACE TRIGGER TRG_SU_KIEN_BU_KIEM_TRA_SUC_CHUA
@@ -1325,6 +1373,8 @@ BEGIN
 END;
 /
 
+--DROP TRIGGER TRG_MA_GIAM_GIA_BU_CHAN_UPDATE;
+
 CREATE OR REPLACE TRIGGER TRG_AP_DUNG_BIUD_TINHLUOTDUNG
     BEFORE INSERT OR UPDATE OF IDGiamGia OR DELETE ON AP_DUNG
     FOR EACH ROW
@@ -1358,6 +1408,37 @@ CREATE OR REPLACE PACKAGE PKG_TONG_DOANH_THU_QUYET_TOAN AS
 END;
 /
 
+-- CREATE OR REPLACE TRIGGER TRG_LICH_SU_QUYET_TOAN_BIU_TONG_DOANH_THU
+--     BEFORE INSERT OR UPDATE OF MaNhaToChuc, KyQT, TongDoanhThu, PhiNenTang ON LICH_SU_QUYET_TOAN
+--     FOR EACH ROW
+-- DECLARE
+--     v_TienChuyen NUMBER;
+-- BEGIN
+--     IF UPDATING('TongDoanhThu') AND NOT PKG_TONG_DOANH_THU_QUYET_TOAN.g_DangDongBo THEN
+--         RAISE_APPLICATION_ERROR(-20038, N'LỖI!');
+--     END IF;
+--
+--     IF INSERTING OR UPDATING('MaNhaToChuc') OR UPDATING('KyQT') THEN
+--         IF NOT PKG_TONG_DOANH_THU_QUYET_TOAN.g_DangDongBo THEN
+--             SELECT NVL(SUM(DM.TongTien), 0) INTO :NEW.TongDoanhThu
+--             FROM DON_MUA DM JOIN SU_KIEN SK ON DM.MaSuKien = SK.MaSuKien
+--             WHERE SK.MaNhaToChuc = :NEW.MaNhaToChuc
+--               AND DM.TrangThaiThanhToan = N'Đã thanh toán'
+--               AND 'Tháng ' || TO_CHAR(DM.ThoiDiemMua, 'FMMM/YYYY') = :NEW.KyQT;
+--         END IF;
+--     END IF;
+--
+--     v_TienChuyen := NVL(:NEW.TongDoanhThu, 0) - NVL(:NEW.PhiNenTang, 0);
+--
+--     IF v_TienChuyen < 0 THEN
+--         :NEW.SoTienChuyen := 0;
+--         :NEW.PhiNenTang := NVL(:NEW.TongDoanhThu, 0);
+--     ELSE
+--         :NEW.SoTienChuyen := v_TienChuyen;
+--     END IF;
+-- END;
+-- /
+
 CREATE OR REPLACE TRIGGER TRG_LICH_SU_QUYET_TOAN_BIU_TONG_DOANH_THU
     BEFORE INSERT OR UPDATE OF MaNhaToChuc, KyQT, TongDoanhThu, PhiNenTang ON LICH_SU_QUYET_TOAN
     FOR EACH ROW
@@ -1374,6 +1455,7 @@ BEGIN
             FROM DON_MUA DM JOIN SU_KIEN SK ON DM.MaSuKien = SK.MaSuKien
             WHERE SK.MaNhaToChuc = :NEW.MaNhaToChuc
               AND DM.TrangThaiThanhToan = N'Đã thanh toán'
+              AND DM.PhuongThucThanhToan NOT LIKE N'%Mua lại%'
               AND 'Tháng ' || TO_CHAR(DM.ThoiDiemMua, 'FMMM/YYYY') = :NEW.KyQT;
         END IF;
     END IF;
@@ -1699,7 +1781,7 @@ BEGIN
 
         -- Cập nhật trạng thái vé
         UPDATE VE
-        SET VE.TRANGTHAIVE = N'Hiệu Lực'
+        SET VE.TRANGTHAIVE = N'Hiệu lực'
         WHERE MaDonMua = p_MaDonMua;
 
         -- Cập nhật trạng thái giao dịch
@@ -2073,30 +2155,88 @@ END;
 /
 
 CREATE OR REPLACE FUNCTION FN_LaySoVeConLai (
-    p_MaHangVe IN HANG_VE.MaHangVe%TYPE
+    p_MaHangVe IN NUMBER,
+    p_MaKhuVuc IN NUMBER DEFAULT NULL
 ) RETURN NUMBER
 AS
-    v_TongSoLuong HANG_VE.TongSoLuong%TYPE;
+    v_TongSoLuong NUMBER;
     v_SoVeDaBan   NUMBER;
 BEGIN
-    SELECT TongSoLuong INTO v_TongSoLuong
-    FROM HANG_VE
-    WHERE MaHangVe = p_MaHangVe;
+    IF p_MaKhuVuc IS NOT NULL THEN
+        -- Kiểm tra sức chứa theo Khu Vực
+        SELECT NVL(SucChuaKv, 0) INTO v_TongSoLuong
+        FROM KHU_VUC
+        WHERE MaKhuVuc = p_MaKhuVuc;
 
-    SELECT COUNT(*) INTO v_SoVeDaBan
-    FROM VE
-    WHERE MaHangVe = p_MaHangVe
-    AND TrangThaiVe IN (N'Hiệu lực', N'Đã Check-in');
+        SELECT COUNT(*) INTO v_SoVeDaBan
+        FROM VE
+        WHERE MaKhuVuc = p_MaKhuVuc
+        AND TrangThaiVe NOT IN (N'Đã hủy', N'Đã hoàn vé');
+    ELSE
+        -- Kiểm tra sức chứa theo Hạng Vé
+        SELECT NVL(TongSoLuong, 0) INTO v_TongSoLuong
+        FROM HANG_VE
+        WHERE MaHangVe = p_MaHangVe;
+
+        SELECT COUNT(*) INTO v_SoVeDaBan
+        FROM VE
+        WHERE MaHangVe = p_MaHangVe
+        AND TrangThaiVe NOT IN (N'Đã hủy', N'Đã hoàn vé');
+    END IF;
 
     RETURN v_TongSoLuong - v_SoVeDaBan;
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(-20047, 'Lỗi: Không tìm thấy hạng vé yêu cầu');
+        RAISE_APPLICATION_ERROR(-20047, 'Lỗi: Không tìm thấy hạng vé hoặc khu vực yêu cầu');
         RETURN 0;
     WHEN OTHERS THEN
         RAISE_APPLICATION_ERROR(-20048, 'Có lỗi hệ thống trong quá trình tính số vé còn lại: ' || SQLERRM);
         RETURN 0;
+END;
+/
+
+CREATE OR REPLACE FUNCTION FN_Check_Ma_Giam_Gia_Hop_Le (
+    p_MaGiamGia IN MA_GIAM_GIA.MaGiamGia%TYPE,
+    p_MaSuKien IN CHIEN_DICH_KHUYEN_MAI.MaSuKien%TYPE
+) RETURN NUMBER
+AS
+    v_TrangThai CHIEN_DICH_KHUYEN_MAI.TrangThai%TYPE;
+    v_SoLuotDaDung MA_GIAM_GIA.SoLuotDaDung%TYPE;
+    v_LuotDungToiDa MA_GIAM_GIA.LuotDungToiDa%TYPE;
+    v_ThoiDiemBD CHIEN_DICH_KHUYEN_MAI.ThoiDiemBD%TYPE;
+    v_ThoiDiemKT CHIEN_DICH_KHUYEN_MAI.ThoiDiemKT%TYPE;
+    v_MaSuKien_CD CHIEN_DICH_KHUYEN_MAI.MaSuKien%TYPE;
+BEGIN
+    SELECT TrangThai, SoLuotDaDung, LuotDungToiDa, ThoiDiemBD, ThoiDiemKT, c.MaSuKien
+    INTO v_TrangThai, v_SoLuotDaDung, v_LuotDungToiDa, v_ThoiDiemBD, v_ThoiDiemKT, v_MaSuKien_CD
+    FROM CHIEN_DICH_KHUYEN_MAI c
+    JOIN MA_GIAM_GIA m ON m.MaChienDich = c.MaChienDich
+    WHERE MaGiamGia = p_MaGiamGia;
+
+    -- Kiểm tra chéo mã sự kiện
+    IF (v_MaSuKien_CD <> p_MaSuKien) THEN
+        RETURN -4;
+    END IF;
+
+    IF (CURRENT_TIMESTAMP < v_ThoiDiemBD) THEN
+        RETURN -1;
+    ELSIF (CURRENT_TIMESTAMP >= v_ThoiDiemKT) THEN
+        RETURN -2;
+    ELSIF (v_SoLuotDaDung >= v_LuotDungToiDa) THEN
+        RETURN -3;
+    END IF;
+
+    IF (v_TrangThai <> N'Đang diễn ra') THEN
+        RETURN 0;
+    END IF;
+
+    RETURN 1;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Lỗi: Không tìm thấy mã giảm giá');
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20007, 'Lỗi trong quá trình xác minh mã giảm giá: ' || SQLERRM);
 END;
 /
 
@@ -2240,3 +2380,660 @@ SELECT 'ROLE_ADMIN', 'Quản trị viên - Quyền duyệt sự kiện và quả
 WHERE NOT EXISTS (SELECT 1 FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN');
 COMMIT;
 
+
+-- 2. Đảm bảo chức năng "Quản lý sự kiện" có trong danh mục (Giả sử ID là 1 nếu chưa có)
+INSERT INTO CHUC_NANG (TenChucNang)
+SELECT N'Quản lý sự kiện' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM CHUC_NANG WHERE TenChucNang = N'Quản lý sự kiện');
+
+-- 3. Tạo một "Phạm vi quyền" Full (Xem, Thêm, Sửa, Xóa) cho chức năng này
+INSERT INTO PHAM_VI_QUYEN (MaChucNang, Xem, Them, Sua, Xoa, XuatFile)
+VALUES ((SELECT MaChucNang FROM CHUC_NANG WHERE TenChucNang = N'Quản lý sự kiện'), 1, 1, 1, 1, 1);
+
+-- 4. Gán phạm vi quyền này cho nhóm ROLE_ADMIN
+INSERT INTO CAU_HINH_NHOM_QUYEN (MaNhomQuyen, MaPhamVi)
+VALUES (
+    (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'),
+    (SELECT MAX(MaPhamVi) FROM PHAM_VI_QUYEN)
+);
+
+COMMIT;
+
+-- ==========================================
+-- SCRIPT TẠO STORED PROCEDURES DEMO LỖI CONCURRENCY (ORACLE)
+-- Tác giả: Antigravity AI
+-- Hướng dẫn sử dụng: Chạy toàn bộ script này trong Oracle SQL Developer / SQL*Plus.
+-- Lưu ý: Cần cấp quyền DBMS_SESSION cho User:
+--   GRANT EXECUTE ON DBMS_SESSION TO <YOUR_USER>;
+-- ==========================================
+-- Thời gian SLEEP được FIX CỨNG trong mỗi procedure:
+--   - Lost Update / Non-Repeatable Read:  SLEEP 7 giây
+--   - Phantom Read:                       SLEEP 7 giây
+--   - Deadlock:                           SLEEP 5 giây
+-- ==========================================
+
+-- ============================================================
+-- 1. LOST UPDATE
+--    Kịch bản: 2 giao dịch cùng đọc số dư ví, cùng trừ tiền
+--    mà không dùng SELECT FOR UPDATE → số dư cuối bị sai.
+--
+--    Cách demo:
+--      Tab A: EXEC PROC_DEMO_WALLET_PAY(maTK, soTienA);
+--      Tab B: EXEC PROC_DEMO_WALLET_PAY(maTK, soTienB);  -- chạy ngay sau tab A
+--    Kết quả: Số dư cuối chỉ trừ 1 lần thay vì 2 lần.
+-- ============================================================
+CREATE OR REPLACE PROCEDURE PROC_DEMO_WALLET_PAY(
+    p_ma_tai_khoan IN NUMBER,
+    p_amount       IN NUMBER
+)
+AS
+    v_sodu NUMBER;
+    C_SLEEP CONSTANT NUMBER := 0;   -- FIX CỨNG 7 giây
+    v_is_fixed NUMBER := 0;
+BEGIN
+    IF v_is_fixed = 1 THEN
+        EXECUTE IMMEDIATE 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE';
+    END IF;
+    -- Đọc số dư hiện tại (Snapshot "dirty" ở READ COMMITTED)
+    SELECT SoDu INTO v_sodu
+    FROM VI_CA_NHAN
+    WHERE MaTaiKhoan = p_ma_tai_khoan;
+
+    -- Giả lập độ trễ xử lý (để TX khác kịp đọc cùng giá trị)
+    DBMS_SESSION.SLEEP(C_SLEEP);
+
+    -- Ghi đè số dư mới → Lost Update nếu có TX khác đã COMMIT
+    UPDATE VI_CA_NHAN
+    SET SoDu = v_sodu - p_amount
+    WHERE MaTaiKhoan = p_ma_tai_khoan;
+    -- Không COMMIT ở đây — Spring @Transactional quản lý commit
+END;
+/
+
+CREATE OR REPLACE PROCEDURE PROC_DEMO_WALLET_RECEIVE(
+    p_ma_tai_khoan IN NUMBER,
+    p_amount       IN NUMBER
+)
+AS
+    v_sodu NUMBER;
+    C_SLEEP CONSTANT NUMBER := 0;   -- FIX CỨNG 7 giây
+    v_is_fixed NUMBER := 0;
+BEGIN
+    IF v_is_fixed = 1 THEN
+        EXECUTE IMMEDIATE 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE';
+    END IF;
+    -- Đọc số dư hiện tại
+    SELECT SoDu INTO v_sodu
+    FROM VI_CA_NHAN
+    WHERE MaTaiKhoan = p_ma_tai_khoan;
+
+    -- Giả lập độ trễ
+    DBMS_SESSION.SLEEP(C_SLEEP);
+
+    -- Ghi đè số dư mới
+    UPDATE VI_CA_NHAN
+    SET SoDu = v_sodu + p_amount
+    WHERE MaTaiKhoan = p_ma_tai_khoan;
+END;
+/
+-- ============================================================
+-- 2. NON-REPEATABLE READ
+--    Kịch bản: T1 đọc giá bán lại vé (lần 1), bị trễ.
+--    Trong thời gian đó T2 cập nhật lại giá vé.
+--    T1 đọc lần 2 → giá đã thay đổi → khác lần đọc 1.
+--
+--    Cách demo:
+--      Tab A: SELECT FUNC_DEMO_NRR_TICKET_PRICE(<maVe>) FROM DUAL;
+--      Tab B: Trong lúc Tab A đang sleep, UPDATE VE SET GiaBanLai=<giaMoi>
+--             WHERE MaVe=<maVe>; COMMIT;
+--    Kết quả: Hàm trả về giá lần 2 (đã bị thay đổi bởi Tab B).
+-- ============================================================
+CREATE OR REPLACE FUNCTION FUNC_DEMO_NRR_TICKET_PRICE(
+    p_ma_ve IN NUMBER
+) RETURN NUMBER
+AS
+    v_price_1 NUMBER;
+    v_price_2 NUMBER;
+    C_SLEEP   CONSTANT NUMBER := 0; -- FIX CỨNG 7 giây
+    v_is_fixed NUMBER := 0;
+BEGIN
+    IF v_is_fixed = 1 THEN
+        EXECUTE IMMEDIATE 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE';
+    END IF;
+    SELECT GiaBanLai INTO v_price_1
+    FROM VE
+    WHERE MaVe = p_ma_ve;
+
+    DBMS_SESSION.SLEEP(C_SLEEP);
+
+    -- Lần đọc 2: Nếu có lỗi Non-Repeatable Read, v_price_2 ≠ v_price_1
+    SELECT GiaBanLai INTO v_price_2
+    FROM VE
+    WHERE MaVe = p_ma_ve;
+
+    -- Log để quan sát
+    DBMS_OUTPUT.PUT_LINE('Gia lan 1: ' || v_price_1 || ' | Gia lan 2: ' || v_price_2);
+
+    RETURN v_price_2;
+END;
+/
+--
+-- alter table ve add CHECK (TrangThaiVe IN (N'Chờ thanh toán', N'Hiệu lực', N'Đã Check-in', N'Đã hủy', N'Đã hoàn vé'));
+-- SELECT owner,
+--        constraint_name,
+--        search_condition,
+--        table_name
+-- FROM all_constraints
+-- WHERE constraint_name = 'SYS_C0011981';
+-- alter table NHAT_KY_THONG_BAO drop constraint SYS_C0011981;
+-- ============================================================
+-- 4. PHANTOM READ - Lấy thống kê vé bán của sự kiện
+--    Kịch bản:
+--      T1 (Hệ thống tổng hợp báo cáo) đọc lần 1 → đếm được N vé + doanh thu R1.
+--      T2 (Người dùng khác) mua thêm 1 vé → INSERT + COMMIT trong lúc T1 đang xử lý.
+--      T1 đọc lần 2 → thấy N+1 vé + doanh thu R2 (phantom row).
+--    → Số vé hiển thị trên UI (lấy từ lần 1) không khớp với doanh thu (lấy từ lần 2).
+--
+--    Cách chạy:
+--      Tab A: Mở trang quản lý → click vào tên sự kiện → hệ thống gọi procedure này.
+--      Tab B: Trong khi Tab A đang tải (~7 giây), vào trang đặt vé và mua thêm 1 vé → thanh toán.
+--    Kết quả: Popup chi tiết hiển thị số vé ≠ số vé tương ứng với doanh thu.
+-- ============================================================
+CREATE OR REPLACE PROCEDURE PROC_GET_EVENT_TICKET_STATS(
+    p_ma_su_kien IN  NUMBER,
+    p_so_ve_1    OUT NUMBER,
+    p_doanh_thu_1 OUT NUMBER,
+    p_so_ve_2    OUT NUMBER,
+    p_doanh_thu_2 OUT NUMBER
+)
+AS
+    C_SLEEP CONSTANT NUMBER := 0; -- 7 giây đọc giữa 2 lần
+    v_is_fixed NUMBER := 0;
+BEGIN
+    IF v_is_fixed = 1 THEN
+        EXECUTE IMMEDIATE 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE';
+    END IF;
+    SELECT COUNT(v.MaVe),
+           NVL(SUM(hv.GiaNiemYet), 0)
+    INTO   p_so_ve_1, p_doanh_thu_1
+    FROM   VE v
+    JOIN   HANG_VE hv ON v.MaHangVe = hv.MaHangVe
+    JOIN   DON_MUA dm ON v.MaDonMua = dm.MaDonMua
+    WHERE  hv.MaSuKien = p_ma_su_kien
+      AND  v.TrangThaiVe IN ('Hiệu lực', 'Đã Check-in');
+
+    -- Giữ kết nối mở để xử lý nghiệp vụ khác (ví dụ: tính toán phí, tổng hợp báo cáo...)
+    DBMS_SESSION.SLEEP(0);
+
+    -- Lần đọc 2: Tổng hợp lại để đảm bảo tính nhất quán
+    SELECT COUNT(v.MaVe),
+           NVL(SUM(hv.GiaNiemYet), 0)
+    INTO   p_so_ve_2, p_doanh_thu_2
+    FROM   VE v
+    JOIN   HANG_VE hv ON v.MaHangVe = hv.MaHangVe
+    JOIN   DON_MUA dm ON v.MaDonMua = dm.MaDonMua
+    WHERE  hv.MaSuKien = p_ma_su_kien
+      AND  v.TrangThaiVe IN ('Hiệu lực', 'Đã Check-in');
+END;
+/
+
+
+-- ============================================================
+-- PHẦN BÁO CÁO: Chạy sau mỗi demo để xem kết quả
+-- ============================================================
+
+-- Kiểm tra số dư ví sau demo Lost Update
+-- SELECT MaTaiKhoan, SoDu FROM VI_CA_NHAN WHERE MaTaiKhoan = <maTK>;
+
+-- Kiểm tra ghế sau demo Deadlock
+-- SELECT MaGhe, TrangThai FROM TRANG_THAI_GHE_THEO_SUAT
+-- WHERE MaGhe IN (<maGheA>, <maGheB>);
+
+-- Kiểm tra vé bán lại sau demo Phantom Read
+-- SELECT MaVe, DaBanLai, GiaBanLai FROM VE
+-- JOIN HANG_VE ON VE.MaHangVe = HANG_VE.MaHangVe
+-- WHERE HANG_VE.MaSuKien = <maSuKien> AND DaBanLai = 1;
+
+
+--UPDATE TỐI ƯU LUỒNG NGHIỆP VỤ BẰNG STORED PROCEDURE
+-- File: sp_optimization.sql
+-- Áp dụng 4 đề xuất tối ưu hóa (Stored Procedures)
+
+-- ==============================================================================
+-- 1. SP Tạo Vé Hàng Loạt (Dành cho BookingService)
+-- Tối ưu hóa việc INSERT nhiều vé và UPDATE trạng thái ghế tránh N+1 Query
+-- ==============================================================================
+CREATE OR REPLACE PROCEDURE SP_TAO_VE_HANG_LOAT (
+    p_MaDonMua IN NUMBER,
+    p_MaTaiKhoan IN NUMBER,
+    p_MaSuKien IN NUMBER,
+    p_MaLichDien IN NUMBER,
+    p_MaHangVe IN NUMBER,
+    p_MaKhuVuc IN NUMBER,
+    p_SoLuong IN NUMBER,
+    p_IsSkipSeatCheck IN NUMBER,
+    p_TrangThaiVe IN NVARCHAR2,
+    p_TrangThaiGhe IN NVARCHAR2
+)
+IS
+    v_MaLichDien_Dung NUMBER;
+    v_MaKhuVuc_Dung NUMBER;
+    v_Count NUMBER := 0;
+BEGIN
+    -- Lấy suất diễn hợp lệ
+    IF p_MaLichDien IS NULL THEN
+        SELECT MIN(MaLichDien) INTO v_MaLichDien_Dung FROM LICH_DIEN WHERE MaSuKien = p_MaSuKien;
+    ELSE
+        v_MaLichDien_Dung := p_MaLichDien;
+    END IF;
+
+    IF p_IsSkipSeatCheck = 1 THEN
+        -- Vé tự do (không ghế cố định)
+        IF p_MaKhuVuc IS NULL THEN
+            SELECT MIN(MaKhuVuc) INTO v_MaKhuVuc_Dung FROM KHU_VUC WHERE MaHangVe = p_MaHangVe;
+        ELSE
+            v_MaKhuVuc_Dung := p_MaKhuVuc;
+        END IF;
+
+        FOR i IN 1..p_SoLuong LOOP
+            INSERT INTO VE (MaDonMua, MaHangVe, DaBanLai, TrangThaiVe, MaKhuVuc, MaLichDien)
+            VALUES (p_MaDonMua, p_MaHangVe, 0, NVL(p_TrangThaiVe, N'Hiệu lực'), v_MaKhuVuc_Dung, v_MaLichDien_Dung);
+        END LOOP;
+    ELSE
+        -- Khách mua ghế đã giữ chỗ
+        FOR rec IN (
+            SELECT MaGhe, MaLichDien, (SELECT MaKhuVuc FROM GHE_NGOI WHERE MaGhe = tt.MaGhe) AS MaKV
+            FROM TRANG_THAI_GHE_THEO_SUAT tt
+            WHERE MaLichDien = v_MaLichDien_Dung
+              AND MaTaiKhoan = p_MaTaiKhoan
+              AND TrangThai = N'Đang giữ chỗ'
+        ) LOOP
+            IF v_Count < p_SoLuong THEN
+                -- INSERT VE
+                INSERT INTO VE (MaDonMua, MaHangVe, DaBanLai, TrangThaiVe, MaGhe, MaKhuVuc, MaLichDien)
+                VALUES (p_MaDonMua, p_MaHangVe, 0, NVL(p_TrangThaiVe, N'Hiệu lực'), rec.MaGhe, rec.MaKV, rec.MaLichDien);
+
+                -- UPDATE TRANG_THAI_GHE
+                UPDATE TRANG_THAI_GHE_THEO_SUAT
+                SET TrangThai = NVL(p_TrangThaiGhe, N'Đã đặt'),
+                    ThoiGianHetHan = CASE WHEN p_TrangThaiGhe = N'Đang giữ chỗ' THEN ThoiGianHetHan ELSE NULL END
+                WHERE MaGhe = rec.MaGhe AND MaLichDien = rec.MaLichDien;
+
+                v_Count := v_Count + 1;
+            END IF;
+        END LOOP;
+    END IF;
+END;
+/
+
+-- ==============================================================================
+-- 2. SP Hoàn Vé Cho Đơn Mua (Dành cho TicketService)
+-- Cập nhật đồng loạt trạng thái Vé -> Đã hoàn vé và Ghế -> Còn trống
+-- ==============================================================================
+CREATE OR REPLACE PROCEDURE SP_HOAN_VE_DON_MUA (
+    p_MaDonMua IN NUMBER
+)
+IS
+BEGIN
+    -- Nhả ghế
+    UPDATE TRANG_THAI_GHE_THEO_SUAT
+    SET TrangThai = N'Còn trống', MaTaiKhoan = NULL, ThoiGianHetHan = NULL
+    WHERE (MaGhe, MaLichDien) IN (
+        SELECT MaGhe, MaLichDien FROM VE WHERE MaDonMua = p_MaDonMua AND MaGhe IS NOT NULL
+    );
+
+    -- Hủy vé
+    UPDATE VE
+    SET TrangThaiVe = N'Đã hoàn vé'
+    WHERE MaDonMua = p_MaDonMua;
+END;
+/
+
+-- ==============================================================================
+-- 3. SP Dọn Dẹp Ghế Hết Hạn (Dành cho SeatService unlockExpiredSeats)
+-- ==============================================================================
+CREATE OR REPLACE PROCEDURE SP_UNLOCK_EXPIRED_SEATS
+IS
+BEGIN
+    UPDATE TRANG_THAI_GHE_THEO_SUAT
+    SET TrangThai = N'Còn trống', MaTaiKhoan = NULL, ThoiGianHetHan = NULL
+    WHERE TrangThai = N'Đang giữ chỗ'
+      AND ThoiGianHetHan < CURRENT_TIMESTAMP;
+END;
+/
+
+-- -- ==============================================================================
+-- -- 4. SP Tạo Ghế Hàng Loạt (Dành cho SeatService generateSeats)
+-- -- ==============================================================================
+-- CREATE OR REPLACE PROCEDURE SP_GENERATE_SEATS (
+--     p_MaKhuVuc IN NUMBER,
+--     p_Rows IN VARCHAR2,
+--     p_SeatsPerRow IN NUMBER
+-- )
+-- IS
+--     v_row_char VARCHAR2(10);
+--     v_toa_do VARCHAR2(20);
+--     v_count NUMBER;
+--     v_inserted NUMBER := 0;
+--     v_MaGheMoi NUMBER;
+--     v_MaSuKien NUMBER;
+-- BEGIN
+--     -- Lấy mã sự kiện từ Khu vực
+--     SELECT H.MaSuKien INTO v_MaSuKien
+--     FROM KHU_VUC K JOIN HANG_VE H ON K.MaHangVe = H.MaHangVe
+--     WHERE K.MaKhuVuc = p_MaKhuVuc;
+--
+--     FOR item IN (
+--         SELECT REGEXP_SUBSTR(p_Rows, '[^,]+', 1, LEVEL) AS row_val
+--         FROM DUAL
+--         CONNECT BY REGEXP_SUBSTR(p_Rows, '[^,]+', 1, LEVEL) IS NOT NULL
+--     ) LOOP
+--         v_row_char := TRIM(item.row_val);
+--         FOR i IN 1 .. p_SeatsPerRow LOOP
+--             v_toa_do := v_row_char || TO_CHAR(i);
+--
+--             SELECT COUNT(*) INTO v_count
+--             FROM GHE_NGOI
+--             WHERE MaKhuVuc = p_MaKhuVuc AND ToaDo = v_toa_do;
+--
+--             IF v_count = 0 THEN
+--                 INSERT INTO GHE_NGOI (MaKhuVuc, ToaDo)
+--                 VALUES (p_MaKhuVuc, v_toa_do)
+--                 RETURNING MaGhe INTO v_MaGheMoi;
+--
+--                 v_inserted := v_inserted + 1;
+--
+--                 -- Sinh trạng thái ghế cho các Lịch diễn ĐÃ TỒN TẠI của sự kiện này
+--                 -- Lưu ý: Trigger TRG_AFTER_INSERT_LICH_DIEN chỉ áp dụng khi tạo Lịch diễn mới
+--                 -- Không áp dụng khi tạo Ghế mới, nên ta cần chèn thủ công ở đây.
+--                 FOR ld IN (SELECT MaLichDien FROM LICH_DIEN WHERE MaSuKien = v_MaSuKien) LOOP
+--                     INSERT INTO TRANG_THAI_GHE_THEO_SUAT (MaGhe, MaLichDien, TrangThai)
+--                     VALUES (v_MaGheMoi, ld.MaLichDien, N'Còn trống');
+--                 END LOOP;
+--             END IF;
+--         END LOOP;
+--     END LOOP;
+-- END;
+-- /
+
+
+CREATE OR REPLACE PROCEDURE SP_TAO_SU_KIEN_TOAN_DIEN (
+    -- 1. Các tham số Sự kiện (IN)
+    p_MaDiaDiem          IN NUMBER,
+    p_MaChinhSachHT      IN NUMBER,
+    p_MaNhaToChuc        IN NUMBER,
+    p_MaNguoiTao         IN NUMBER,
+    p_TenSuKien          IN NVARCHAR2,
+    p_ThoiGianBD         IN TIMESTAMP,
+    p_ThoiGianKT         IN TIMESTAMP,
+    p_ThoiGianMoBanVe    IN TIMESTAMP,
+    p_ThoiGianNgungBanVe IN TIMESTAMP,
+    p_MoTa               IN CLOB,
+    p_PhanLoai           IN NVARCHAR2,
+    p_AnhBiaURL          IN NVARCHAR2,
+    p_AnhThumbnailURL    IN NVARCHAR2,
+
+    -- 2. Dữ liệu Hạng Vé & Khu Vực (Truyền dưới dạng mảng JSON)
+    -- Cấu trúc mẫu:
+    -- [
+    --   {
+    --     "tenHang": "VIP", "gia": 1000000, "soLuong": 100, "gioiHan": 2,
+    --     "khuVuc": [ {"tenKV": "Khu A", "sucChua": 50}, {"tenKV": "Khu B", "sucChua": 50} ]
+    --   }
+    -- ]
+    p_JSON_HangVe_KhuVuc IN CLOB,
+
+    -- 3. Tham số đầu ra (OUT)
+    p_MaSuKien_Out       OUT NUMBER
+)
+IS
+    v_MaSuKien NUMBER;
+    v_MaHangVe NUMBER;
+BEGIN
+    -- =========================================================
+    -- BƯỚC 1: TẠO SỰ KIỆN & LỊCH DIỄN
+    -- =========================================================
+    INSERT INTO SU_KIEN (
+        MaDiaDiem, MaChinhSachHT, MaNhaToChuc, MaNguoiTao,
+        TenSuKien, ThoiGianBD, ThoiGianKT, ThoiGianMoBanVe, ThoiGianNgungBanVe,
+        MoTa, PhanLoai, AnhBiaURL, AnhThumbnailURL, TrangThai
+    ) VALUES (
+        p_MaDiaDiem, p_MaChinhSachHT, p_MaNhaToChuc, p_MaNguoiTao,
+        p_TenSuKien, p_ThoiGianBD, p_ThoiGianKT, p_ThoiGianMoBanVe, p_ThoiGianNgungBanVe,
+        p_MoTa, p_PhanLoai, p_AnhBiaURL, p_AnhThumbnailURL, N'Chờ phê duyệt'
+    ) RETURNING MaSuKien INTO v_MaSuKien;
+
+    INSERT INTO LICH_DIEN (TenLichDien, MaSuKien, ThoiGianBatDau, ThoiGianKetThuc, TrangThaiLichDien)
+    VALUES (N'Đêm diễn chính', v_MaSuKien, p_ThoiGianBD, p_ThoiGianKT, N'Chưa diễn ra');
+
+    -- =========================================================
+    -- BƯỚC 2: QUÉT JSON ĐỂ TẠO HẠNG VÉ VÀ KHU VỰC
+    -- =========================================================
+    IF p_JSON_HangVe_KhuVuc IS NOT NULL THEN
+        -- Dùng JSON_TABLE để quét vòng lặp mảng các Hạng Vé
+        FOR rec_HangVe IN (
+            SELECT jt.idx, jt.ten_hang, jt.gia, jt.so_luong, jt.gioi_han
+            FROM JSON_TABLE(p_JSON_HangVe_KhuVuc, '$[*]'
+                COLUMNS (
+                    idx FOR ORDINALITY, -- Lấy số thứ tự (index) của mảng (Bắt đầu từ 1)
+                    ten_hang VARCHAR2(100) PATH '$.tenHang',
+                    gia NUMBER PATH '$.gia',
+                    so_luong NUMBER PATH '$.soLuong',
+                    gioi_han NUMBER PATH '$.gioiHan'
+                )
+            ) jt
+        ) LOOP
+            -- Insert Hạng Vé
+            INSERT INTO HANG_VE (MaSuKien, TenHangVe, GiaNiemYet, TongSoLuong, GioiHanMoiNguoi)
+            VALUES (v_MaSuKien, rec_HangVe.ten_hang, rec_HangVe.gia, rec_HangVe.so_luong, rec_HangVe.gioi_han)
+            RETURNING MaHangVe INTO v_MaHangVe;
+
+            -- Quét mảng Khu Vực nằm gọn bên trong Hạng vé tương ứng (dựa vào index mảng)
+            -- Lưu ý: Index của JSON path trong Oracle bắt đầu từ 0, nên phải lấy (idx - 1)
+            FOR rec_KhuVuc IN (
+                SELECT kv.ten_kv, kv.suc_chua
+                FROM JSON_TABLE(p_JSON_HangVe_KhuVuc, '$[' || TO_CHAR(rec_HangVe.idx - 1) || '].khuVuc[*]'
+                    COLUMNS (
+                        ten_kv VARCHAR2(255) PATH '$.tenKV',
+                        suc_chua NUMBER PATH '$.sucChua'
+                    )
+                ) kv
+            ) LOOP
+                -- Insert Khu vực
+                INSERT INTO KHU_VUC (MaHangVe, TenKhuVuc, SucChuaKV)
+                VALUES (v_MaHangVe, rec_KhuVuc.ten_kv, rec_KhuVuc.suc_chua);
+            END LOOP;
+
+        END LOOP;
+    END IF;
+
+    -- Trả mã sự kiện về cho Java
+    p_MaSuKien_Out := v_MaSuKien;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(-20003, 'Lỗi tạo Sự Kiện: ' || SQLERRM);
+END;
+/
+
+--
+-- SELECT * FROM SU_KIEN;
+--
+-- SELECT * FROM LICH_DIEN;
+--
+-- SELECT * FROM HANG_VE;
+--
+-- SELECT * FROM KHU_VUC;
+--
+-- SELECT * FROM VE;
+-- SELECT * FROM NHAT_KY_SOAT_VE;
+--
+--
+-- SELECT * FROM DON_MUA DM
+-- JOIN VE V
+-- ON DM.MADONMUA = V.MADONMUA
+-- WHERE V.MAVE = 201;
+--
+-- COMMIT;
+-- SELECT * FROM TAI_KHOAN;
+
+
+
+-- SELECT * FROM VE;
+--
+-- SELECT TenDangNhap, MatKhauMaHoa FROM TAI_KHOAN WHERE MaTaiKhoan = 2;
+--
+-- SELECT tk.TenDangNhap, nq.TenNhomQuyen
+-- FROM TAI_KHOAN tk
+-- JOIN PHAN_QUYEN_NHOM pqn ON tk.MaTaiKhoan = pqn.MaTaiKhoan
+-- JOIN NHOM_QUYEN nq ON pqn.MaNhomQuyen = nq.MaNhomQuyen
+-- WHERE tk.TenDangNhap = 'admin';
+--
+--
+-- SELECT * FROM VE;
+--
+-- SELECT * FROM NHAT_KY_SOAT_VE;
+--
+-- SELECT * FROM PHAN_CONG_SK_NV;
+--
+--
+-- SELECT * FROM DIA_DIEM;
+--
+-- SELECT * FROM GHE_NGOI;
+
+
+
+/*
+  Seed data demo cho hệ thống bán vé sự kiện Oracle.
+  Mục tiêu:
+  - Tạo khoảng 10 sự kiện mới, có ảnh bìa + thumbnail.
+  - Tạo customer account bằng SP_DANG_KY_TAI_KHOAN.
+  - Tạo dữ liệu mua vé đa dạng 18 đơn mua bằng DON_MUA + SP_TAO_VE_HANG_LOAT.
+  - Xác nhận thanh toán bằng SP_XAC_NHAN_TT_NGOAI.
+
+  Lưu ý:
+  - Script này giả định các bảng/procedure/trigger trong source của bạn đã được tạo trước.
+  - Sự kiện được mở bán từ 15 ngày trước đến trước giờ diễn 1 giờ, nên chạy ở thời điểm hiện tại vẫn mua được.
+  - Vé tạo dạng general admission theo khu vực/hạng vé, không gán ghế cụ thể.
+*/
+--------------------------------------------------------------------------------
+-- DATA GRIP / ORACLE 21 COMPATIBLE SEED SCRIPT
+-- Cách chạy trong DataGrip:
+-- 1) Mở Oracle console đúng schema CONCERTMANAGEMENTDB.
+-- 2) Copy toàn bộ file này, paste vào console.
+-- 3) Ctrl + A -> Execute.
+--
+-- Script này KHÔNG dùng @file.sql, PROMPT, SHOW ERRORS, SET SERVEROUTPUT.
+-- Có dùng dấu / sau PL/SQL object/block để DataGrip tách statement Oracle.
+--------------------------------------------------------------------------------
+select * from TAI_KHOAN;
+select * from nha_to_chuc;
+select *
+from SU_KIEN;
+commit;
+select * from DON_MUA;
+
+CREATE OR REPLACE VIEW V_ANALYTICS_CATEGORY AS
+SELECT sk.MaSuKien,
+       NVL(TRIM(sk.PhanLoai), N'Khác') AS THE_LOAI,
+       NVL(dm_gross.GROSS_REVENUE, 0)  AS GROSS_REVENUE,
+       NVL(ht.TONG_HOAN, 0)            AS TONG_HOAN_TRA
+FROM SU_KIEN sk
+         LEFT JOIN (SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
+                    FROM DON_MUA
+                    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
+                    GROUP BY MaSuKien) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien
+         LEFT JOIN (SELECT MaSuKien, SUM(SoTienHoan) AS TONG_HOAN
+                    FROM LICH_SU_HOAN_TIEN
+                    GROUP BY MaSuKien) ht ON sk.MaSuKien = ht.MaSuKien;
+
+CREATE OR REPLACE VIEW V_ANALYTICS_GROWTH AS
+SELECT TRUNC(dm.ThoiDiemMua)                        AS NGAY_PHAT_SINH,
+       TO_CHAR(dm.ThoiDiemMua, 'MM/YYYY')           AS THANG_NAM,
+       TO_CHAR(TRUNC(dm.ThoiDiemMua), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
+       dm.MaSuKien,
+       dm.TongTien                                  AS GROSS_TIEN,
+       0                                            AS SO_TIEN_HOAN
+FROM DON_MUA dm
+WHERE dm.TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
+  AND dm.ThoiDiemMua IS NOT NULL
+UNION ALL
+SELECT TRUNC(ht.ThoiDiemHoan)                        AS NGAY_PHAT_SINH,
+       TO_CHAR(ht.ThoiDiemHoan, 'MM/YYYY')           AS THANG_NAM,
+       TO_CHAR(TRUNC(ht.ThoiDiemHoan), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
+       ht.MaSuKien,
+       0                                             AS GROSS_TIEN,
+       ht.SoTienHoan
+FROM LICH_SU_HOAN_TIEN ht
+WHERE ht.ThoiDiemHoan IS NOT NULL;
+
+CREATE OR REPLACE VIEW V_ANALYTICS_ORGANIZER AS
+SELECT sk.MaSuKien,
+       sk.TenSuKien,
+       CASE
+           WHEN sk.MaNguoiTao IS NULL THEN N'Hệ thống'
+           ELSE NVL(ntc.TenNhaToChuc, tk.TenDangNhap)
+           END                        AS TEN_NHA_TO_CHUC,
+       NVL(dm_gross.GROSS_REVENUE, 0) AS GROSS_REVENUE,
+       NVL(ht.TONG_HOAN, 0)           AS TONG_HOAN_TRA
+FROM SU_KIEN sk
+         LEFT JOIN TAI_KHOAN tk ON sk.MaNguoiTao = tk.MaTaiKhoan
+         LEFT JOIN NHA_TO_CHUC ntc ON tk.MaTaiKhoan = ntc.MaTaiKhoan
+         LEFT JOIN (SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
+                    FROM DON_MUA
+                    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
+                    GROUP BY MaSuKien) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien
+         LEFT JOIN (SELECT MaSuKien, SUM(SoTienHoan) AS TONG_HOAN
+                    FROM LICH_SU_HOAN_TIEN
+                    GROUP BY MaSuKien) ht ON sk.MaSuKien = ht.MaSuKien;
+
+CREATE OR REPLACE VIEW V_ORGANIZER_TICKET_SALES AS
+SELECT
+    sk.MaNguoiTao,
+    sk.MaSuKien,
+    sk.TenSuKien,
+    sk.TRANGTHAI,
+    NVL(sk.AnhBiaURL, sk.ANHTHUMBNAILURL) AS ANH_BIA_URL,
+    NVL(tickets.SO_VE_BAN, 0) AS SO_VE_BAN
+FROM SU_KIEN sk
+LEFT JOIN (
+    SELECT hv.MaSuKien, COUNT(v.MaVe) AS SO_VE_BAN
+    FROM VE v
+    JOIN HANG_VE hv ON v.MaHangVe = hv.MaHangVe
+    WHERE v.TRANGTHAIVE IN ('Hiệu lực', 'Đã check-in')
+    GROUP BY hv.MaSuKien
+) tickets ON sk.MaSuKien = tickets.MaSuKien;
+
+CREATE OR REPLACE VIEW V_ORGANIZER_EVENT_REVENUE AS
+SELECT
+    sk.MaNguoiTao,
+    sk.MaSuKien,
+    sk.TenSuKien,
+    NVL(dm_gross.GROSS_REVENUE, 0) AS DOANH_THU
+FROM SU_KIEN sk
+LEFT JOIN (
+    SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
+    FROM DON_MUA
+    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
+    GROUP BY MaSuKien
+) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien;
+
+CREATE OR REPLACE VIEW V_ORGANIZER_GROWTH AS
+SELECT
+    sk.MaNguoiTao,
+    TRUNC(dm.THOIDIEMMUA) AS NGAY_PHAT_SINH,
+    TO_CHAR(dm.THOIDIEMMUA, 'MM/YYYY') AS THANG_NAM,
+    TO_CHAR(TRUNC(dm.THOIDIEMMUA), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
+    dm.TongTien AS GROSS_TIEN
+FROM DON_MUA dm
+JOIN SU_KIEN sk ON dm.MaSuKien = sk.MaSuKien
+WHERE dm.TrangThaiThanhToan = N'Đã thanh toán'
+  AND dm.THOIDIEMMUA IS NOT NULL;
+
+-- 1. Gán nhóm ROLE_ADMIN cho tài khoản ID = 2
+INSERT INTO PHAN_QUYEN_NHOM (MaTaiKhoan, MaNhomQuyen)
+VALUES (1, (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'));
+
+COMMIT;

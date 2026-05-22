@@ -8,6 +8,7 @@ public class RevenueResponseDto {
     private int tongSoVeBan;
     private int tongSoSuKien;
     private List<EventRevenueDetail> chiTietSuKien;
+    private List<RevenueGrowthDetail> tangTruongDoanhThu;
 
     // Getter / Setter
     public BigDecimal getTongDoanhThu() { return tongDoanhThu; }
@@ -18,6 +19,25 @@ public class RevenueResponseDto {
     public void setTongSoSuKien(int tongSoSuKien) { this.tongSoSuKien = tongSoSuKien; }
     public List<EventRevenueDetail> getChiTietSuKien() { return chiTietSuKien; }
     public void setChiTietSuKien(List<EventRevenueDetail> chiTietSuKien) { this.chiTietSuKien = chiTietSuKien; }
+    public List<RevenueGrowthDetail> getTangTruongDoanhThu() { return tangTruongDoanhThu; }
+    public void setTangTruongDoanhThu(List<RevenueGrowthDetail> tangTruongDoanhThu) { this.tangTruongDoanhThu = tangTruongDoanhThu; }
+
+    public static class RevenueGrowthDetail {
+        private String thoiGian;
+        private BigDecimal doanhThu;
+
+        public RevenueGrowthDetail() {}
+
+        public RevenueGrowthDetail(String thoiGian, BigDecimal doanhThu) {
+            this.thoiGian = thoiGian;
+            this.doanhThu = doanhThu;
+        }
+
+        public String getThoiGian() { return thoiGian; }
+        public void setThoiGian(String thoiGian) { this.thoiGian = thoiGian; }
+        public BigDecimal getDoanhThu() { return doanhThu; }
+        public void setDoanhThu(BigDecimal doanhThu) { this.doanhThu = doanhThu; }
+    }
 
     public static class EventRevenueDetail {
         private Long maSuKien;

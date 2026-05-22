@@ -27,17 +27,20 @@
         }
 
         .checkout-container {
-            text-align: center;
+            width: 100%;
+            max-width: 800px;
             z-index: 10;
             position: relative;
         }
 
         .success-icon {
-            font-size: 5rem;
+            font-size: 4rem;
             color: #10b981;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
             animation: float 3s ease-in-out infinite;
+            text-align: center;
+            display: block;
         }
 
         @keyframes float {
@@ -56,8 +59,9 @@
 
         .checkout-title {
             font-family: 'Unbounded', sans-serif;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
             background: linear-gradient(90deg, #10b981, var(--primary-cyan));
             -webkit-background-clip: text;
             background-clip: text;
@@ -65,96 +69,155 @@
             color: #fff;
         }
 
-        /* Mã code Barcode Cyberpunk */
-        .ticket-hologram {
-            background: rgba(20, 25, 40, 0.8);
+        /* Invoice Card */
+        .invoice-card {
+            background: rgba(20, 25, 40, 0.85);
             border: 1px solid var(--primary-cyan);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 0 50px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.1);
             backdrop-filter: blur(20px);
-            margin: 30px auto;
-            max-width: 400px;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 30px;
         }
 
-        .ticket-hologram::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
-            animation: scanline 2s linear infinite;
-        }
-
-        @keyframes scanline {
-            0% {
-                top: 0;
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                top: 100%;
-                opacity: 0;
-            }
-        }
-
-        .barcode {
-            font-family: 'Space Mono', monospace;
-            font-size: 3rem;
-            letter-spacing: -2px;
-            opacity: 0.8;
-            margin: 20px 0;
-            color: var(--primary-cyan);
-            text-shadow: 0 0 10px var(--primary-cyan);
-        }
-
-        .info-row {
+        .invoice-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-            padding-bottom: 8px;
+            align-items: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .info-row span {
+        .invoice-header h2 {
+            font-family: 'Unbounded', sans-serif;
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary-cyan);
+        }
+
+        .invoice-id {
+            font-family: 'Space Mono', monospace;
+            background: rgba(0, 243, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: var(--primary-cyan);
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
             color: #a0a5b5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .info-row strong {
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Ticket Grid */
+        .ticket-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .ticket-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .ticket-item:hover {
+            border-color: var(--accent-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 5px 20px rgba(176, 107, 255, 0.15);
+        }
+
+        .qr-box {
+            flex-shrink: 0;
+            width: 90px;
+            height: 90px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .ticket-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ticket-tier {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1rem;
+            color: var(--accent-secondary);
+            margin: 0;
+        }
+
+        .ticket-meta {
+            font-size: 0.85rem;
+            color: #e0e6ed;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ticket-meta strong {
             color: #fff;
+        }
+
+        .actions-wrapper {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--primary-cyan);
             font-family: 'Space Mono', monospace;
         }
 
-        .back-btn {
-            display: inline-block;
-            padding: 15px 40px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-family: 'Unbounded', sans-serif;
-            transition: all 0.3s;
-            margin-top: 20px;
-        }
+        @media (max-width: 600px) {
+            .invoice-details {
+                grid-template-columns: 1fr;
+            }
 
-        .back-btn:hover {
-            background: #fff;
-            color: #000;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            .ticket-item {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -167,63 +230,169 @@
     <div class="checkout-container">
         <i class="fa fa-check-circle success-icon"></i>
         <h1 class="checkout-title">GIAO DỊCH THÀNH CÔNG</h1>
-        <p style="color:#a0a5b5; font-size: 1.2rem;">Thiết bị của bạn đã nhận được Mã Vé Điện Tử Hologram</p>
+        <p style="color:#a0a5b5; font-size: 1.1rem; text-align: center; margin-bottom: 30px;">Hóa đơn điện tử và mã soát
+            vé của bạn đã sẵn sàng</p>
 
-        <div class="ticket-hologram">
-            <div class="info-row">
-                <span>Trạng thái:</span>
-                <strong style="color: #10b981;">Đã Xác Nhận</strong>
-            </div>
-            <div class="info-row">
-                <span>Mã Phiếu Thanh Toán:</span>
-                <strong id="invoiceId">INV-0000</strong>
-            </div>
-            <div class="info-row">
-                <span>Số lượng vé:</span>
-                <strong id="ticketQty">0</strong>
+        <div id="loading" class="loading-state">
+            <i class="fa fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p>Đang truy xuất thông tin vé...</p>
+        </div>
+
+        <div id="invoiceContainer" style="display: none;">
+            <div class="invoice-card">
+                <div class="invoice-header">
+                    <h2>THÔNG TIN HÓA ĐƠN</h2>
+                    <div class="invoice-id" id="displayInvoiceId">VRG-0000</div>
+                </div>
+                <div class="invoice-details">
+                    <div class="info-item">
+                        <span class="info-label">Sự kiện</span>
+                        <span class="info-value" id="eventName">Đang tải...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Thời gian đặt vé</span>
+                        <span class="info-value" id="bookingTime">Đang tải...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Số lượng vé</span>
+                        <span class="info-value" id="totalTickets">0 vé</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phương thức thanh toán</span>
+                        <span class="info-value" id="paymentMethodName">Đang tải...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tổng tiền thanh toán</span>
+                        <span class="info-value" id="totalPrice" style="color: #10b981;">0 đ</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="barcode">
-                ||| ||| || ||| || |||
+            <h3 style="font-family: 'Unbounded', sans-serif; font-size: 1.2rem; margin-bottom: 20px; color: #fff;">DANH
+                SÁCH VÉ CỦA BẠN</h3>
+            <div class="ticket-list" id="ticketList">
+                <!-- Danh sách vé sẽ được render tại đây -->
             </div>
+        </div>
 
-            <div style="text-align: center; margin-top: 20px;">
-                <p style="color: #a0a5b5; font-size: 0.95rem;"><i>Vui lòng xuất trình mã QR này để check-in tại sự
-                        kiện</i></p>
+        <div id="errorContainer"
+            style="display: none; text-align: center; background: rgba(255, 85, 85, 0.1); padding: 30px; border-radius: 15px; border: 1px solid rgba(255, 85, 85, 0.3); margin-bottom: 30px;">
+            <i class="fa fa-exclamation-triangle" style="font-size: 3rem; color: #ff5555; margin-bottom: 15px;"></i>
+            <h3 style="color: #ff5555; margin-bottom: 10px;">Không tìm thấy thông tin đơn hàng</h3>
+            <p style="color: #e0e6ed;">Vui lòng kiểm tra lại mã giao dịch hoặc chuyển đến trang Hồ sơ để xem vé của bạn.
+            </p>
+        </div>
 
-                <a href="index.html" class="btn btn-outline" style="margin-top: 20px; display: inline-block;">
-                    <i class="fa fa-arrow-left"></i> VỀ TRANG CHỦ
-                </a>
-                <a href="profile.html" class="btn btn-primary glow-btn"
-                    style="margin-top: 20px; margin-left: 10px; display: inline-block;">
-                    <i class="fa fa-user"></i> XEM DANH SÁCH VÉ
-                </a>
-            </div>
+        <div class="actions-wrapper">
+            <a href="index.html" class="btn btn-outline" style="display: inline-block;">
+                <i class="fa fa-arrow-left"></i> VỀ TRANG CHỦ
+            </a>
+            <a href="profile.html" class="btn btn-primary glow-btn" style="margin-left: 10px; display: inline-block;">
+                <i class="fa fa-user"></i> HỒ SƠ CỦA TÔI
+            </a>
         </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        document.getElementById('invoiceId').innerText = 'VRG-' + (urlParams.get('invoiceId') || '999');
-        document.getElementById('ticketQty').innerText = urlParams.get('tickets') || '1';
-
-        // Lấy cursor cũ
+        // Custom Cursor
         const cursor = document.querySelector('.custom-cursor');
         document.addEventListener('mousemove', (e) => {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
-        const btn = document.querySelector('.back-btn');
-        btn.addEventListener('mouseenter', () => {
-            cursor.style.transform = 'translate(-50%, -50%) scale(2.5)';
-            cursor.style.background = 'transparent';
-            cursor.style.border = '1px solid white';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('stellar_token');
+            const urlParams = new URLSearchParams(window.location.search);
+            const invoiceId = urlParams.get('invoiceId');
+
+            if (!token || !invoiceId) {
+                showError();
+                return;
+            }
+
+            fetchOrderDetails(token, invoiceId);
         });
-        btn.addEventListener('mouseleave', () => {
-            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-            cursor.style.background = '#fff';
-            cursor.style.border = 'none';
-        });
+
+        async function fetchOrderDetails(token, invoiceId) {
+            try {
+                const res = await fetch('http://localhost:8081/api/user/tickets', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (!res.ok) {
+                    throw new Error('Không thể lấy danh sách vé');
+                }
+
+                const orders = await res.json();
+                // Tìm đơn hàng tương ứng với invoiceId
+                const currentOrder = orders.find(o => String(o.transactionId) === String(invoiceId));
+
+                if (currentOrder) {
+                    renderInvoice(currentOrder);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error(error);
+                showError();
+            }
+        }
+
+        function renderInvoice(order) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('invoiceContainer').style.display = 'block';
+
+            // Cập nhật thông tin hóa đơn
+            document.getElementById('displayInvoiceId').textContent = 'VRG-' + order.transactionId;
+            document.getElementById('eventName').textContent = order.eventName || 'Sự kiện Ve\'ryGood';
+
+            const bookingDate = new Date(order.bookingTime);
+            document.getElementById('bookingTime').textContent = bookingDate.toLocaleString('vi-VN');
+
+            const numTickets = order.tickets ? order.tickets.length : 0;
+            document.getElementById('totalTickets').textContent = numTickets + ' vé';
+
+            document.getElementById('paymentMethodName').textContent = order.paymentMethod || 'Ví Ve\'ryGood Pay';
+
+            document.getElementById('totalPrice').textContent = (order.totalPrice || 0).toLocaleString('vi-VN') + ' VNĐ';
+
+            // Cập nhật danh sách vé
+            const ticketList = document.getElementById('ticketList');
+            ticketList.innerHTML = '';
+
+            if (order.tickets && order.tickets.length > 0) {
+                order.tickets.forEach(ticket => {
+                    const ticketEl = document.createElement('div');
+                    ticketEl.className = 'ticket-item';
+
+                    // API tạo QR Code
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.ticketId}&color=10101a&bgcolor=ffffff`;
+
+                    ticketEl.innerHTML = `
+                        <div class="qr-box">
+                            <img src="${qrUrl}" alt="QR Code cho vé ${ticket.ticketId}">
+                        </div>
+                        <div class="ticket-info">
+                            <h4 class="ticket-tier">${ticket.tierName || 'Vé Sự Kiện'}</h4>
+                            <div class="ticket-meta">
+                                <span>Khu vực: <strong>${ticket.zoneName || 'Khu vực chung'}</strong></span>
+                                <span>Vị trí: <strong>${ticket.seatInfo || 'Tự do'}</strong></span>
+                                <span>Mã vé: <strong>#${ticket.ticketId}</strong></span>
+                            </div>
+                        </div>
+                    `;
+                    ticketList.appendChild(ticketEl);
+                });
+            } else {
+                ticketList.innerHTML = '<p style="color: #a0a5b5;">Đơn hàng này chưa có vé nào được ghi nhận.</p>';
+            }
+        }
+
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('errorContainer').style.display = 'block';
+        }
     </script>
 </body>
 

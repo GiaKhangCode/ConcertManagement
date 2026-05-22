@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trang báo cáo thống kê doanh thu và hoạt động dành cho Admin trên Ve'ryGood.">
+    <title>Ve'ryGood | Báo Cáo Thống Kê Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Unbounded:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/test.png">
+    <style>
+        .admin-page-header {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 1.5rem 2.5rem;
+            backdrop-filter: blur(10px);
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            text-align: left;
+            margin-bottom: 2.5rem;
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            letter-spacing: 2px;
+            font-family: 'Unbounded';
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            text-transform: uppercase;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-subtle), transparent);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 1.8rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 229, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .charts-container-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 1.8rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 420px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .ranking-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .ranking-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .ranking-table-wrapper {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-subtle);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 600;
+        }
+
+        .ranking-table td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            font-size: 0.9rem;
+        }
+
+        .rank-number {
+            display: inline-flex;
+            width: 26px;
+            height: 26px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            font-family: 'Unbounded';
+            font-size: 0.75rem;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #ffc800, #ff9f43);
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 200, 0, 0.4);
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #a0a5b5, #cfd2db);
+            color: #000;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #b56c28);
+            color: #fff;
+        }
+
+        .rank-other {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 13, 20, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 20px;
+            transition: opacity 0.3s;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 229, 255, 0.1);
+            border-top-color: var(--accent-secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-container-grid {
+                grid-template-columns: 1fr;
+            }
+            .ranking-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="custom-cursor"></div>
+    <div class="bg-mesh primary-mesh"></div>
+    <div class="bg-mesh secondary-mesh"></div>
+
+    <header class="navbar">
+        <a href="index.html" style="text-decoration:none; color:inherit;">
+            <div class="logo">Ve'ry<span class="neon-text">Good</span></div>
+        </a>
+        <div class="nav-center">
+            <div class="search-bar">
+                <i class="fa fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm sự kiện..." id="searchInput">
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn">Trang Chủ</a>
+            <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="admin-analytics.html" style="display:none;" id="adminAnalyticsNav" class="nav-btn active">Báo Cáo Thống Kê</a>
+            <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn">Quản Lý Sự Kiện</a>
+            <a href="organizer-promotions.html" style="display:none;" id="promotionsNav" class="nav-btn">Khuyến Mãi</a>
+            <a href="admin-create.html" style="display:none;" id="createEventNav" class="nav-btn">Tạo Sự Kiện</a>
+
+            <div class="account-dropdown" id="accountDropdown" style="display:none;">
+                <button class="btn btn-account">
+                    <i class="fa fa-user-circle"></i>
+                    <span id="userNameDropdown">Tài khoản</span>
+                    <i class="fa fa-chevron-down" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.7;"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="profile.html"><i class="fa fa-user"></i> Hồ sơ của tôi</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="logout()" class="logout-item"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                </div>
+            </div>
+            <a href="auth.html" class="btn btn-outline small" id="authBtn">Đăng Nhập</a>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 2rem;">
+        <!-- Header Section -->
+        <div class="admin-page-header fade-up"
+            style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h1 class="neon-text" style="font-size: 1.8rem; font-family: 'Unbounded'; margin: 0;">THỐNG KÊ</h1>
+                <div
+                    style="background: rgba(255, 85, 255, 0.1); border: 1px solid rgba(255, 85, 255, 0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; color: #ff55ff; font-weight: 600;">
+                    DASHBOARD HỆ THỐNG
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline small" onclick="loadAnalyticsData()"><i class="fa fa-sync-alt"></i> Làm mới</button>
+            </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="stats-grid">
+            <div class="stat-card fade-up">
+                <div class="stat-label">Tổng doanh thu gộp</div>
+                <div class="stat-value" id="grossRevenue">0đ</div>
+            </div>
+            <div class="stat-card fade-up" style="border-color: rgba(255, 85, 255, 0.2);">
+                <div class="stat-label" style="color: #ff55ff;">Doanh thu phí nền tảng</div>
+                <div class="stat-value" id="platformRevenue" style="color: #ff55ff; text-shadow: 0 0 10px rgba(255, 85, 255, 0.3);">0đ</div>
+            </div>
+            <div class="stat-card fade-up">
+                <div class="stat-label">Tổng vé bán hợp lệ</div>
+                <div class="stat-value" id="ticketsSold">0 vé</div>
+            </div>
+            <div class="stat-card fade-up">
+                <div class="stat-label">Tổng số sự kiện</div>
+                <div class="stat-value" id="totalEvents">0</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-container-grid fade-up">
+            <div class="chart-box" id="pieChartBox">
+                <div class="loading-overlay"><div class="loading-spinner"></div>Đang tải dữ liệu...</div>
+                <h3 class="section-title" style="margin-bottom: 1.5rem; font-size: 1rem;">Doanh thu nền tảng theo thể loại</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-box" id="lineChartBox">
+                <div class="loading-overlay"><div class="loading-spinner"></div>Đang tải dữ liệu...</div>
+                <h3 class="section-title" style="margin-bottom: 1.5rem; font-size: 1rem;">Tăng trưởng doanh thu nền tảng</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Organizers Row -->
+        <section class="ranking-section fade-up" id="rankingSection">
+            <div class="loading-overlay"><div class="loading-spinner"></div>Đang tải dữ liệu...</div>
+            <h3 class="section-title" style="margin-bottom: 2rem;">Top nhà tổ chức theo doanh thu</h3>
+            <div class="ranking-container">
+                <div class="ranking-table-wrapper">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px; text-align: center;">Hạng</th>
+                                <th>Nhà tổ chức</th>
+                                <th>Doanh thu gộp</th>
+                                <th>Doanh thu nền tảng (5%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="organizerTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">Không có dữ liệu.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="chart-canvas-container" style="height: 320px;">
+                    <canvas id="organizerChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="mascot-companion" id="mascotCompanion">
+        <div class="mascot-tooltip" id="mascotTooltip">Đang tải lời chào...</div>
+        <img src="assets/mascot.png" alt="Stellar Mascot">
+    </div>
+
+    <footer>
+        <div class="copyright">© 2026 Ve'ryGood. All rights reserved.</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        // Check Auth at client side
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('stellar_token');
+            const rolesStr = localStorage.getItem('stellar_roles');
+            if (!token) {
+                window.location.href = 'auth.html';
+                return;
+            }
+            let roles = [];
+            try { roles = JSON.parse(rolesStr || '[]'); } catch (e) {}
+            if (!roles.includes('ROLE_ADMIN')) {
+                alert('Truy cập bị từ chối. Chỉ dành cho Quản Trị Viên (Admin).');
+                window.location.href = 'index.html';
+                return;
+            }
+            loadAnalyticsData();
+        });
+
+        // Global Chart Objects for cleaning/updating
+        let categoryChartObj = null;
+        let growthChartObj = null;
+        let organizerChartObj = null;
+
+        async function loadAnalyticsData() {
+            const token = localStorage.getItem('stellar_token');
+            showLoaders(true);
+
+            try {
+                const res = await fetch('http://localhost:8081/api/admin/analytics/summary', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    alert('Phiên đăng nhập hết hạn hoặc bạn không có quyền truy cập!');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                if (!res.ok) throw new Error('Không thể tải dữ liệu thống kê');
+
+                const data = await res.json();
+                renderKPIs(data);
+                renderCategoryChart(data.chiTietTheLoai || []);
+                renderGrowthChart(data.tangTruongDoanhThu || []);
+                renderOrganizerRanking(data.topNhaToChuc || []);
+
+            } catch (e) {
+                console.error(e);
+                showErrors(e.message);
+            } finally {
+                showLoaders(false);
+            }
+        }
+
+        function showLoaders(visible) {
+            const loaders = document.querySelectorAll('.loading-overlay');
+            loaders.forEach(l => {
+                l.style.opacity = visible ? '1' : '0';
+                l.style.pointerEvents = visible ? 'all' : 'none';
+            });
+        }
+
+        function showErrors(msg) {
+            const emptyTable = document.getElementById('organizerTableBody');
+            emptyTable.innerHTML = `<tr><td colspan="4" class="empty-state" style="color: #ff3366;"><i class="fa fa-exclamation-triangle" style="font-size:1.5rem; margin-bottom:10px;"></i>Lỗi kết nối server: ${msg}</td></tr>`;
+        }
+
+        function renderKPIs(data) {
+            document.getElementById('grossRevenue').textContent = (data.tongDoanhThuGop || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('platformRevenue').textContent = (data.tongDoanhThuNenTang || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('ticketsSold').textContent = (data.tongSoVeHopLe || 0).toLocaleString('vi-VN') + ' vé';
+            document.getElementById('totalEvents').textContent = (data.tongSoSuKien || 0).toLocaleString('vi-VN');
+        }
+
+        // 1. DOUGHNUT CHART - CATEGORY REVENUE
+        function renderCategoryChart(categories) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartObj) categoryChartObj.destroy();
+
+            const activeCats = categories.filter(c => (c.doanhThuNenTang || 0) > 0);
+
+            if (activeCats.length === 0) {
+                document.getElementById('categoryChart').style.display = 'none';
+                return;
+            }
+            document.getElementById('categoryChart').style.display = 'block';
+
+            const labels = activeCats.map(c => c.theLoai);
+            const values = activeCats.map(c => c.doanhThuNenTang);
+            const total = values.reduce((a, b) => a + b, 0);
+
+            const neonColors = ['#00e5ff', '#ff55ff', '#ffb86c', '#00ff88', '#bd93f9', '#ff5555', '#f1fa8c'];
+
+            categoryChartObj = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: neonColors.slice(0, activeCats.length),
+                        borderColor: '#141928',
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#a0a5b5',
+                                font: { family: 'Be Vietnam Pro', size: 11 },
+                                padding: 12
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(20, 25, 40, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a0a5b5',
+                            borderColor: 'rgba(0, 229, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const pct = ((val / total) * 100).toFixed(1);
+                                    return ` Phí thu được: ${val.toLocaleString('vi-VN')}đ (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // 2. LINE CHART - PLATFORM REVENUE GROWTH
+        function renderGrowthChart(growthData) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            if (growthChartObj) growthChartObj.destroy();
+
+            if (growthData.length === 0) {
+                document.getElementById('growthChart').style.display = 'none';
+                return;
+            }
+            document.getElementById('growthChart').style.display = 'block';
+
+            const labels = growthData.map(g => g.thoiGian);
+            const values = growthData.map(g => g.doanhThuNenTang);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(255, 85, 255, 0.35)');
+            gradient.addColorStop(1, 'rgba(255, 85, 255, 0.00)');
+
+            growthChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: '#ff55ff',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ff55ff',
+                        pointBorderColor: '#141928',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: gradient
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(20, 25, 40, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a0a5b5',
+                            borderColor: 'rgba(255, 85, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Doanh thu: ${context.raw.toLocaleString('vi-VN')}đ`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#8a90a4',
+                                font: { family: 'Be Vietnam Pro', size: 11 }
+                            }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: {
+                                color: '#8a90a4',
+                                font: { family: 'Be Vietnam Pro', size: 11 },
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + ' triệu';
+                                    }
+                                    return value.toLocaleString('vi-VN') + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. HORIZONTAL BAR CHART & TABLE - ORGANIZER RANKING
+        function renderOrganizerRanking(organizers) {
+            const tbody = document.getElementById('organizerTableBody');
+            const ctx = document.getElementById('organizerChart').getContext('2d');
+            if (organizerChartObj) organizerChartObj.destroy();
+
+            if (organizers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không có dữ liệu nhà tổ chức.</td></tr>`;
+                document.getElementById('organizerChart').style.display = 'none';
+                return;
+            }
+            document.getElementById('organizerChart').style.display = 'block';
+
+            // Limit to Top 5 for chart visual aesthetics, but show full list in Table
+            const top5 = organizers.slice(0, 5);
+
+            // Table rendering
+            tbody.innerHTML = organizers.map((o, idx) => {
+                const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+                return `
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-number ${rankClass}">${idx + 1}</span></td>
+                        <td style="font-weight: 500; color: #fff;">${o.tenNhaToChuc}</td>
+                        <td>${(o.tongDoanhThuGop || 0).toLocaleString('vi-VN')}đ</td>
+                        <td style="color: #ff55ff; font-weight: 500;">${(o.tongDoanhThuNenTang || 0).toLocaleString('vi-VN')}đ</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Chart rendering (Horizontal Bar)
+            const labels = top5.map(o => o.tenNhaToChuc);
+            const grossData = top5.map(o => o.tongDoanhThuGop);
+
+            organizerChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: grossData,
+                        backgroundColor: 'rgba(0, 229, 255, 0.75)',
+                        borderColor: '#00e5ff',
+                        borderWidth: 1.5,
+                        borderRadius: 5,
+                        barThickness: 16
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Makes it a Horizontal Bar Chart!
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(20, 25, 40, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#a0a5b5',
+                            borderColor: 'rgba(0, 229, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Doanh thu gộp: ${context.raw.toLocaleString('vi-VN')}đ`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: {
+                                color: '#8a90a4',
+                                font: { family: 'Be Vietnam Pro', size: 10 },
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(0) + ' triệu';
+                                    }
+                                    return value;
+                                }
+                            }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#fff',
+                                font: { family: 'Be Vietnam Pro', size: 11, weight: '500' }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Trigger cursor events
+            if (typeof attachCursorEvents === 'function') {
+                attachCursorEvents(document.querySelectorAll('.ranking-table tbody tr'));
+            }
+        }
+    </script>
+</body>
+
+</html>

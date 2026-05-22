@@ -159,6 +159,7 @@ public class UserController {
             orderDto.setEventId(don.getSuKien().getMaSuKien());
             orderDto.setTotalPrice(don.getTongTien());
             orderDto.setBookingTime(don.getThoiDiemMua() != null ? don.getThoiDiemMua() : java.time.LocalDateTime.now());
+            orderDto.setPaymentMethod(don.getPhuongThucThanhToan());
 
             List<UserTicketResponseDto> ticketDtos = new ArrayList<>();
             for(Ve ve : veList) {

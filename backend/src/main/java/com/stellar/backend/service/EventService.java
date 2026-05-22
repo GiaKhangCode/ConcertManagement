@@ -34,13 +34,15 @@ public class EventService {
     private final LichDienRepository lichDienRepository;
     private final QuyTacHoanTienRepository quyTacHoanTienRepository;
     private final com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository;
+    private final com.stellar.backend.repository.HangVeRepository hangVeRepository;
 
     // Constructor Injection instead of @RequiredArgsConstructor
-    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository, QuyTacHoanTienRepository quyTacHoanTienRepository, com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository) {
+    public EventService(SuKienRepository suKienRepository, LichDienRepository lichDienRepository, QuyTacHoanTienRepository quyTacHoanTienRepository, com.stellar.backend.repository.NhaToChucRepository nhaToChucRepository, com.stellar.backend.repository.HangVeRepository hangVeRepository) {
         this.suKienRepository = suKienRepository;
         this.lichDienRepository = lichDienRepository;
         this.quyTacHoanTienRepository = quyTacHoanTienRepository;
         this.nhaToChucRepository = nhaToChucRepository;
+        this.hangVeRepository = hangVeRepository;
     }
 
     @Transactional(readOnly = true)
@@ -116,11 +118,21 @@ public class EventService {
                 hDto.setName(hv.getTenHangVe());
                 hDto.setPrice(hv.getGiaNiemYet());
                 
+                // Lấy số vé còn lại của hạng vé (không có khu vực)
+                Long hvSoVeConLai = hangVeRepository.callFnLaySoVeConLai(hv.getMaHangVe(), null);
+                hDto.setSoVeConLai(hvSoVeConLai);
+                
                 // Force-load khuVucList (lazy) bằng cách truy cập trực tiếp
                 java.util.List<com.stellar.backend.entity.KhuVuc> rawList = hv.getKhuVucList();
                 if (rawList != null && !rawList.isEmpty()) {
                     List<com.stellar.backend.dto.KhuVucDto> kvList = rawList.stream()
-                        .map(kv -> new com.stellar.backend.dto.KhuVucDto(kv.getMaKhuVuc(), kv.getTenKhuVuc(), kv.getSucChuaKv()))
+                        .map(kv -> {
+                            com.stellar.backend.dto.KhuVucDto kDto = new com.stellar.backend.dto.KhuVucDto(kv.getMaKhuVuc(), kv.getTenKhuVuc(), kv.getSucChuaKv());
+                            // Lấy số vé còn lại của khu vực
+                            Long kvSoVeConLai = hangVeRepository.callFnLaySoVeConLai(hv.getMaHangVe(), kv.getMaKhuVuc());
+                            kDto.setSoVeConLai(kvSoVeConLai);
+                            return kDto;
+                        })
                         .collect(Collectors.toList());
                     hDto.setKhuVucList(kvList);
                 } else {

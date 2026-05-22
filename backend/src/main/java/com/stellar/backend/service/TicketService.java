@@ -87,9 +87,7 @@ public class TicketService {
         // Seller receives
         walletService.receive(sellerId, price, "Tiền bán lại vé #" + ve.getMaVe());
 
-        // Update ticket status
-        ve.setDaBanLai(0);
-        ve.setGiaBanLai(null);
+        // Update ticket status (DB Trigger will handle clearing DaBanLai and GiaBanLai)
         
         // Create new DonMua for buyer to transfer ownership
         TaiKhoan buyerAccount = taiKhoanRepository.findById(buyerId)
@@ -98,7 +96,7 @@ public class TicketService {
         DonMua newOrder = new DonMua();
         newOrder.setTaiKhoan(buyerAccount);
         newOrder.setSuKien(ve.getLichDien().getSuKien());
-        newOrder.setTongTien(price);
+        newOrder.setTongTien(BigDecimal.ZERO); // Trigger DB sẽ tự động cộng giá bán lại vào
         newOrder.setTrangThaiThanhToan("Đã thanh toán");
         newOrder.setPhuongThucThanhToan("Stellar Pay (Mua lại)");
         
@@ -155,21 +153,9 @@ public class TicketService {
     }
 
     private void cancelOrderTicketsAndFreeSeats(DonMua dm) {
-        List<Ve> ticketsInOrder = veRepository.findByDonMua_MaDonMua(dm.getMaDonMua());
-        for (Ve ticket : ticketsInOrder) {
-            ticket.setTrangThaiVe("Đã hoàn vé");
-            if (ticket.getGheNgoi() != null) {
-                java.util.Optional<TrangThaiGheTheoSuat> optStatus = trangThaiGheTheoSuatRepository.findByMaGheAndMaLichDien(ticket.getGheNgoi().getMaGhe(), ticket.getLichDien().getMaLichDien());
-                if (optStatus.isPresent()) {
-                    TrangThaiGheTheoSuat status = optStatus.get();
-                    status.setTrangThai("Còn trống");
-                    status.setTaiKhoan(null);
-                    status.setThoiGianHetHan(null);
-                    trangThaiGheTheoSuatRepository.save(status);
-                }
-            }
-        }
-        veRepository.saveAll(ticketsInOrder);
+        // Tối ưu hóa bằng Stored Procedure (Đề xuất 2)
+        // Thay thế vòng lặp N+1 query để tránh quá tải DB
+        veRepository.callSpHoanVeDonMua(dm.getMaDonMua());
     }
 
     @Transactional
@@ -286,6 +272,10 @@ public class TicketService {
         return tickets.stream()
                 .map(v -> {
                     System.out.println("DEBUG: Mapping ticket ID " + v.getMaVe() + " - Resale Price: " + v.getGiaBanLai());
+                    String thumbnailUrl = v.getLichDien().getSuKien().getAnhThumbnailUrl();
+                    if (thumbnailUrl == null || thumbnailUrl.isEmpty()) {
+                        thumbnailUrl = "https://via.placeholder.com/640x480.png?text=No+Thumbnail";
+                    }
                     return new ResaleTicketDto(
                         v.getMaVe(),
                         v.getLichDien().getSuKien().getTenSuKien(),
@@ -293,7 +283,8 @@ public class TicketService {
                         v.getHangVe().getTenHangVe(),
                         v.getGheNgoi() != null ? v.getGheNgoi().getToaDo() : "Tự do",
                         v.getGiaBanLai(),
-                        v.getDonMua().getTaiKhoan().getTenDangNhap()
+                        v.getDonMua().getTaiKhoan().getTenDangNhap(),
+                        thumbnailUrl
                     );
                 })
                 .collect(Collectors.toList());

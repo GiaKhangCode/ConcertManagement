@@ -26,4 +26,12 @@ public class BookingRequestDto {
     private String discountCode;
     public String getDiscountCode() { return discountCode; }
     public void setDiscountCode(String discountCode) { this.discountCode = discountCode; }
+
+    private String paymentMethod;
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    private String walletPassword;
+    public String getWalletPassword() { return walletPassword; }
+    public void setWalletPassword(String walletPassword) { this.walletPassword = walletPassword; }
 }

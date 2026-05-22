@@ -125,7 +125,9 @@
             display: flex;
             align-items: flex-end;
             gap: 12px;
-            height: 200px;
+            min-height: 200px;
+            padding-top: 2.5rem;
+            margin-top: 1rem;
         }
 
         .bar-item {
@@ -179,6 +181,41 @@
             color: var(--text-muted);
         }
 
+        .charts-container-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-container-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-box {
+                height: 350px;
+            }
+        }
+
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -204,6 +241,7 @@
         <div class="nav-links">
             <a href="index.html" class="nav-btn">Trang Chủ</a>
             <a href="admin-approval.html" style="display:none;" id="adminNav" class="nav-btn">Duyệt Sự Kiện</a>
+            <a href="admin-analytics.html" style="display:none;" id="adminAnalyticsNav" class="nav-btn">Báo Cáo Thống Kê</a>
             <a href="event-management.html" style="display:none;" id="revenueNav" class="nav-btn active">Quản Lý Sự
                 Kiện</a>
             <a href="organizer-promotions.html" style="display:none;" id="promotionsNav" class="nav-btn">Khuyến Mãi</a>
@@ -244,11 +282,11 @@
 
         <div class="stats-grid">
             <div class="stat-card fade-up">
-                <div class="stat-label">Tổng vé bán ra</div>
+                <div class="stat-label">Tổng doanh thu thực tế</div>
                 <div class="stat-value" id="totalRevenue">---</div>
             </div>
             <div class="stat-card fade-up">
-                <div class="stat-label">Tổng vé bán</div>
+                <div class="stat-label">Tổng vé bán ra</div>
                 <div class="stat-value" id="totalTickets">---</div>
             </div>
             <div class="stat-card fade-up">
@@ -261,6 +299,21 @@
             <h3 class="section-title">Biểu Đồ Vé Bán Theo Sự Kiện</h3>
             <div class="bar-chart" id="barChart">
                 <div class="empty-state">Đang tải dữ liệu...</div>
+            </div>
+        </div>
+
+        <div class="charts-container-grid fade-up">
+            <div class="chart-box">
+                <h3 class="section-title" style="margin-bottom: 1.5rem; font-size: 1rem;">Cơ cấu doanh thu theo sự kiện</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-box">
+                <h3 class="section-title" style="margin-bottom: 1.5rem; font-size: 1rem;">Tốc độ tăng trưởng doanh thu</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="lineChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -378,8 +431,12 @@
         <img src="assets/mascot.png" alt="Stellar Mascot">
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
     <script>
+        let pieChartObj = null;
+        let lineChartObj = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('stellar_token');
             if (!token) {
@@ -407,8 +464,8 @@
         }
 
         function renderDashboard(data) {
-            document.getElementById('totalRevenue').textContent = (data.tongSoVeBan || 0) + ' vé';
-            document.getElementById('totalTickets').textContent = data.tongSoVeBan || 0;
+            document.getElementById('totalRevenue').textContent = (data.tongDoanhThu || 0).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('totalTickets').textContent = (data.tongSoVeBan || 0) + ' vé';
             document.getElementById('totalEvents').textContent = data.tongSoSuKien || 0;
 
             const chart = document.getElementById('barChart');
@@ -424,9 +481,9 @@
             chart.innerHTML = '';
             tbody.innerHTML = '';
 
+            // Vẽ biểu đồ cột cũ (Vé bán theo sự kiện)
             data.chiTietSuKien.forEach((ev, idx) => {
-                // Biểu đồ dùng số vé bán
-                const h = ((ev.soVeBan || 0) / maxVe) * 180;
+                const h = ((ev.soVeBan || 0) / maxVe) * 130;
                 const bar = document.createElement('div');
                 bar.className = 'bar-item';
                 bar.innerHTML = `
@@ -437,7 +494,7 @@
                 chart.appendChild(bar);
                 setTimeout(() => { bar.querySelector('.bar').style.height = h + 'px'; }, 100 + idx * 50);
 
-                // Table — 4 cột (bỏ doanh thu)
+                // Table
                 const tr = document.createElement('tr');
                 const isCancelled = ev.trangThai === 'Đã hủy';
                 const statusClass = ev.trangThai === 'Sắp diễn ra' || ev.trangThai === 'Đang diễn ra' ? 'status-active' : 'status-expired';
@@ -460,6 +517,216 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // === 1. BIỂU ĐỒ TRÒN: CƠ CẤU DOANH THU THEO SỰ KIỆN ===
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            if (pieChartObj) {
+                pieChartObj.destroy();
+            }
+
+            const activeEvents = data.chiTietSuKien.filter(e => (e.doanhThu || 0) > 0);
+
+            if (activeEvents.length === 0) {
+                document.getElementById('pieChart').style.display = 'none';
+                const parent = document.getElementById('pieChart').parentNode;
+                let emptyDiv = parent.querySelector('.chart-empty-state');
+                if (!emptyDiv) {
+                    emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'chart-empty-state empty-state';
+                    emptyDiv.innerHTML = 'Chưa có dữ liệu doanh thu sự kiện.';
+                    emptyDiv.style.position = 'absolute';
+                    emptyDiv.style.top = '50%';
+                    emptyDiv.style.left = '50%';
+                    emptyDiv.style.transform = 'translate(-50%, -50%)';
+                    parent.appendChild(emptyDiv);
+                } else {
+                    emptyDiv.style.display = 'block';
+                }
+            } else {
+                document.getElementById('pieChart').style.display = 'block';
+                const parent = document.getElementById('pieChart').parentNode;
+                let emptyDiv = parent.querySelector('.chart-empty-state');
+                if (emptyDiv) emptyDiv.style.display = 'none';
+
+                const pieLabels = activeEvents.map(e => e.tenSuKien);
+                const pieData = activeEvents.map(e => e.doanhThu || 0);
+                const totalRev = pieData.reduce((a, b) => a + b, 0);
+
+                const neonColors = [
+                    '#00e5ff', // Cyan
+                    '#ff55ff', // Pink
+                    '#ffb86c', // Orange
+                    '#00ff88', // Green
+                    '#bd93f9', // Purple
+                    '#ff5555', // Red
+                    '#f1fa8c'  // Yellow
+                ];
+
+                const isMobile = window.innerWidth < 768;
+
+                pieChartObj = new Chart(ctxPie, {
+                    type: 'doughnut',
+                    data: {
+                        labels: pieLabels,
+                        datasets: [{
+                            data: pieData,
+                            backgroundColor: neonColors.slice(0, activeEvents.length),
+                            borderColor: '#141928',
+                            borderWidth: 2,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: isMobile ? 'bottom' : 'right',
+                                labels: {
+                                    color: '#a0a5b5',
+                                    font: {
+                                        family: 'Be Vietnam Pro',
+                                        size: 11
+                                    },
+                                    padding: 12
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(20, 25, 40, 0.95)',
+                                titleColor: '#fff',
+                                bodyColor: '#a0a5b5',
+                                borderColor: 'rgba(0, 229, 255, 0.3)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const pct = ((value / totalRev) * 100).toFixed(1);
+                                        return ` Doanh thu: ${value.toLocaleString('vi-VN')}đ (${pct}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // === 2. BIỂU ĐỒ ĐƯỜNG: TỐC ĐỘ TĂNG TRƯỞNG DOANH THU ===
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (lineChartObj) {
+                lineChartObj.destroy();
+            }
+
+            const growthData = data.tangTruongDoanhThu || [];
+
+            if (growthData.length === 0) {
+                document.getElementById('lineChart').style.display = 'none';
+                const parent = document.getElementById('lineChart').parentNode;
+                let emptyDiv = parent.querySelector('.chart-empty-state');
+                if (!emptyDiv) {
+                    emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'chart-empty-state empty-state';
+                    emptyDiv.innerHTML = 'Chưa có dữ liệu tăng trưởng doanh thu.';
+                    emptyDiv.style.position = 'absolute';
+                    emptyDiv.style.top = '50%';
+                    emptyDiv.style.left = '50%';
+                    emptyDiv.style.transform = 'translate(-50%, -50%)';
+                    parent.appendChild(emptyDiv);
+                } else {
+                    emptyDiv.style.display = 'block';
+                }
+            } else {
+                document.getElementById('lineChart').style.display = 'block';
+                const parent = document.getElementById('lineChart').parentNode;
+                let emptyDiv = parent.querySelector('.chart-empty-state');
+                if (emptyDiv) emptyDiv.style.display = 'none';
+
+                const lineLabels = growthData.map(g => g.thoiGian);
+                const lineValues = growthData.map(g => g.doanhThu || 0);
+
+                const gradient = ctxLine.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(0, 229, 255, 0.35)');
+                gradient.addColorStop(1, 'rgba(0, 229, 255, 0.00)');
+
+                lineChartObj = new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: lineLabels,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: lineValues,
+                            borderColor: '#00e5ff',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#00e5ff',
+                            pointBorderColor: '#141928',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: gradient
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(20, 25, 40, 0.95)',
+                                titleColor: '#fff',
+                                bodyColor: '#a0a5b5',
+                                borderColor: 'rgba(0, 229, 255, 0.3)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: function(context) {
+                                        return ` Doanh thu: ${context.raw.toLocaleString('vi-VN')}đ`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#8a90a4',
+                                    font: {
+                                        family: 'Be Vietnam Pro',
+                                        size: 11
+                                    }
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: '#8a90a4',
+                                    font: {
+                                        family: 'Be Vietnam Pro',
+                                        size: 11
+                                    },
+                                    callback: function(value) {
+                                        if (value >= 1000000) {
+                                            const val = value / 1000000;
+                                            return (Number.isInteger(val) ? val : val.toFixed(2)) + ' triệu';
+                                        }
+                                        return value.toLocaleString('vi-VN') + 'đ';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         async function showSettlement(eventId) {

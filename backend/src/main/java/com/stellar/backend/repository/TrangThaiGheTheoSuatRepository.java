@@ -26,6 +26,10 @@ public interface TrangThaiGheTheoSuatRepository extends JpaRepository<TrangThaiG
     void deleteByMaLichDien(@org.springframework.data.repository.query.Param("maLichDien") Long maLichDien);
 
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query(value = "CALL SP_UNLOCK_EXPIRED_SEATS()", nativeQuery = true)
+    void callSpUnlockExpiredSeats();
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
     @org.springframework.data.jpa.repository.Query("DELETE FROM TrangThaiGheTheoSuat t WHERE t.maGhe IN :maGheIds")
     void deleteByMaGheIn(@org.springframework.data.repository.query.Param("maGheIds") List<Long> maGheIds);
 }

@@ -19,4 +19,8 @@ public class HangVeDto {
 
     public java.util.List<KhuVucDto> getKhuVucList() { return khuVucList; }
     public void setKhuVucList(java.util.List<KhuVucDto> khuVucList) { this.khuVucList = khuVucList; }
+
+    private Long soVeConLai;
+    public Long getSoVeConLai() { return soVeConLai; }
+    public void setSoVeConLai(Long soVeConLai) { this.soVeConLai = soVeConLai; }
 }

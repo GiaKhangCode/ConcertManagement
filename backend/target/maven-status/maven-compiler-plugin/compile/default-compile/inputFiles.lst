@@ -28,6 +28,7 @@ D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\cont
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\repository\VeRepository.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\controller\BookingController.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\service\TicketService.java
+D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\dto\AdminAnalyticsResponseDto.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\repository\TaiTroRepository.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\entity\NguoiDung.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\security\SecurityConfig.java
@@ -45,6 +46,7 @@ D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\enti
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\entity\NhomQuyen.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\controller\FinancialController.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\entity\NhaToChuc.java
+D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\controller\AdminAnalyticsController.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\repository\NhaTaiTroRepository.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\entity\TaiTroId.java
 D:\DoAn\Concert\ConcertManagement\backend\src\main\java\com\stellar\backend\entity\LichSuQuyetToan.java

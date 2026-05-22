@@ -9,6 +9,7 @@ com\stellar\backend\entity\NhatKyDangNhap.class
 com\stellar\backend\dto\LoginRequest.class
 com\stellar\backend\repository\MaGiamGiaRepository.class
 com\stellar\backend\dto\UserProfileResponseDto.class
+com\stellar\backend\dto\AdminAnalyticsResponseDto$CategoryRevenueDetail.class
 com\stellar\backend\dto\EventCreateRequestDto$SponsorDto.class
 com\stellar\backend\repository\TaiTroRepository.class
 com\stellar\backend\dto\EventDetailDto.class
@@ -22,13 +23,16 @@ com\stellar\backend\dto\RegisterRequest.class
 com\stellar\backend\repository\KhuVucRepository.class
 com\stellar\backend\service\SettlementService.class
 com\stellar\backend\aspect\AuditLogAspect.class
+com\stellar\backend\dto\AdminAnalyticsResponseDto$OrganizerRevenueDetail.class
 com\stellar\backend\entity\ChienDichKhuyenMai.class
 com\stellar\backend\entity\HangVe.class
 com\stellar\backend\dto\EventCreateRequestDto$RefundPolicyDto$RuleDto.class
 com\stellar\backend\entity\GiaoDich.class
 com\stellar\backend\repository\DiaDiemRepository.class
+com\stellar\backend\controller\AdminAnalyticsController.class
 com\stellar\backend\controller\SeatController.class
 com\stellar\backend\dto\SoDoSuKienDto.class
+com\stellar\backend\dto\AdminAnalyticsResponseDto.class
 com\stellar\backend\entity\TaiTroId.class
 com\stellar\backend\repository\GheNgoiRepository.class
 com\stellar\backend\repository\NhaToChucRepository.class
@@ -72,6 +76,7 @@ com\stellar\backend\service\EventService.class
 com\stellar\backend\dto\EventDetailDto$SponsorDto.class
 com\stellar\backend\entity\LichSuHoanTien.class
 com\stellar\backend\repository\ChienDichKhuyenMaiRepository.class
+com\stellar\backend\dto\AdminAnalyticsResponseDto$RevenueGrowthDetail.class
 com\stellar\backend\controller\TicketCheckInController.class
 com\stellar\backend\dto\RevenueResponseDto.class
 com\stellar\backend\entity\NguoiDung.class
@@ -119,6 +124,7 @@ com\stellar\backend\dto\EventDetailDto$NgheSiDto.class
 com\stellar\backend\dto\EventCreateRequestDto$KhuVucDto.class
 com\stellar\backend\entity\ThamGiaId.class
 com\stellar\backend\dto\JwtResponse.class
+com\stellar\backend\dto\RevenueResponseDto$RevenueGrowthDetail.class
 com\stellar\backend\entity\GheNgoi.class
 com\stellar\backend\entity\ApDung.class
 com\stellar\backend\controller\FinancialController.class

@@ -17,7 +17,7 @@ let activeLine = null;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('stageCanvas')) return;
-    
+
     // Init Fabric Canvas
     canvas = new fabric.Canvas('stageCanvas', {
         selection: true,
@@ -34,23 +34,31 @@ document.addEventListener('DOMContentLoaded', () => {
     drawGrid();
     setupEvents();
     setupKeyboardShortcuts();
-    
+
     // Khởi tạo state gốc
     setTimeout(() => saveState(), 100);
 });
 
 function drawGrid() {
-    canvas.clear();
+    // Xoá các grid lines cũ (nếu có) thay vì xoá toàn bộ canvas
+    let gridLines = canvas.getObjects().filter(obj => obj.stroke === '#ffffff11' && obj.selectable === false);
+    gridLines.forEach(obj => canvas.remove(obj));
+
     const grid = 50;
     const width = canvas.width;
     const height = canvas.height;
-    
+
     for (let i = 0; i < (width / grid); i++) {
-        canvas.add(new fabric.Line([ i * grid, 0, i * grid, height], { stroke: '#ffffff11', selectable: false, evented: false, strokeWidth: 1 }));
+        canvas.add(new fabric.Line([i * grid, 0, i * grid, height], { stroke: '#ffffff11', selectable: false, evented: false, strokeWidth: 1 }));
     }
     for (let i = 0; i < (height / grid); i++) {
-        canvas.add(new fabric.Line([ 0, i * grid, width, i * grid], { stroke: '#ffffff11', selectable: false, evented: false, strokeWidth: 1 }));
+        canvas.add(new fabric.Line([0, i * grid, width, i * grid], { stroke: '#ffffff11', selectable: false, evented: false, strokeWidth: 1 }));
     }
+
+    // Đưa grid xuống dưới cùng
+    canvas.getObjects().forEach(obj => {
+        if (obj.stroke === '#ffffff11') canvas.sendToBack(obj);
+    });
 }
 
 function toggleStageBuilder() {
@@ -67,22 +75,22 @@ function updateTicketTypeDropdown() {
     const select = document.getElementById('sbObjTicketType');
     const currentValue = select.value;
     select.innerHTML = '<option value="">-- Chọn Khu Vực --</option>';
-    
+
     // Quét tất cả các hạng vé
     document.querySelectorAll('#hangVeContainer .dynamic-box').forEach(hvItem => {
         const hvName = hvItem.querySelector('.hv-name')?.value.trim() || 'Hạng vé chưa tên';
-        
+
         // Quét các khu vực bên trong hạng vé đó
         hvItem.querySelectorAll('.kv-item').forEach(kvItem => {
             const kvNameInput = kvItem.querySelector('.kv-name');
             const kvColorInput = kvItem.querySelector('.kv-color');
             const maKhuVuc = kvItem.dataset.maKhuVuc;
-            
+
             if (kvNameInput) {
                 let kvName = kvNameInput.value.trim() || 'Khu vực chưa tên';
                 let kvColor = kvColorInput ? kvColorInput.value : '#3B82F6';
                 let id = maKhuVuc ? maKhuVuc : kvItem.id;
-                
+
                 let option = document.createElement('option');
                 option.value = id;
                 option.dataset.color = kvColor;
@@ -103,7 +111,7 @@ document.querySelectorAll('.sb-tool').forEach(btn => {
         const targetBtn = e.currentTarget;
         targetBtn.classList.add('active');
         currentTool = targetBtn.dataset.tool;
-        
+
         // Reset polygon drawing state if switching tools
         if (currentTool !== 'polygon') {
             resetPolygonState();
@@ -127,7 +135,7 @@ function resetPolygonState() {
     polygonPoints = [];
     polygonLines.forEach(l => canvas.remove(l));
     polygonLines = [];
-    if(activeLine) {
+    if (activeLine) {
         canvas.remove(activeLine);
         activeLine = null;
     }
@@ -136,7 +144,7 @@ function resetPolygonState() {
 
 // Canvas Interactions
 function setupEvents() {
-    canvas.on('mouse:wheel', function(opt) {
+    canvas.on('mouse:wheel', function (opt) {
         let delta = opt.e.deltaY;
         let zoom = canvas.getZoom();
         zoom *= 0.999 ** delta;
@@ -147,7 +155,7 @@ function setupEvents() {
         opt.e.stopPropagation();
     });
 
-    canvas.on('mouse:down', function(opt) {
+    canvas.on('mouse:down', function (opt) {
         const evt = opt.e;
         if (evt.altKey === true || evt.code === 'Space') {
             this.isDragging = true;
@@ -183,12 +191,12 @@ function setupEvents() {
                 activeShape = new fabric.Ellipse({ ...defaultProps, rx: 0, ry: 0 });
                 activeShape.set('shapeType', 'OVAL');
             }
-            
+
             activeShape.set('customLabel', 'Khu vực mới');
             activeShape.set('zoneId', '');
             activeShape.set('uuid', Date.now().toString());
             canvas.add(activeShape);
-            
+
         } else if (currentTool === 'text') {
             let shape = new fabric.IText('Nhập Text', {
                 left: pointer.x,
@@ -206,7 +214,7 @@ function setupEvents() {
             canvas.setActiveObject(shape);
             saveState();
             document.querySelector('.sb-tool[data-tool="select"]').click();
-            
+
         } else if (currentTool === 'seat') {
             let seatColor = document.getElementById('sbObjColor').value;
             let circle = new fabric.Circle({
@@ -241,13 +249,13 @@ function setupEvents() {
             canvas.add(group);
             canvas.setActiveObject(group);
             saveState();
-            
+
         } else if (currentTool === 'polygon') {
             handlePolygonDown(opt, pointer);
         }
     });
 
-    canvas.on('mouse:move', function(opt) {
+    canvas.on('mouse:move', function (opt) {
         if (this.isDragging) {
             let e = opt.e;
             let vpt = this.viewportTransform;
@@ -279,12 +287,22 @@ function setupEvents() {
             }
             canvas.renderAll();
         } else if (currentTool === 'polygon' && activeLine) {
-            activeLine.set({ x2: pointer.x, y2: pointer.y });
+            let px = pointer.x;
+            let py = pointer.y;
+
+            // Smart snapping: Tự chỉnh thẳng dòng nếu gần ngang hoặc dọc
+            if (polygonPoints.length > 0) {
+                let lastPt = polygonPoints[polygonPoints.length - 1];
+                if (Math.abs(px - lastPt.x) < 15) px = lastPt.x;
+                if (Math.abs(py - lastPt.y) < 15) py = lastPt.y;
+            }
+
+            activeLine.set({ x2: px, y2: py });
             canvas.renderAll();
         }
     });
 
-    canvas.on('mouse:up', function(opt) {
+    canvas.on('mouse:up', function (opt) {
         this.setViewportTransform(this.viewportTransform);
         this.isDragging = false;
 
@@ -297,12 +315,12 @@ function setupEvents() {
                     activeShape.set('rx', 15);
                     activeShape.set('ry', 15);
                 }
-                
+
                 activeShape.setCoords();
                 canvas.setActiveObject(activeShape);
                 activeShape = null;
                 saveState();
-                
+
                 // Tự động quay lại công cụ Chọn sau khi vẽ xong 1 hình
                 const selectBtn = document.querySelector('.sb-tool[data-tool="select"]');
                 if (selectBtn) selectBtn.click();
@@ -313,7 +331,7 @@ function setupEvents() {
     canvas.on('selection:created', showProperties);
     canvas.on('selection:updated', showProperties);
     canvas.on('selection:cleared', hideProperties);
-    
+
     // Ghi nhận thay đổi để lưu Undo
     canvas.on('object:modified', saveState);
 
@@ -391,14 +409,14 @@ function setupEvents() {
     function getSnapPoints(obj) {
         const b = obj.getBoundingRect(true, true);
         return {
-            left:    b.left,
-            right:   b.left + b.width,
-            centerX: b.left + b.width  / 2,
-            top:     b.top,
-            bottom:  b.top  + b.height,
-            centerY: b.top  + b.height / 2,
-            width:   b.width,
-            height:  b.height
+            left: b.left,
+            right: b.left + b.width,
+            centerX: b.left + b.width / 2,
+            top: b.top,
+            bottom: b.top + b.height,
+            centerY: b.top + b.height / 2,
+            width: b.width,
+            height: b.height
         };
     }
 
@@ -422,7 +440,7 @@ function setupEvents() {
     }
 
     // === Sự kiện di chuyển object ===
-    canvas.on('object:moving', function(opt) {
+    canvas.on('object:moving', function (opt) {
         const moving = opt.target;
         clearGuides();
 
@@ -435,7 +453,7 @@ function setupEvents() {
         );
 
         const canvasH = canvas.getHeight() / canvas.getZoom();
-        const canvasW = canvas.getWidth()  / canvas.getZoom();
+        const canvasW = canvas.getWidth() / canvas.getZoom();
 
         // ─────────────────────────────────────────────
         // 1. SNAP CĂNG THẲNG (Alignment Snapping)
@@ -459,15 +477,15 @@ function setupEvents() {
 
             // --- Trục X (căn dọc) ---
             const xCandidates = [
-                { mVal: m.left,    oVal: o.left    },
-                { mVal: m.left,    oVal: o.centerX },
-                { mVal: m.left,    oVal: o.right   },
-                { mVal: m.centerX, oVal: o.left    },
+                { mVal: m.left, oVal: o.left },
+                { mVal: m.left, oVal: o.centerX },
+                { mVal: m.left, oVal: o.right },
+                { mVal: m.centerX, oVal: o.left },
                 { mVal: m.centerX, oVal: o.centerX },
-                { mVal: m.centerX, oVal: o.right   },
-                { mVal: m.right,   oVal: o.left    },
-                { mVal: m.right,   oVal: o.centerX },
-                { mVal: m.right,   oVal: o.right   },
+                { mVal: m.centerX, oVal: o.right },
+                { mVal: m.right, oVal: o.left },
+                { mVal: m.right, oVal: o.centerX },
+                { mVal: m.right, oVal: o.right },
             ];
             for (const { mVal, oVal } of xCandidates) {
                 const diff = mVal - oVal;
@@ -485,15 +503,15 @@ function setupEvents() {
 
             // --- Trục Y (căn ngang) ---
             const yCandidates = [
-                { mVal: m.top,     oVal: o.top     },
-                { mVal: m.top,     oVal: o.centerY },
-                { mVal: m.top,     oVal: o.bottom  },
-                { mVal: m.centerY, oVal: o.top     },
+                { mVal: m.top, oVal: o.top },
+                { mVal: m.top, oVal: o.centerY },
+                { mVal: m.top, oVal: o.bottom },
+                { mVal: m.centerY, oVal: o.top },
                 { mVal: m.centerY, oVal: o.centerY },
-                { mVal: m.centerY, oVal: o.bottom  },
-                { mVal: m.bottom,  oVal: o.top     },
-                { mVal: m.bottom,  oVal: o.centerY },
-                { mVal: m.bottom,  oVal: o.bottom  },
+                { mVal: m.centerY, oVal: o.bottom },
+                { mVal: m.bottom, oVal: o.top },
+                { mVal: m.bottom, oVal: o.centerY },
+                { mVal: m.bottom, oVal: o.bottom },
             ];
             for (const { mVal, oVal } of yCandidates) {
                 const diff = mVal - oVal;
@@ -705,8 +723,8 @@ function handlePolygonDown(opt, pointer) {
     if (opt.e.detail === 2 && polygonPoints.length > 2) {
         // Double click: hoàn thành đa giác
         polygonLines.forEach(l => canvas.remove(l));
-        if(activeLine) canvas.remove(activeLine);
-        
+        if (activeLine) canvas.remove(activeLine);
+
         let poly = new fabric.Polygon(polygonPoints, {
             fill: document.getElementById('sbObjColor').value,
             opacity: 0.8,
@@ -729,12 +747,22 @@ function handlePolygonDown(opt, pointer) {
         return;
     }
 
+    let px = pointer.x;
+    let py = pointer.y;
+
+    // Smart snapping: Tự chỉnh thẳng dòng nếu gần ngang hoặc dọc
+    if (polygonPoints.length > 0) {
+        let lastPt = polygonPoints[polygonPoints.length - 1];
+        if (Math.abs(px - lastPt.x) < 15) px = lastPt.x;
+        if (Math.abs(py - lastPt.y) < 15) py = lastPt.y;
+    }
+
     // Add point
-    polygonPoints.push({ x: pointer.x, y: pointer.y });
-    
+    polygonPoints.push({ x: px, y: py });
+
     if (polygonPoints.length > 1) {
         let lastPt = polygonPoints[polygonPoints.length - 2];
-        let newLine = new fabric.Line([lastPt.x, lastPt.y, pointer.x, pointer.y], {
+        let newLine = new fabric.Line([lastPt.x, lastPt.y, px, py], {
             strokeWidth: 2,
             stroke: '#00f3ff',
             selectable: false,
@@ -744,9 +772,9 @@ function handlePolygonDown(opt, pointer) {
         canvas.add(newLine);
     }
 
-    if(activeLine) canvas.remove(activeLine);
+    if (activeLine) canvas.remove(activeLine);
 
-    activeLine = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+    activeLine = new fabric.Line([px, py, px, py], {
         strokeWidth: 2,
         stroke: 'rgba(0, 243, 255, 0.5)',
         strokeDashArray: [5, 5],
@@ -760,24 +788,24 @@ function handlePolygonDown(opt, pointer) {
 function showProperties(e) {
     let obj = e.selected[0];
     if (!obj) return;
-    
+
     updateTicketTypeDropdown();
-    
+
     const isText = obj.type === 'i-text' || obj.type === 'text';
-    
+
     document.getElementById('sbObjLabel').disabled = false;
     document.getElementById('sbObjLabel').value = obj.customLabel || (isText ? obj.text : '');
-    
+
     document.getElementById('sbObjTicketType').disabled = isText;
     document.getElementById('sbObjTicketType').value = obj.zoneId || '';
-    
+
     document.getElementById('sbObjColor').disabled = false;
     document.getElementById('sbObjColor').value = obj.fill;
     document.getElementById('sbObjColorHex').textContent = obj.fill;
-    
+
     document.getElementById('sbObjFontSize').disabled = !isText;
     if (isText) document.getElementById('sbObjFontSize').value = obj.fontSize;
-    
+
     document.getElementById('btnFlipH').disabled = false;
     document.getElementById('btnFlipV').disabled = false;
 }
@@ -785,13 +813,13 @@ function showProperties(e) {
 function hideProperties() {
     document.getElementById('sbObjLabel').disabled = true;
     document.getElementById('sbObjLabel').value = '';
-    
+
     document.getElementById('sbObjTicketType').disabled = true;
     document.getElementById('sbObjTicketType').value = '';
-    
+
     document.getElementById('sbObjColor').disabled = true;
     document.getElementById('sbObjFontSize').disabled = true;
-    
+
     document.getElementById('btnFlipH').disabled = true;
     document.getElementById('btnFlipV').disabled = true;
 }
@@ -847,7 +875,7 @@ function sbUpdateTicketType(val) {
     let obj = canvas.getActiveObject();
     if (obj) {
         obj.set('zoneId', val);
-        
+
         // Tự động cập nhật màu theo khu vực nếu có
         const select = document.getElementById('sbObjTicketType');
         const selectedOption = select.options[select.selectedIndex];
@@ -858,7 +886,7 @@ function sbUpdateTicketType(val) {
             document.getElementById('sbObjColor').value = color;
             document.getElementById('sbObjColorHex').textContent = color;
         }
-        
+
         saveState();
     }
 }
@@ -873,7 +901,7 @@ function sbUpdateColor(val) {
         } else {
             obj.set('fill', val);
         }
-        
+
         document.getElementById('sbObjColorHex').textContent = val;
         canvas.requestRenderAll();
         saveState();
@@ -893,7 +921,7 @@ function sbDeleteSelected() {
     let activeObjects = canvas.getActiveObjects();
     if (activeObjects.length) {
         canvas.discardActiveObject();
-        activeObjects.forEach(function(object) {
+        activeObjects.forEach(function (object) {
             // Xóa cả Text được liên kết nếu đang xóa một Shape
             if (object.uuid) {
                 canvas.getObjects().forEach(o => {
@@ -909,7 +937,7 @@ function sbDeleteSelected() {
 
 // --- Shortcuts & Undo/Redo/Copy/Paste ---
 function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (!document.getElementById('enableStageBuilder').checked) return;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -918,19 +946,19 @@ function setupKeyboardShortcuts() {
             e.preventDefault();
             sbDeleteSelected();
         }
-        
+
         // Ctrl/Cmd + Z
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
             e.preventDefault();
             undo();
         }
-        
+
         // Ctrl/Cmd + C
         if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
             e.preventDefault();
             copy();
         }
-        
+
         // Ctrl/Cmd + V
         if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
             e.preventDefault();
@@ -950,31 +978,32 @@ function setupKeyboardShortcuts() {
 
 function copy() {
     if (!canvas.getActiveObject()) return;
-    canvas.getActiveObject().clone(function(cloned) {
+    canvas.getActiveObject().clone(function (cloned) {
         clipboard = cloned;
-    });
+    }, ['shapeType', 'customLabel', 'zoneId', 'uuid', 'linkedTextId']);
 }
 
 function paste() {
     if (!clipboard) return;
-    
-    clipboard.clone(function(clonedObj) {
+
+    clipboard.clone(function (clonedObj) {
         canvas.discardActiveObject();
         clonedObj.set({
             left: clonedObj.left + 20,
             top: clonedObj.top + 20,
             evented: true,
         });
-        
+
         // Reset uuid for clones so they don't share identical metadata
-        if (clonedObj.uuid) clonedObj.set('uuid', Date.now().toString() + Math.floor(Math.random()*1000));
+        if (clonedObj.uuid) clonedObj.set('uuid', Date.now().toString() + Math.floor(Math.random() * 1000));
         clonedObj.set('linkedTextId', null); // Don't copy text link blindly
-        
+
         if (clonedObj.type === 'activeSelection') {
             clonedObj.canvas = canvas;
-            clonedObj.forEachObject(function(obj) { 
-                if (obj.uuid) obj.set('uuid', Date.now().toString() + Math.floor(Math.random()*1000));
-                canvas.add(obj); 
+            clonedObj.forEachObject(function (obj) {
+                if (obj.uuid) obj.set('uuid', Date.now().toString() + Math.floor(Math.random() * 1000));
+                obj.set('linkedTextId', null);
+                canvas.add(obj);
             });
             clonedObj.setCoords();
         } else {
@@ -985,18 +1014,18 @@ function paste() {
         canvas.setActiveObject(clonedObj);
         canvas.requestRenderAll();
         saveState();
-    });
+    }, ['shapeType', 'customLabel', 'zoneId', 'uuid', 'linkedTextId']);
 }
 
 function saveState() {
     if (isRedoing) return;
-    
+
     let json = canvas.toJSON(['shapeType', 'customLabel', 'zoneId', 'uuid', 'linkedTextId']);
     // Filter ra grid lines
     json.objects = json.objects.filter(o => o.selectable !== false || o.type === 'i-text');
-    
+
     const stateStr = JSON.stringify(json);
-    
+
     // Ngăn lưu đè trạng thái giống hệt trạng thái trước đó
     if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== stateStr) {
         undoStack.push(stateStr);
@@ -1008,18 +1037,18 @@ function undo() {
         isRedoing = true;
         undoStack.pop(); // Remove state hiện tại
         let prevState = undoStack[undoStack.length - 1]; // Load state liền trước
-        
-        canvas.loadFromJSON(prevState, function() {
+
+        canvas.loadFromJSON(prevState, function () {
             drawGrid(); // Vẽ lại lưới nằm dưới
             canvas.getObjects().forEach(obj => {
-                if(obj.stroke === '#ffffff11') canvas.sendToBack(obj);
+                if (obj.stroke === '#ffffff11') canvas.sendToBack(obj);
             });
             canvas.renderAll();
-            
+
             // Xóa selection
             canvas.discardActiveObject();
             hideProperties();
-            
+
             isRedoing = false;
         });
     }
@@ -1031,18 +1060,18 @@ function getStageBuilderData() {
     if (!isEnabled || !canvas) return null;
 
     let json = canvas.toJSON(['shapeType', 'customLabel', 'zoneId', 'uuid', 'linkedTextId']);
-    json.objects = json.objects.filter(o => o.selectable !== false || o.type === 'i-text' || o.type==='text');
+    json.objects = json.objects.filter(o => o.selectable !== false || o.type === 'i-text' || o.type === 'text');
 
     let zones = [];
     let dsGhe = [];
     let seatMapCache = {};
-    
+
     json.objects.forEach(obj => {
         if (obj.shapeType === 'SEAT') {
             let zId = obj.zoneId || 'no_zone';
             if (!seatMapCache[zId]) seatMapCache[zId] = {};
             let label = obj.customLabel || 'Ghe';
-            
+
             // Xử lý trùng lặp ToaDo trong cùng 1 khu vực để fix lỗi khóa nhầm nhiều ghế
             if (seatMapCache[zId][label]) {
                 let suffix = 1;
@@ -1051,7 +1080,7 @@ function getStageBuilderData() {
                 }
                 label = label + '_' + suffix;
                 obj.customLabel = label;
-                
+
                 // Đồng bộ lại Text hiển thị trên Canvas
                 let canvasObj = canvas.getObjects().find(o => o.uuid === obj.uuid);
                 if (canvasObj) {

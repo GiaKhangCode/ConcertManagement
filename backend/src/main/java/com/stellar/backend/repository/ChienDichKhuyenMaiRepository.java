@@ -21,4 +21,6 @@ public interface ChienDichKhuyenMaiRepository extends JpaRepository<ChienDichKhu
            "LEFT JOIN FETCH c.danhSachMaGiamGia " +
            "WHERE s.nguoiTao.maTaiKhoan = :maTaiKhoan")
     List<ChienDichKhuyenMai> findBySuKienNguoiTaoMaTaiKhoan(@Param("maTaiKhoan") Long maTaiKhoan);
+
+    List<ChienDichKhuyenMai> findByTrangThai(String trangThai);
 }

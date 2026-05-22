@@ -11,4 +11,7 @@ public interface HangVeRepository extends JpaRepository<HangVe, Long> {
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
     @org.springframework.data.jpa.repository.Query("DELETE FROM HangVe h WHERE h.suKien.maSuKien = :maSuKien")
     void deleteBySuKien_MaSuKien(@org.springframework.data.repository.query.Param("maSuKien") Long maSuKien);
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT FN_LaySoVeConLai(:maHangVe, :maKhuVuc) FROM DUAL", nativeQuery = true)
+    Long callFnLaySoVeConLai(@org.springframework.data.repository.query.Param("maHangVe") Long maHangVe, @org.springframework.data.repository.query.Param("maKhuVuc") Long maKhuVuc);
 }

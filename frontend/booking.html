@@ -445,10 +445,21 @@
             </div>
 
             <div class="booking-box" style="border-color: rgba(0, 243, 255, 0.3);">
-                <h3><i class="fa fa-wallet"></i> THANH TOÁN QUA VÍ</h3>
-                <div class="wallet-info">
-                    <span style="color: #a0a5b5; font-size: 0.85rem;">SỐ DƯ HIỆN TẠI:</span>
-                    <span id="userWalletBalance" style="font-family: 'Space Mono', monospace; font-weight: bold; color: var(--primary-cyan);">--- VNĐ</span>
+                <h3><i class="fa fa-credit-card"></i> PHƯƠNG THỨC THANH TOÁN</h3>
+                <select id="paymentMethodSelect" class="form-input" style="margin-bottom: 15px;" onchange="toggleWalletInfo()">
+                    <option value="WALLET">Ví cá nhân (Ve'ryGood Pay)</option>
+                    <option value="MOMO">Ví MoMo (Giả lập)</option>
+                    <option value="BANK">Thẻ Ngân hàng / VNPAY (Giả lập)</option>
+                </select>
+                <div class="wallet-info" id="walletInfoBox" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <span style="color: #a0a5b5; font-size: 0.85rem;">SỐ DƯ HIỆN TẠI:</span>
+                        <span id="userWalletBalance" style="font-family: 'Space Mono', monospace; font-weight: bold; color: var(--primary-cyan);">--- VNĐ</span>
+                    </div>
+                    <div style="width: 100%;">
+                        <span style="color: #a0a5b5; font-size: 0.85rem; display: block; margin-bottom: 5px;">MẬT KHẨU THANH TOÁN:</span>
+                        <input type="password" id="walletPasswordInput" class="form-input" placeholder="Nhập mật khẩu ví..." style="padding: 10px; width: 100%;" value="123456" />
+                    </div>
                 </div>
             </div>
 
@@ -463,6 +474,16 @@
     </div>
 
     <script>
+        function toggleWalletInfo() {
+            const method = document.getElementById('paymentMethodSelect').value;
+            const walletBox = document.getElementById('walletInfoBox');
+            if (method === 'WALLET') {
+                walletBox.style.display = 'flex';
+            } else {
+                walletBox.style.display = 'none';
+            }
+        }
+
         // Custom cursor logic
         const cursor = document.querySelector('.custom-cursor');
         document.addEventListener('mousemove', (e) => {
@@ -699,11 +720,12 @@
 
             khuVucList.forEach((kv, index) => {
                 const isFirst = index === 0;
-                selectHtml += `<option value="${kv.id}">${kv.name} (Sức chứa: ${kv.capacity})</option>`;
+                selectHtml += `<option value="${kv.id}">${kv.name} (Còn lại: ${kv.soVeConLai !== undefined ? kv.soVeConLai : '---'} / ${kv.capacity})</option>`;
                 stageHtml += `
                     <div class="zone-card ${isFirst ? 'selected' : ''}" data-zone="${kv.id}" onclick="selectZone('${kv.id}')" style="cursor: pointer;">
                         ${kv.name}<br>
-                        <small style="opacity: 0.6; font-size: 0.7rem;">SỨC CHỨA: ${kv.capacity}</small>
+                        <small style="opacity: 0.6; font-size: 0.7rem;">SỨC CHỨA: ${kv.capacity}</small><br>
+                        <small style="color: ${kv.soVeConLai > 0 ? '#00f3ff' : '#ff4d4d'}; font-size: 0.75rem; font-weight: bold;">CÒN LẠI: ${kv.soVeConLai !== undefined ? kv.soVeConLai : '---'}</small>
                     </div>
                 `;
             });
@@ -730,11 +752,14 @@
                         <div class="tier-info">
                             <h4>${t.name}</h4>
                             <div class="price">${t.price.toLocaleString('vi-VN')} VNĐ</div>
+                            <div style="margin-top: 5px; font-size: 0.8rem; color: ${t.soVeConLai > 0 ? '#00f3ff' : '#ff4d4d'}; font-weight: bold;">
+                                CÒN LẠI: ${t.soVeConLai !== undefined ? t.soVeConLai : '---'} VÉ
+                            </div>
                         </div>
                         <div class="qty-selector">
                             <button class="qty-btn" onclick="changeNonMapQty(${t.id}, -1)" ${qty <= 0 ? 'disabled' : ''}>-</button>
                             <div class="qty-value" id="qty-${t.id}">${qty}</div>
-                            <button class="qty-btn" onclick="changeNonMapQty(${t.id}, 1)" ${qty >= 10 ? 'disabled' : ''}>+</button>
+                            <button class="qty-btn" onclick="changeNonMapQty(${t.id}, 1)" ${qty >= 10 || (t.soVeConLai !== undefined && qty >= t.soVeConLai) ? 'disabled' : ''}>+</button>
                         </div>
                     </div>
                 `;
@@ -744,12 +769,21 @@
 
         function changeNonMapQty(tierId, delta) {
             const current = nonMapQuantities[tierId] || 0;
-            const newVal = Math.max(0, Math.min(10, current + delta));
+            
+            // Tìm thông tin hạng vé hiện tại để check số vé còn lại
+            const tierInfo = eventTiers.find(t => t.id == tierId);
+            const maxAvailable = (tierInfo && tierInfo.soVeConLai !== undefined) ? tierInfo.soVeConLai : 10;
+            
+            const newVal = Math.max(0, Math.min(Math.min(10, maxAvailable), current + delta));
             
             // Nếu muốn giới hạn tổng số vé là 10
             const totalQty = Object.values(nonMapQuantities).reduce((a, b) => a + b, 0);
             if (delta > 0 && totalQty >= 10) {
                 alert("Bạn chỉ được chọn tối đa 10 vé!");
+                return;
+            }
+            if (delta > 0 && current >= maxAvailable) {
+                alert("Số lượng vé còn lại không đủ!");
                 return;
             }
 
@@ -1177,13 +1211,14 @@
         async function submitBooking() {
             const token = localStorage.getItem('stellar_token');
             const { total: totalAmt, qty } = updateUIPrice();
+            const paymentMethod = document.getElementById('paymentMethodSelect') ? document.getElementById('paymentMethodSelect').value : 'WALLET';
 
             if (qty === 0) {
                 alert(isMapAvailable ? "Vui lòng chọn ít nhất 1 ghế trên sơ đồ!" : "Vui lòng chọn ít nhất 1 vé!");
                 return;
             }
             
-            if (totalAmt > userBalance) {
+            if (paymentMethod === 'WALLET' && totalAmt > userBalance) {
                 alert("Số dư trong ví của bạn không đủ!");
                 return;
             }
@@ -1266,6 +1301,9 @@
                     }
 
                     console.log("Submitting booking for tier:", hId, "Qty:", item.qty);
+                    
+                    const walletPassword = document.getElementById('walletPasswordInput') ? document.getElementById('walletPasswordInput').value : '';
+
                     const response = await fetch('http://localhost:8081/api/booking/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -1276,7 +1314,9 @@
                             maKhuVuc: item.maKhuVuc ? parseInt(item.maKhuVuc) : null,
                             soLuong: item.qty,
                             dsGhe: item.seats,
-                            discountCode: (appliedDiscount && appliedDiscount.code) || null
+                            discountCode: (appliedDiscount && appliedDiscount.code) || null,
+                            paymentMethod: paymentMethod,
+                            walletPassword: walletPassword
                         })
                     });
 

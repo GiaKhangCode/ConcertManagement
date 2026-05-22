@@ -271,6 +271,8 @@ function logout() {
 }
 
 // Logic mua vé chuyển trang
+let pendingBookingInfo = null;
+
 window.handleBooking = function(eventId, ticketTierId, tierName) {
     if (window.currentEventStatus === 'Đã kết thúc') {
         showMascotMessage("Sự kiện này đã kết thúc, bạn không thể mua vé nữa nha! 😢", true);
@@ -284,11 +286,153 @@ window.handleBooking = function(eventId, ticketTierId, tierName) {
         return;
     }
     
+    // Lưu lại thông tin đặt vé để dùng sau khi qua captcha
+    pendingBookingInfo = { eventId, ticketTierId, tierName };
+    
+    // Hiển thị modal captcha chống bot
+    document.getElementById('captchaModal').style.display = 'flex';
+    initCaptcha();
+}
+
+function executeBookingNavigation() {
+    if(!pendingBookingInfo) return;
+    const { eventId, ticketTierId, tierName } = pendingBookingInfo;
     const schedules = window.eventSchedules || [];
     const maLichDien = (schedules.length > 0 && schedules[0].id) ? schedules[0].id : eventId;
 
     window.location.href = `booking.html?eventId=${eventId}&tierId=${ticketTierId}&tierName=${encodeURIComponent(tierName)}&scheduleId=${maLichDien}`;
 }
+
+// --- Logic Captcha Chống Bot ---
+let captchaX = 0;
+let captchaY = 0;
+let isDraggingCaptcha = false;
+let startClientX = 0;
+
+function initCaptcha() {
+    const bgCanvas = document.getElementById('captchaBg');
+    const pieceCanvas = document.getElementById('captchaPiece');
+    const bgCtx = bgCanvas.getContext('2d');
+    const pieceCtx = pieceCanvas.getContext('2d');
+    
+    // Đặt lại slider
+    const sliderBtn = document.getElementById('sliderBtn');
+    const track = document.getElementById('sliderTrack');
+    sliderBtn.style.left = '0px';
+    track.style.width = '0px';
+    sliderBtn.innerHTML = '<i class="fa fa-arrow-right"></i>';
+    sliderBtn.style.background = '#2f80ed';
+    
+    const img = new Image();
+    img.src = document.getElementById('eventPoster').src || 'assets/test.png';
+    img.onload = () => {
+        bgCtx.clearRect(0, 0, 310, 180);
+        pieceCtx.clearRect(0, 0, 310, 180);
+        
+        // Vẽ background
+        bgCtx.drawImage(img, 0, 0, 310, 180);
+        
+        // Random vị trí lỗ hổng
+        captchaX = Math.floor(Math.random() * 140) + 100;
+        captchaY = Math.floor(Math.random() * 90) + 30;
+        const r = 8;
+        const size = 45;
+        
+        // Vẽ mảnh ghép cắt ra
+        pieceCtx.save();
+        drawPuzzlePiece(pieceCtx, captchaX, captchaY, size, r);
+        pieceCtx.clip();
+        pieceCtx.drawImage(img, 0, 0, 310, 180);
+        pieceCtx.restore();
+        
+        // Vẽ viền mảnh ghép
+        pieceCtx.save();
+        drawPuzzlePiece(pieceCtx, captchaX, captchaY, size, r);
+        pieceCtx.lineWidth = 2;
+        pieceCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        pieceCtx.stroke();
+        pieceCtx.restore();
+        
+        // Vẽ lỗ trống trên nền
+        bgCtx.save();
+        drawPuzzlePiece(bgCtx, captchaX, captchaY, size, r);
+        bgCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        bgCtx.fill();
+        bgCtx.lineWidth = 2;
+        bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        bgCtx.stroke();
+        bgCtx.restore();
+        
+        // Dịch chuyển canvas của mảnh ghép sang trái cùng
+        pieceCanvas.style.transform = `translateX(-${captchaX}px)`;
+    };
+}
+
+function drawPuzzlePiece(ctx, x, y, size, r) {
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + size / 2 - r, y);
+    ctx.arc(x + size / 2, y, r, Math.PI, 0, false);
+    ctx.lineTo(x + size, y);
+    ctx.lineTo(x + size, y + size / 2 - r);
+    ctx.arc(x + size, y + size / 2, r, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    ctx.lineTo(x + size, y + size);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+}
+
+function closeCaptcha() {
+    document.getElementById('captchaModal').style.display = 'none';
+}
+
+// Sự kiện Slider Captcha
+document.addEventListener('DOMContentLoaded', () => {
+    const sliderBtn = document.getElementById('sliderBtn');
+    if (sliderBtn) {
+        sliderBtn.addEventListener('mousedown', (e) => {
+            isDraggingCaptcha = true;
+            startClientX = e.clientX;
+            sliderBtn.style.cursor = 'grabbing';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingCaptcha) return;
+            let moveX = e.clientX - startClientX;
+            if (moveX < 0) moveX = 0;
+            if (moveX > 260) moveX = 260; // 310 - 50 (chiều rộng nút)
+            
+            sliderBtn.style.left = moveX + 'px';
+            document.getElementById('sliderTrack').style.width = moveX + 'px';
+            
+            document.getElementById('captchaPiece').style.transform = `translateX(${moveX - captchaX}px)`;
+        });
+        
+        document.addEventListener('mouseup', (e) => {
+            if (!isDraggingCaptcha) return;
+            isDraggingCaptcha = false;
+            sliderBtn.style.cursor = 'grab';
+            
+            const currentLeft = parseInt(sliderBtn.style.left || '0');
+            if (Math.abs(currentLeft - captchaX) < 10) {
+                // Thành công
+                sliderBtn.innerHTML = '<i class="fa fa-check"></i>';
+                sliderBtn.style.background = '#50fa7b'; // Xanh lá
+                setTimeout(() => {
+                    closeCaptcha();
+                    executeBookingNavigation(); // Tiến hành chuyển trang
+                }, 500);
+            } else {
+                // Thất bại
+                sliderBtn.style.background = '#ff5555'; // Đỏ
+                sliderBtn.innerHTML = '<i class="fa fa-times"></i>';
+                setTimeout(() => {
+                    initCaptcha(); // Reset lại captcha nếu sai
+                }, 500);
+            }
+        });
+    }
+});
 
 function showMascotMessage(msg, isError = false) {
     const tooltip = document.getElementById('mascotTooltip');

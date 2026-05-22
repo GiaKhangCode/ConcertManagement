@@ -3,6 +3,7 @@ package com.stellar.backend.controller;
 import com.stellar.backend.dto.RevenueResponseDto;
 import com.stellar.backend.entity.SuKien;
 import com.stellar.backend.entity.Ve;
+import com.stellar.backend.entity.DonMua;
 import com.stellar.backend.repository.DonMuaRepository;
 import com.stellar.backend.repository.SuKienRepository;
 import com.stellar.backend.repository.VeRepository;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -76,11 +78,64 @@ public class OrganizerController {
                 chiTiet.add(detail);
             }
 
+            // Tính toán tăng trưởng doanh thu theo ngày hoặc tháng
+            List<DonMua> donMuaList = donMuaRepository.findBySuKien_NguoiTao_MaTaiKhoan(userId);
+            List<DonMua> donMuaHopLe = donMuaList.stream()
+                    .filter(d -> d.getThoiDiemMua() != null && "Đã thanh toán".equals(d.getTrangThaiThanhToan()))
+                    .collect(Collectors.toList());
+
+            List<RevenueResponseDto.RevenueGrowthDetail> tangTruong = new ArrayList<>();
+
+            if (!donMuaHopLe.isEmpty()) {
+                // Sắp xếp các đơn hàng theo thời gian
+                donMuaHopLe.sort(java.util.Comparator.comparing(DonMua::getThoiDiemMua));
+
+                // Lấy tất cả các tháng duy nhất (format: yyyy-MM) để đếm
+                java.util.Set<String> uniqueMonths = donMuaHopLe.stream()
+                        .map(d -> d.getThoiDiemMua().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")))
+                        .collect(Collectors.toSet());
+
+                boolean groupByDay = uniqueMonths.size() <= 2;
+
+                if (groupByDay) {
+                    // Gom nhóm theo ngày
+                    java.util.Map<java.time.LocalDate, BigDecimal> mapByDay = new java.util.TreeMap<>();
+                    for (DonMua dm : donMuaHopLe) {
+                        java.time.LocalDate dateKey = dm.getThoiDiemMua().toLocalDate();
+                        mapByDay.put(dateKey, mapByDay.getOrDefault(dateKey, BigDecimal.ZERO).add(dm.getTongTien()));
+                    }
+                    
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    for (java.util.Map.Entry<java.time.LocalDate, BigDecimal> entry : mapByDay.entrySet()) {
+                        tangTruong.add(new RevenueResponseDto.RevenueGrowthDetail(
+                                entry.getKey().format(dtf),
+                                entry.getValue()
+                        ));
+                    }
+                } else {
+                    // Gom nhóm theo tháng
+                    java.util.Map<java.time.YearMonth, BigDecimal> mapByMonth = new java.util.TreeMap<>();
+                    for (DonMua dm : donMuaHopLe) {
+                        java.time.YearMonth monthKey = java.time.YearMonth.from(dm.getThoiDiemMua());
+                        mapByMonth.put(monthKey, mapByMonth.getOrDefault(monthKey, BigDecimal.ZERO).add(dm.getTongTien()));
+                    }
+
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("MM/yyyy");
+                    for (java.util.Map.Entry<java.time.YearMonth, BigDecimal> entry : mapByMonth.entrySet()) {
+                        tangTruong.add(new RevenueResponseDto.RevenueGrowthDetail(
+                                entry.getKey().format(dtf),
+                                entry.getValue()
+                        ));
+                    }
+                }
+            }
+
             RevenueResponseDto response = new RevenueResponseDto();
             response.setTongDoanhThu(tongDoanhThu);
             response.setTongSoVeBan((int) tongSoVeBan);
             response.setTongSoSuKien(suKienList.size());
             response.setChiTietSuKien(chiTiet);
+            response.setTangTruongDoanhThu(tangTruong);
 
             return ResponseEntity.ok(response);
 
