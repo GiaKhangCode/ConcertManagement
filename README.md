@@ -146,6 +146,17 @@ Chạy script SQL trong thư mục `Database/`.
 Database/CONCERTMANAGEMENTDB.sql
 ```
 
+Lưu ý:
+
+- Đoạn mã phân quyền nhóm phải chạy sau khi tạo 1 tài khoản mới
+- 
+```sql
+INSERT INTO PHAN_QUYEN_NHOM (MaTaiKhoan, MaNhomQuyen)
+VALUES (1, (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'));
+
+COMMIT;
+```
+
 ---
 
 ## 7. Cấu hình backend
@@ -307,7 +318,8 @@ Role được seed từ các file SQL trong thư mục `Database/`.
 
 Nếu không đăng nhập được, kiểm tra lại:
 
-- Đã chạy `INSERT INTO PHAN_QUYEN_NHOM (MaTaiKhoan, MaNhomQuyen) VALUES (1, (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'));` chưa
+- Đã chạy đoạn mã setup role hay chưa
+- Đã chạy dữ liệu mẫu chưa
 - Backend có kết nối được Oracle chưa
 - API `http://localhost:8081/api/auth/login` có hoạt động không
 
