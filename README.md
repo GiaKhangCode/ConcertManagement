@@ -3,10 +3,10 @@
 ConcertManagement là hệ thống quản lý sự kiện/concert gồm:
 
 - **Backend**: Spring Boot REST API
-- **Frontend**: HTML/CSS/JavaScript tĩnh
+- **Frontend**: HTML/CSS/JavaScript
 - **Database**: Oracle Database
 
-> Lưu ý: Trong repo hiện tại, backend là Spring Boot Maven Java 17. Frontend là web tĩnh dùng HTML/CSS/JavaScript và gọi API backend tại `http://localhost:8081`.
+> Lưu ý: Trong repo hiện tại, backend là Spring Boot Maven Java 17. Frontend dùng HTML/CSS/JavaScript và gọi API backend tại `http://localhost:8081`.
 
 ---
 
@@ -43,17 +43,6 @@ ConcertManagement là hệ thống quản lý sự kiện/concert gồm:
 ConcertManagement/
 ├── Database/
 │   ├── CONCERTMANAGEMENTDB.sql
-│   ├── mock_data.sql
-│   ├── seed_roles.sql
-│   ├── seed_staff_role.sql
-│   ├── create_analytics_views.sql
-│   ├── create_sodo.sql
-│   ├── alter_phase6.sql
-│   ├── alter_refund_history.sql
-│   ├── alter_reject_logic.sql
-│   ├── sp_optimization.sql
-│   ├── update_db_images.sql
-│   └── update_logging_tables.sql
 │
 ├── backend/
 │   ├── src/
