@@ -815,7 +815,7 @@
             
             if (zoneData) {
                 console.log("Zone found:", zoneData.name);
-                if (nameEl) nameEl.innerText = zoneData.name;
+                if (nameEl) nameEl.innerText = zoneData.name + " (Còn lại: " + (zoneData.soVeConLai !== undefined ? zoneData.soVeConLai : '---') + ")";
                 
                 // Cập nhật nhãn hạng vé dựa trên khu vực đang chọn
                 const tier = eventTiers.find(t => String(t.id || t.maHangVe) === String(zoneData.tierId));
@@ -862,8 +862,16 @@
             if (!currentSelectedZoneId) return;
             
             const currentQty = nonMapQuantities[currentSelectedZoneId] || 0;
-            const newVal = Math.max(0, Math.min(10, currentQty + delta));
+            const zoneData = eventZones.find(z => String(z.id || z.maKhuVuc) === String(currentSelectedZoneId));
+            const maxAvailable = (zoneData && zoneData.soVeConLai !== undefined) ? zoneData.soVeConLai : 10;
             
+            const newVal = Math.max(0, Math.min(Math.min(10, maxAvailable), currentQty + delta));
+            
+            if (delta > 0 && currentQty >= maxAvailable) {
+                alert("Số lượng vé còn lại không đủ!");
+                return;
+            }
+
             // Giới hạn tổng 10 vé
             const { qty: currentTotalQty } = updateUIPrice();
             if (delta > 0 && currentTotalQty >= 10) {

@@ -937,9 +937,31 @@ function sbDeleteSelected() {
 
 // --- Shortcuts & Undo/Redo/Copy/Paste ---
 function setupKeyboardShortcuts() {
+    let moveTimeout;
     document.addEventListener('keydown', function (e) {
         if (!document.getElementById('enableStageBuilder').checked) return;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Move objects with arrow keys
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            let activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                e.preventDefault();
+                const MOVE_STEP = e.shiftKey ? 10 : 1;
+                
+                if (e.key === 'ArrowUp') activeObj.set('top', activeObj.top - MOVE_STEP);
+                else if (e.key === 'ArrowDown') activeObj.set('top', activeObj.top + MOVE_STEP);
+                else if (e.key === 'ArrowLeft') activeObj.set('left', activeObj.left - MOVE_STEP);
+                else if (e.key === 'ArrowRight') activeObj.set('left', activeObj.left + MOVE_STEP);
+                
+                activeObj.setCoords();
+                canvas.requestRenderAll();
+                
+                clearTimeout(moveTimeout);
+                moveTimeout = setTimeout(saveState, 500);
+                return;
+            }
+        }
 
         // Delete
         if (e.key === 'Delete' || e.key === 'Backspace') {

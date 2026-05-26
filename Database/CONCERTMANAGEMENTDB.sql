@@ -1790,6 +1790,16 @@ BEGIN
         WHERE MaDonMua = p_MaDonMua AND TRANGTHAI = N'Chờ thanh toán'
         RETURNING MaGiaoDich INTO v_MaGiaoDich; -- Lấy mã giao dịch liên quan
 
+        -- Chốt Ghế (Chuyển 'Đang giữ chỗ' -> 'Đã đặt')
+        UPDATE TRANG_THAI_GHE_THEO_SUAT tt
+        SET TrangThai = N'Đã đặt'
+        WHERE EXISTS (
+            SELECT 1 FROM VE v
+            WHERE v.MaDonMua = p_MaDonMua
+              AND v.MaGhe = tt.MaGhe
+              AND v.MaLichDien = tt.MaLichDien
+        );
+
         -- Ghi lại lịch sử biến động ví
         INSERT INTO LICH_SU_BIEN_DONG_VI (MAVI,MaGiaoDichLienQuan, LoaiBienDong, SOTIEN, NOIDUNG)
         VALUES(v_MaVi, v_MaGiaoDich, N'Giảm',v_TongTienThanhToan, '* Thanh Toán đơn mua ' || p_MaDonMua ||' *');
@@ -2935,105 +2945,6 @@ from SU_KIEN;
 commit;
 select * from DON_MUA;
 
-CREATE OR REPLACE VIEW V_ANALYTICS_CATEGORY AS
-SELECT sk.MaSuKien,
-       NVL(TRIM(sk.PhanLoai), N'Khác') AS THE_LOAI,
-       NVL(dm_gross.GROSS_REVENUE, 0)  AS GROSS_REVENUE,
-       NVL(ht.TONG_HOAN, 0)            AS TONG_HOAN_TRA
-FROM SU_KIEN sk
-         LEFT JOIN (SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
-                    FROM DON_MUA
-                    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
-                    GROUP BY MaSuKien) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien
-         LEFT JOIN (SELECT MaSuKien, SUM(SoTienHoan) AS TONG_HOAN
-                    FROM LICH_SU_HOAN_TIEN
-                    GROUP BY MaSuKien) ht ON sk.MaSuKien = ht.MaSuKien;
 
-CREATE OR REPLACE VIEW V_ANALYTICS_GROWTH AS
-SELECT TRUNC(dm.ThoiDiemMua)                        AS NGAY_PHAT_SINH,
-       TO_CHAR(dm.ThoiDiemMua, 'MM/YYYY')           AS THANG_NAM,
-       TO_CHAR(TRUNC(dm.ThoiDiemMua), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
-       dm.MaSuKien,
-       dm.TongTien                                  AS GROSS_TIEN,
-       0                                            AS SO_TIEN_HOAN
-FROM DON_MUA dm
-WHERE dm.TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
-  AND dm.ThoiDiemMua IS NOT NULL
-UNION ALL
-SELECT TRUNC(ht.ThoiDiemHoan)                        AS NGAY_PHAT_SINH,
-       TO_CHAR(ht.ThoiDiemHoan, 'MM/YYYY')           AS THANG_NAM,
-       TO_CHAR(TRUNC(ht.ThoiDiemHoan), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
-       ht.MaSuKien,
-       0                                             AS GROSS_TIEN,
-       ht.SoTienHoan
-FROM LICH_SU_HOAN_TIEN ht
-WHERE ht.ThoiDiemHoan IS NOT NULL;
+DROP TRIGGER
 
-CREATE OR REPLACE VIEW V_ANALYTICS_ORGANIZER AS
-SELECT sk.MaSuKien,
-       sk.TenSuKien,
-       CASE
-           WHEN sk.MaNguoiTao IS NULL THEN N'Hệ thống'
-           ELSE NVL(ntc.TenNhaToChuc, tk.TenDangNhap)
-           END                        AS TEN_NHA_TO_CHUC,
-       NVL(dm_gross.GROSS_REVENUE, 0) AS GROSS_REVENUE,
-       NVL(ht.TONG_HOAN, 0)           AS TONG_HOAN_TRA
-FROM SU_KIEN sk
-         LEFT JOIN TAI_KHOAN tk ON sk.MaNguoiTao = tk.MaTaiKhoan
-         LEFT JOIN NHA_TO_CHUC ntc ON tk.MaTaiKhoan = ntc.MaTaiKhoan
-         LEFT JOIN (SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
-                    FROM DON_MUA
-                    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
-                    GROUP BY MaSuKien) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien
-         LEFT JOIN (SELECT MaSuKien, SUM(SoTienHoan) AS TONG_HOAN
-                    FROM LICH_SU_HOAN_TIEN
-                    GROUP BY MaSuKien) ht ON sk.MaSuKien = ht.MaSuKien;
-
-CREATE OR REPLACE VIEW V_ORGANIZER_TICKET_SALES AS
-SELECT
-    sk.MaNguoiTao,
-    sk.MaSuKien,
-    sk.TenSuKien,
-    sk.TRANGTHAI,
-    NVL(sk.AnhBiaURL, sk.ANHTHUMBNAILURL) AS ANH_BIA_URL,
-    NVL(tickets.SO_VE_BAN, 0) AS SO_VE_BAN
-FROM SU_KIEN sk
-LEFT JOIN (
-    SELECT hv.MaSuKien, COUNT(v.MaVe) AS SO_VE_BAN
-    FROM VE v
-    JOIN HANG_VE hv ON v.MaHangVe = hv.MaHangVe
-    WHERE v.TRANGTHAIVE IN ('Hiệu lực', 'Đã check-in')
-    GROUP BY hv.MaSuKien
-) tickets ON sk.MaSuKien = tickets.MaSuKien;
-
-CREATE OR REPLACE VIEW V_ORGANIZER_EVENT_REVENUE AS
-SELECT
-    sk.MaNguoiTao,
-    sk.MaSuKien,
-    sk.TenSuKien,
-    NVL(dm_gross.GROSS_REVENUE, 0) AS DOANH_THU
-FROM SU_KIEN sk
-LEFT JOIN (
-    SELECT MaSuKien, SUM(TongTien) AS GROSS_REVENUE
-    FROM DON_MUA
-    WHERE TrangThaiThanhToan IN (N'Đã thanh toán', N'Đã hủy', N'Đã hoàn tiền')
-    GROUP BY MaSuKien
-) dm_gross ON sk.MaSuKien = dm_gross.MaSuKien;
-
-CREATE OR REPLACE VIEW V_ORGANIZER_GROWTH AS
-SELECT
-    sk.MaNguoiTao,
-    TRUNC(dm.THOIDIEMMUA) AS NGAY_PHAT_SINH,
-    TO_CHAR(dm.THOIDIEMMUA, 'MM/YYYY') AS THANG_NAM,
-    TO_CHAR(TRUNC(dm.THOIDIEMMUA), 'DD/MM/YYYY') AS NGAY_THANG_NAM,
-    dm.TongTien AS GROSS_TIEN
-FROM DON_MUA dm
-JOIN SU_KIEN sk ON dm.MaSuKien = sk.MaSuKien
-WHERE dm.TrangThaiThanhToan = N'Đã thanh toán'
-  AND dm.THOIDIEMMUA IS NOT NULL;
-
--- 1. Gán nhóm ROLE_ADMIN cho tài khoản ID = 2
-INSERT INTO PHAN_QUYEN_NHOM (MaTaiKhoan, MaNhomQuyen)
-VALUES (1, (SELECT MaNhomQuyen FROM NHOM_QUYEN WHERE TenNhomQuyen = 'ROLE_ADMIN'));
-
-COMMIT;

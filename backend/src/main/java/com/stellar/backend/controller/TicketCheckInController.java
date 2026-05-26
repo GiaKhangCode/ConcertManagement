@@ -1,9 +1,11 @@
 package com.stellar.backend.controller;
 
+import com.stellar.backend.dto.CheckInHistoryDto;
 import com.stellar.backend.dto.CheckInRequest;
 import com.stellar.backend.dto.CheckInResponse;
 import com.stellar.backend.security.UserDetailsImpl;
 import com.stellar.backend.service.TicketService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,5 +33,15 @@ public class TicketCheckInController {
         } else {
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER') or hasRole('STAFF')")
+    public ResponseEntity<List<CheckInHistoryDto>> getCheckInHistory() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long staffId = userDetails.getId();
+        
+        List<CheckInHistoryDto> history = ticketService.getCheckInHistory(staffId);
+        return ResponseEntity.ok(history);
     }
 }

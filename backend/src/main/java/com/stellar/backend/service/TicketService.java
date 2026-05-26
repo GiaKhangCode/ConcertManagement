@@ -351,4 +351,26 @@ public class TicketService {
         log.setThietBiQuet(deviceName != null ? deviceName : "Unknown Device");
         nhatKySoatVeRepository.save(log);
     }
+
+    public List<CheckInHistoryDto> getCheckInHistory(Long staffId) {
+        List<NhatKySoatVe> logs = nhatKySoatVeRepository.findByTaiKhoan_MaTaiKhoanOrderByThoiGianQuetMaDesc(staffId);
+        return logs.stream().map(log -> {
+            Ve ve = log.getVe();
+            String eventName = (ve != null && ve.getLichDien() != null && ve.getLichDien().getSuKien() != null) 
+                ? ve.getLichDien().getSuKien().getTenSuKien() : "N/A";
+            String zoneName = (ve != null && ve.getKhuVuc() != null) ? ve.getKhuVuc().getTenKhuVuc() : "Khu vực chung";
+            String seatInfo = (ve != null && ve.getGheNgoi() != null) ? ve.getGheNgoi().getToaDo() : "Tự do";
+            Long ticketId = (ve != null) ? ve.getMaVe() : null;
+            
+            return new CheckInHistoryDto(
+                ticketId,
+                eventName,
+                zoneName,
+                seatInfo,
+                log.getThietBiQuet(),
+                log.getTrangThaiSoatVe(),
+                log.getThoiGianQuetMa()
+            );
+        }).collect(Collectors.toList());
+    }
 }
