@@ -146,7 +146,7 @@ public class UserController {
     public ResponseEntity<?> getUserTickets() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
-        List<DonMua> orders = donMuaRepository.findByTaiKhoan_MaTaiKhoan(userDetails.getId());
+        List<DonMua> orders = donMuaRepository.findByTaiKhoan_MaTaiKhoanOrderByThoiDiemMuaDesc(userDetails.getId());
         
         List<UserOrderResponseDto> result = new ArrayList<>();
         for(DonMua don : orders) {

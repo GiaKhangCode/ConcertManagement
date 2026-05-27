@@ -155,7 +155,12 @@ public class BookingService {
             "Đang giữ chỗ"
         );
 
-        // 9. Xử lý thanh toán qua Procedure tương ứng
+        // 9. Áp dụng khuyến mãi (Thực hiện trước khi thanh toán để cập nhật TongTien trong DB)
+        if (appliedMgg != null) {
+            promotionService.applyPromotion(savedDonMua, request.getDiscountCode(), soTienGiam);
+        }
+
+        // 10. Xử lý thanh toán qua Procedure tương ứng
         if (isWallet) {
             String walletPassword = request.getWalletPassword();
             if (walletPassword == null || walletPassword.isEmpty()) {
@@ -204,11 +209,6 @@ public class BookingService {
             query.execute();
             String result = (String) query.getOutputParameterValue("p_KetQua");
             System.out.println("Mock Webhook Result: " + result);
-        }
-
-        // 9. Áp dụng khuyến mãi
-        if (appliedMgg != null) {
-            promotionService.applyPromotion(savedDonMua, request.getDiscountCode(), soTienGiam);
         }
 
         return savedDonMua;

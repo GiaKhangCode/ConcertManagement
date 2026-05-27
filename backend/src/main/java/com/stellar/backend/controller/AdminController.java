@@ -715,7 +715,7 @@ public class AdminController {
         }
 
         // Cập nhật trạng thái đơn mua liên quan sang "Đã hoàn tiền"
-        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKien(eventId);
+        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKienOrderByThoiDiemMuaDesc(eventId);
         for (DonMua dm : orders) {
             if (!"Đã hoàn tiền".equals(dm.getTrangThaiThanhToan())) {
                 dm.setTrangThaiThanhToan("Đã hoàn tiền");
@@ -1146,7 +1146,7 @@ public class AdminController {
         }
 
         // Lấy danh sách những người đã mua vé
-        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKien(id);
+        List<DonMua> orders = donMuaRepository.findBySuKien_MaSuKienOrderByThoiDiemMuaDesc(id);
         java.util.Set<Long> sentUserIds = new java.util.HashSet<>();
         int count = 0;
 

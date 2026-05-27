@@ -79,7 +79,7 @@ public class OrganizerController {
             }
 
             // Tính toán tăng trưởng doanh thu theo ngày hoặc tháng
-            List<DonMua> donMuaList = donMuaRepository.findBySuKien_NguoiTao_MaTaiKhoan(userId);
+            List<DonMua> donMuaList = donMuaRepository.findBySuKien_NguoiTao_MaTaiKhoanOrderByThoiDiemMuaDesc(userId);
             List<DonMua> donMuaHopLe = donMuaList.stream()
                     .filter(d -> d.getThoiDiemMua() != null && "Đã thanh toán".equals(d.getTrangThaiThanhToan()))
                     .collect(Collectors.toList());
