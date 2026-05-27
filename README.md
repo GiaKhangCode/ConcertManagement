@@ -1,4 +1,4 @@
-﻿# ConcertManagement
+# ConcertManagement
 
 ConcertManagement là hệ thống quản lý sự kiện/concert gồm:
 
