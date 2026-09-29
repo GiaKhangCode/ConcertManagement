@@ -1,16 +1,20 @@
-# ConcertManagement
+<div align="center">
+<h1>🎸 ConcertManagement</h1>
+</div>
 
-ConcertManagement là hệ thống quản lý sự kiện/concert gồm:
-
-- **Backend**: Spring Boot REST API
-- **Frontend**: HTML/CSS/JavaScript
-- **Database**: Oracle Database
-
-> Lưu ý: Trong repo hiện tại, backend là Spring Boot Maven Java 17. Frontend dùng HTML/CSS/JavaScript và gọi API backend tại `http://localhost:8081`.
+> **Hệ thống quản lý sự kiện/concert**
+>
+> *ConcertManagement là giải pháp phần mềm toàn diện được thiết kế chuyên biệt để hỗ trợ tối ưu hóa quy trình tổ chức, quản lý và đặt vé các sự kiện, concert biểu diễn. Hệ thống cung cấp trải nghiệm hiện đại và mượt mà với đầy đủ các tính năng thiết yếu bao gồm: đặt vé nhanh chóng cho khách hàng, quản lý và tổ chức sự kiện chuyên nghiệp, phê duyệt từ quản trị viên, thống kê dữ liệu trực quan, phân quyền chặt chẽ đa người dùng và lưu trữ dữ liệu an toàn, bảo mật trên nền tảng Oracle Database.*
 
 ---
 
-## 1. Công nghệ sử dụng
+<div align="center">
+  <img src="figs/admin.png" alt="ConcertManagement Interface">
+</div>
+
+---
+
+## 🛠️ 1. Công nghệ sử dụng
 
 ### Backend
 
@@ -37,7 +41,7 @@ ConcertManagement là hệ thống quản lý sự kiện/concert gồm:
 
 ---
 
-## 2. Cấu trúc thư mục
+## 📁 2. Cấu trúc thư mục
 
 ```txt
 ConcertManagement/
@@ -71,7 +75,7 @@ ConcertManagement/
 
 ---
 
-## 3. Yêu cầu cài đặt
+## ⚙️ 3. Yêu cầu cài đặt
 
 Trước khi chạy project, cần cài:
 
@@ -93,7 +97,7 @@ git --version
 
 ---
 
-## 4. Clone project
+## 📥 4. Clone project
 
 ```bash
 git clone https://github.com/GiaKhangCode/ConcertManagement.git
@@ -102,7 +106,7 @@ cd ConcertManagement
 
 ---
 
-## 5. Tạo Oracle user/schema
+## 👤 5. Tạo Oracle user/schema
 
 Đăng nhập Oracle bằng tài khoản có quyền DBA, ví dụ `SYS AS SYSDBA`, sau đó chạy:
 
@@ -127,7 +131,7 @@ Password: Admin123
 
 ---
 
-## 6. Import database
+## 💾 6. Import database
 
 Chạy script SQL trong thư mục `Database/`.
 
@@ -148,7 +152,7 @@ COMMIT;
 
 ---
 
-## 7. Cấu hình backend
+## ⚙️ 7. Cấu hình backend
 
 File cấu hình backend nằm tại:
 
@@ -222,7 +226,7 @@ Tùy cấu hình Oracle trên máy bạn.
 
 ---
 
-## 8. Chạy backend
+## 🚀 8. Chạy backend
 
 Mở terminal tại thư mục project:
 
@@ -256,7 +260,7 @@ Nếu backend chạy thành công, console sẽ in:
 
 ---
 
-## 9. Chạy frontend
+## 🚀 9. Chạy frontend
 
 Frontend hiện là web tĩnh. Có thể chạy bằng Node.js static server.
 
@@ -294,7 +298,7 @@ Vì vậy cần chạy backend trước khi thao tác đăng nhập, đăng ký,
 
 ---
 
-## 10. Tài khoản và phân quyền
+## 🔐 10. Tài khoản và phân quyền
 
 Project có các role như:
 
@@ -314,7 +318,7 @@ Nếu không đăng nhập được, kiểm tra lại:
 
 ---
 
-## 11. Một số lỗi thường gặp
+## ❌ 11. Một số lỗi thường gặp
 
 ### Lỗi không kết nối được Oracle
 
@@ -383,7 +387,7 @@ Thường do một trong các nguyên nhân:
 ---
 
 
-## 12. Quy trình chạy nhanh
+## ⚡ 12. Quy trình chạy nhanh
 
 ```bash
 git clone https://github.com/GiaKhangCode/ConcertManagement.git
